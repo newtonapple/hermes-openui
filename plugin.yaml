@@ -1,0 +1,17 @@
+name: hermes-openui
+version: 0.1.0
+manifest_version: 2
+api_version: 1
+requires_hermes: ">=0.22.5"
+description: "Draw charts, DAG/ER diagrams, maps, tables and dashboards as rich inline widgets in the Hermes desktop app. OpenUI Lang, fully local, no network."
+author: "David Dai"
+license: MIT
+tags: [desktop, widgets, charts, diagrams, openui]
+provides_tools:
+  - render_widget
+config_schema:
+  mode:
+    type: str
+    default: preview
+    choices: [preview, native]
+    description: "preview = a self-contained HTML widget shown by the app's built-in ::preview (works out of the box). native = OpenUI source rendered by this plugin's desktop half via ::openui (enable the desktop half first, in Capabilities > Plugins)."

@@ -1,0 +1,91 @@
+{
+ "core": {
+  "file": "core.js.gz",
+  "raw": 810076,
+  "gz": 205007,
+  "sha256": "6fa1de9199d2311ce9c330f5c4fcc3eb6abb0d7b93b7b0304b567b595cdb3bd0",
+  "components": [
+   "Stack",
+   "Text",
+   "Card",
+   "Metric",
+   "Table",
+   "BarChart",
+   "Callout",
+   "Button",
+   "TabItem",
+   "Tabs",
+   "Image"
+  ]
+ },
+ "packs": {
+  "charts": {
+   "file": "packs/charts.js.gz",
+   "raw": 208479,
+   "gz": 64638,
+   "sha256": "3c76a5f3a19bb9f2ef9a27e7c6c938e25f727dd08ceca3b36510bbe1c727fa70",
+   "components": [
+    "Series",
+    "LineChart",
+    "AreaChart",
+    "PieChart",
+    "RadarChart"
+   ]
+  },
+  "diagrams": {
+   "file": "packs/diagrams.js.gz",
+   "raw": 12939,
+   "gz": 5590,
+   "sha256": "64dfd0c4af279e60dc9e0d5b53f764aef4db684fd39c9cf1e239171e293cba95",
+   "components": [
+    "DagNode",
+    "Dag",
+    "Entity",
+    "Relation",
+    "Erd"
+   ]
+  },
+  "map": {
+   "file": "packs/map.js.gz",
+   "raw": 27404,
+   "gz": 11608,
+   "sha256": "805a73b003f75d0a1760401f64b4c57425947022cde451c64194b9124eb27184",
+   "components": [
+    "GeoPoint",
+    "GeoMap"
+   ]
+  },
+  "text": {
+   "file": "packs/text.js.gz",
+   "raw": 11590,
+   "gz": 4689,
+   "sha256": "6cc3ea24cb0b1081f19473a884cfbb172f224c3eccb66d4a7e613bebab9e478d",
+   "components": [
+    "Markdown",
+    "CodeBlock",
+    "FaqItem",
+    "Faq",
+    "Choice"
+   ]
+  }
+ },
+ "components": {
+  "Series": "charts",
+  "LineChart": "charts",
+  "AreaChart": "charts",
+  "PieChart": "charts",
+  "RadarChart": "charts",
+  "DagNode": "diagrams",
+  "Dag": "diagrams",
+  "Entity": "diagrams",
+  "Relation": "diagrams",
+  "Erd": "diagrams",
+  "GeoPoint": "map",
+  "GeoMap": "map",
+  "Markdown": "text",
+  "CodeBlock": "text",
+  "FaqItem": "text",
+  "Faq": "text",
+  "Choice": "text"
+ }
+}
