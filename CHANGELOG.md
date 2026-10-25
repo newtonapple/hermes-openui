@@ -16,6 +16,7 @@ First release.
 - A browser runtime split into a core and four packs: charts, map, diagrams and text. A widget embeds only the packs it uses, so a page is about 275 KB without charts and about 390 KB with every pack.
 - An offline world map for GeoMap. It needs no tiles and no network.
 - The bundled skill `hermes-openui:openui-render`, with layout patterns and pitfalls. Hermes loads it on demand.
+- Installing from GitHub with `hermes plugins install newtonapple/hermes-openui --enable`.
 - `scripts/install.sh`. It copies the runtime files into a Hermes home and enables the plugin. `--home` targets a profile and `--no-enable` leaves the enabled state alone. An existing copy moves to `<home>/cache/` instead of being deleted.
 - `requires_hermes: ">=0.22.5"` in `plugin.yaml`. 0.22.5 is the only Hermes version this release was tested on.
 - Docs: a README, AGENTS.md, development notes, and a page for every component with 59 example programs and a screenshot of each.
@@ -35,7 +36,6 @@ First release.
 - How the desktop app draws a widget. Rendering was checked in headless Chrome only.
 - Clicks and the Copy button inside the app's widget frame.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
-- Installing with `hermes plugins install newtonapple/hermes-openui`.
 - Linux and Windows.
 
 [Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.1.0...HEAD

@@ -69,6 +69,8 @@ hermes plugins install newtonapple/hermes-openui --enable
 
 or in the desktop app: **Capabilities → Plugins → Install from Git**. To install a specific release, see [Versioning](#versioning).
 
+Hermes clones the whole repository, about 10 MB with the docs, tests and build sources. `scripts/install.sh` copies only the 1.8 MB the plugin runs on. Hermes also prints a warning that the source is not from its catalog. That is expected for any plugin installed from a Git URL.
+
 ### On another computer
 
 Repeat either route there. The plugin keeps no state outside `$HERMES_HOME/widgets/` (generated widgets). Keep this folder in Git, rsync or a synced drive and run `sh scripts/install.sh` on each machine. If you sync it through iCloud Drive, do not run `npm ci` inside the synced folder (see [Development](#development)).
