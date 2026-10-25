@@ -1,0 +1,3 @@
+root = Stack([title, chart])
+title = Text("Disk used by dataset, GB (sample data)", "heading")
+chart = PieChart(["text", "images", "audio", "free"], [90, 60, 44, 106], "pie", "semiCircular")

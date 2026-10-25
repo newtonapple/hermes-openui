@@ -1,0 +1,6 @@
+root = Stack([title, chart])
+title = Text("GPU utilisation by node, last hour (sample data)", "heading")
+chart = LineChart(["10:00", "10:10", "10:20", "10:30", "10:40", "10:50"], [s1, s2, s3])
+s1 = Series("spark-1", [62, 71, 84, 91, 88, 79])
+s2 = Series("spark-2", [45, 48, 52, 61, 58, 55])
+s3 = Series("spark-3", [30, 28, 41, 66, 72, 69])

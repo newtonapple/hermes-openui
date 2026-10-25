@@ -1,0 +1,3 @@
+root = Stack([title, chart])
+title = Text("GPU memory by model on spark-1, GB (sample data)", "heading")
+chart = PieChart(["qwen3-32b", "llama-3.3-70b", "gemma-3-27b", "embeddings", "free"], [38, 52, 18, 6, 14])

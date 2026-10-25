@@ -1,0 +1,2 @@
+root = Stack([photo])
+photo = Image("/path/to/sample.png", "A 480 by 270 sample image", "The caption sits under the image in small grey text.")

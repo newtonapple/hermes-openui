@@ -1,0 +1,6 @@
+root = Stack([map])
+map = GeoMap([p1, p2, p3, p4], [["ams-1", "fra-1"], ["fra-1", "par-1"], ["par-1", "mad-1"]], "Edge sites in Europe (sample data)")
+p1 = GeoPoint("ams-1", 52.37, 4.90, "good")
+p2 = GeoPoint("fra-1", 50.11, 8.68, "good")
+p3 = GeoPoint("par-1", 48.86, 2.35, "warn")
+p4 = GeoPoint("mad-1", 40.42, -3.70, "bad")

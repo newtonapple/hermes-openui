@@ -1,0 +1,6 @@
+root = Stack([title, chart])
+title = Text("Model comparison, score out of 100 (sample data)", "heading")
+chart = RadarChart(["Throughput", "Latency", "Memory use", "Quality", "Cost"], [a, b, c])
+a = Series("qwen3-32b", [78, 70, 60, 85, 72])
+b = Series("llama-3.3-70b", [60, 55, 40, 92, 50])
+c = Series("gemma-3-27b", [85, 80, 75, 70, 85])

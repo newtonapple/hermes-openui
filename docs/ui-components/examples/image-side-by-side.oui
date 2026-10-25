@@ -1,0 +1,5 @@
+root = Stack([before, after], "row")
+before = Card([beforeImage], "Before")
+beforeImage = Image("/path/to/sample.png", "Sample image, before", "09:00 UTC")
+after = Card([afterImage], "After")
+afterImage = Image("/path/to/sample.png", "Sample image, after", "10:00 UTC")

@@ -1,0 +1,6 @@
+root = Stack([faq])
+faq = Faq([q1, q2, q3, q4])
+q1 = FaqItem("How do I restart vLLM on a node?", "Ask the agent: `Restart the vllm service on spark-1`. It runs `systemctl restart vllm` and checks `/health` afterwards.")
+q2 = FaqItem("Why is GPU memory at 100%?", "vLLM reserves a fixed share of GPU memory at start-up (`--gpu-memory-utilization`). A full gauge is normal and does not mean a leak.")
+q3 = FaqItem("What does a 429 from the gateway mean?", "The API key hit its rate limit. Wait for the `Retry-After` period or ask for a higher quota.")
+q4 = FaqItem("Where are the logs?", "Per node: `journalctl -u vllm`. Gateway requests are stored in the `requests` table.")

@@ -1,0 +1,7 @@
+root = Stack([title, tiles])
+title = Text("Metric tones", "heading")
+tiles = Stack([good, warn, bad, neutral], "row", "m", true)
+good = Metric("Uptime", "99.98%", "+0.02 pt", "good")
+warn = Metric("p95 latency", "840 ms", "+90 ms", "warn")
+bad = Metric("Error rate", "2.4%", "+1.9 pt", "bad")
+neutral = Metric("Requests / min", "1,284", "unchanged", "neutral")

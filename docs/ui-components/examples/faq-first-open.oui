@@ -1,0 +1,5 @@
+root = Stack([faq])
+faq = Faq([q1, q2, q3], true)
+q1 = FaqItem("How do I add a new model?", "Three steps:\n\n1. Download the weights to the shared volume.\n2. Add a deployment with **at least one replica**.\n3. Check that `/v1/models` lists the new name.\n\nExpected cold start:\n\n| Size | Cold start |\n|---|---|\n| 8B | 20 s |\n| 32B | 90 s |\n| 70B | 3 min |")
+q2 = FaqItem("Can two models share one GPU?", "Yes, if their combined memory fits. Lower `--gpu-memory-utilization` on both so neither reserves the whole card.")
+q3 = FaqItem("Why does the first request after a restart take so long?", "The server loads the weights and warms its caches on the first call. Later requests are fast.")

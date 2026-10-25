@@ -1,0 +1,3 @@
+root = Stack([note, ask])
+note = Callout("Clearing the model cache on spark-2 frees 212 GB. Downloading the models again takes about 40 minutes.", "warn")
+ask = Choice("Clear the cache on spark-2?", ["Yes, clear it", "No, keep it"])

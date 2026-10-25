@@ -1,0 +1,6 @@
+root = Stack([title, subtitle, summary, reproduceHeading, command])
+title = Text("Nightly benchmark", "title")
+subtitle = Text("qwen3-32b on spark-1, finished 02:14 UTC", "muted")
+summary = Text("Throughput held at 1,840 tokens/s for the whole run. Median time to first token was 210 ms and p95 was 480 ms. The slowest request waited 1.9 s in the queue.")
+reproduceHeading = Text("Reproduce", "heading")
+command = Text("vllm bench serve --model qwen3-32b --num-prompts 500", "code")

@@ -1,0 +1,4 @@
+root = Stack([title, chart])
+title = Text("Queue depth (sample data)", "heading")
+chart = LineChart(["10:00", "10:05", "10:10", "10:15", "10:20", "10:25", "10:30"], [q], "step")
+q = Series("queued requests", [4, 4, 12, 12, 7, 3, 3])

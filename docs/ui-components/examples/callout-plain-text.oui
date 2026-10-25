@@ -1,0 +1,3 @@
+root = Stack([longNote, stars])
+longNote = Callout("Rolling restart in progress. Each node drains for up to five minutes before vllm restarts, so request latency may rise for the next 20 minutes. No action is needed unless the queue stays above 50 after 09:45.")
+stars = Callout("A Callout prints **these asterisks** and `these backticks` as typed.", "warn")

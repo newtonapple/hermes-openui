@@ -1,0 +1,4 @@
+root = Stack([alert, nodes, hint])
+alert = Callout("2 of 4 nodes are not serving requests.", "error")
+nodes = Table(["Node", "State", "Since"], [["spark-1", "serving", "08:12"], ["spark-2", "down", "09:03"], ["spark-3", "serving", "08:12"], ["spark-4", "down", "09:05"]])
+hint = Callout("Traffic is being routed to spark-1 and spark-3. Expect higher latency until the other nodes are back.", "info")

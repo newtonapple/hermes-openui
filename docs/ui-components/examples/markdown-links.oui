@@ -1,0 +1,3 @@
+root = Stack([card])
+card = Card([doc], "Release notes")
+doc = Markdown("**vllm 0.11** is installed on all four nodes.\n\n- Faster prefix caching, see the [changelog](https://docs.example.com/vllm/changelog).\n- New flag `--max-num-seqs`, see the [tuning guide](https://docs.example.com/vllm/tuning).\n- Plain addresses such as https://docs.example.com/vllm are not turned into links.\n\nA link is underlined and coloured, but clicking it does nothing.")

@@ -1,0 +1,8 @@
+root = Stack([bareLabel, bare, wrappedLabel, wrappedRow])
+bareLabel = Text("A Card placed directly in a column Stack:", "muted")
+bare = Card([bareText], "Status")
+bareText = Text("spark-3 is draining.")
+wrappedLabel = Text("The same Card wrapped in a one-item row:", "muted")
+wrappedRow = Stack([wrapped], "row")
+wrapped = Card([wrappedText], "Status")
+wrappedText = Text("spark-3 is draining.")

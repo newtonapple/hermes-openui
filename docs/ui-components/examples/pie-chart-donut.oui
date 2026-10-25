@@ -1,0 +1,3 @@
+root = Stack([title, chart])
+title = Text("Requests by traffic type, last 24 h (sample data)", "heading")
+chart = PieChart(["chat", "batch", "embeddings", "eval"], [4600, 2800, 1600, 1000], "donut")

@@ -1,0 +1,5 @@
+root = Stack([plainLabel, plain, richLabel, rich])
+plainLabel = Text("Text prints the characters exactly as written:", "muted")
+plain = Text("**Restart** the `vllm` service.\nThen check the logs.")
+richLabel = Text("Markdown turns them into formatting:", "muted")
+rich = Markdown("**Restart** the `vllm` service.\n\nThen check the logs.")

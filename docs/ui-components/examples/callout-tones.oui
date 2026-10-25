@@ -1,0 +1,5 @@
+root = Stack([info, success, warn, error])
+info = Callout("spark-4 rejoined the cluster at 09:02 UTC.", "info")
+success = Callout("Backup finished: 412 GB written to the NAS in 18 minutes.", "success")
+warn = Callout("The disk on spark-2 is 86% full. Free some space before the next model download.", "warn")
+error = Callout("vllm on spark-1 exited with code 137 (out of memory).", "error")

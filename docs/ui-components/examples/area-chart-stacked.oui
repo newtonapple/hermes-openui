@@ -1,0 +1,6 @@
+root = Stack([title, chart])
+title = Text("Tokens per minute by model (sample data)", "heading")
+chart = AreaChart(["10:00", "10:10", "10:20", "10:30", "10:40", "10:50"], [a, b, c])
+a = Series("qwen3-32b", [1200, 1500, 1900, 2400, 2200, 2100])
+b = Series("llama-3.3-70b", [800, 900, 1100, 1300, 1250, 1150])
+c = Series("gemma-3-27b", [400, 380, 500, 650, 700, 640])

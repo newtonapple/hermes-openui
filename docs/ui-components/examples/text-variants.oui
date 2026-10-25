@@ -1,0 +1,6 @@
+root = Stack([title, heading, body, muted, code])
+title = Text("Title: cluster report", "title")
+heading = Text("Heading: GPU utilisation", "heading")
+body = Text("Body: the default variant, for sentences and short paragraphs.")
+muted = Text("Muted: updated 09:14 UTC from spark-1", "muted")
+code = Text("code: vllm serve qwen3-32b --port 8000", "code")

@@ -1,0 +1,2 @@
+root = Stack([doc])
+doc = Markdown("### Service check\n\n\u0060\u0060\u0060bash\nsystemctl status vllm\njournalctl -u vllm -n 50\n\u0060\u0060\u0060\n\n---\n\n| Node | State | Uptime |\n|---|---|---|\n| spark-1 | **serving** | 12 d |\n| spark-2 | `draining` | 12 d |\n| spark-3 | serving | 3 d |")

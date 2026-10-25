@@ -1,0 +1,8 @@
+root = Stack([map])
+map = GeoMap([p1, p2, p3, p4, p5, p6], null, "Rack health by site (sample data)")
+p1 = GeoPoint("sea-1", 47.61, -122.33, "good")
+p2 = GeoPoint("den-1", 39.74, -104.99, "warn")
+p3 = GeoPoint("dal-1", 32.78, -96.80, "bad")
+p4 = GeoPoint("chi-1", 41.88, -87.63, "info")
+p5 = GeoPoint("atl-1", 33.75, -84.39, "neutral")
+p6 = GeoPoint("nyc-1", 40.71, -74.01)

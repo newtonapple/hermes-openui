@@ -1,0 +1,5 @@
+root = Stack([title, chart])
+title = Text("Latency percentiles (sample data)", "heading")
+chart = LineChart(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], [p50, p95], "linear", "Day of week", "Latency (ms)", 220)
+p50 = Series("p50", [210, 220, 205, 240, 230, 190, 185])
+p95 = Series("p95", [610, 680, 640, 910, 760, 520, 500])

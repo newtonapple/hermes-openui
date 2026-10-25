@@ -1,0 +1,5 @@
+root = Stack([throughputCard, latencyCard], "row")
+throughputCard = Card([throughput], "Tokens per second")
+throughput = BarChart(["qwen3-32b", "llama-3.3", "mistral-3"], [1840, 920, 2310])
+latencyCard = Card([latency], "p95 latency")
+latency = BarChart(["qwen3-32b", "llama-3.3", "mistral-3"], [480, 910, 350], null, " ms")

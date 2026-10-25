@@ -1,0 +1,2 @@
+root = Stack([doc])
+doc = Markdown("# Restart runbook\n\nUse this when **vllm** stops answering on a node. Check the *queue depth* first.\n\n## Steps\n\n1. Drain the node with `drain spark-1`.\n2. Wait for in-flight requests to finish.\n3. Restart the service.\n4. Confirm the health check passes.\n\n## Do not\n\n- Restart two nodes at once.\n- Restart during a benchmark run.\n\n> If the node does not recover within 5 minutes, escalate and leave it drained.")

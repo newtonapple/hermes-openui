@@ -1,0 +1,5 @@
+root = Stack([nodesCard, loadCard], "row")
+nodesCard = Card([nodes], "Nodes")
+nodes = Table(["Node", "State"], [["spark-1", "serving"], ["spark-2", "serving"], ["spark-3", "draining"], ["spark-4", "serving"]])
+loadCard = Card([load], "GPU load")
+load = BarChart(["spark-1", "spark-2", "spark-3", "spark-4"], [91, 84, 40, 62], null, "%")

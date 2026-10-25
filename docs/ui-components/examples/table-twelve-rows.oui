@@ -1,0 +1,3 @@
+root = Stack([card])
+card = Card([slow], "Slowest requests, last hour")
+slow = Table(["Request", "Model", "Prompt tokens", "Output tokens", "Latency ms"], [["req-8841", "qwen3-32b", 6120, 512, 9840], ["req-8812", "qwen3-32b", 5890, 480, 9210], ["req-8790", "llama-3.3-70b", 7340, 640, 8760], ["req-8755", "qwen3-32b", 4410, 512, 7420], ["req-8731", "llama-3.3-70b", 6980, 256, 7105], ["req-8702", "mistral-small-3", 3820, 700, 6630], ["req-8688", "qwen3-32b", 5120, 384, 6410], ["req-8671", "llama-3.3-70b", 6010, 512, 6240], ["req-8650", "mistral-small-3", 2990, 640, 5870], ["req-8624", "qwen3-32b", 4760, 300, 5590], ["req-8603", "qwen3-32b", 3330, 512, 5320], ["req-8590", "llama-3.3-70b", 5440, 220, 5105]])

@@ -1,0 +1,7 @@
+root = Stack([schema])
+schema = Erd([users, projects, jobs], [r1, r2], "Job queue schema (sample data)")
+users = Entity("users", ["id uuid PK", "email text UNIQUE", "created_at timestamptz"])
+projects = Entity("projects", ["id uuid PK", "owner_id uuid FK", "name text"])
+jobs = Entity("jobs", ["id uuid PK", "project_id uuid FK", "status text", "started_at timestamptz"])
+r1 = Relation("users", "projects", "1:N", "owns")
+r2 = Relation("projects", "jobs", "1:N", "runs")

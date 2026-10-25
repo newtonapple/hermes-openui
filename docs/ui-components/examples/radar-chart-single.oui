@@ -1,0 +1,4 @@
+root = Stack([title, chart])
+title = Text("spark-1 health profile, score out of 100 (sample data)", "heading")
+chart = RadarChart(["GPU", "Memory", "Disk", "Network", "CPU", "Thermals"], [s])
+s = Series("spark-1", [91, 74, 52, 88, 66, 80])

@@ -1,0 +1,2 @@
+root = Stack([ask])
+ask = Choice("Which node should I restart first?", ["spark-1", "spark-2", "spark-3"], "Pick one. I will restart it and report back.")

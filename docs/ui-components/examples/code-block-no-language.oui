@@ -1,0 +1,3 @@
+root = Stack([toml, log])
+toml = CodeBlock("[server]\nhost = \"0.0.0.0\"\nport = 8000\nworkers = 4", "toml")
+log = CodeBlock("2026-10-24 09:14:03 INFO req-8841 finished in 9.84 s with 512 tokens on spark-1, and this long line runs past the right edge of the column")

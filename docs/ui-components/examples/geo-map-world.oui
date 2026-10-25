@@ -1,0 +1,8 @@
+root = Stack([map])
+map = GeoMap([p1, p2, p3, p4, p5, p6], [["us-west", "us-east"], ["us-east", "eu-central"], ["eu-central", "ap-south"], ["ap-south", "ap-northeast"], ["us-east", "sa-east"]], "Regions and replication links (sample data)")
+p1 = GeoPoint("us-west", 37.77, -122.42, "good")
+p2 = GeoPoint("us-east", 39.04, -77.49, "good")
+p3 = GeoPoint("eu-central", 50.11, 8.68, "warn")
+p4 = GeoPoint("ap-south", 1.35, 103.82, "info")
+p5 = GeoPoint("ap-northeast", 35.68, 139.69, "good")
+p6 = GeoPoint("sa-east", -23.55, -46.63, "neutral")

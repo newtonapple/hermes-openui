@@ -1,0 +1,7 @@
+root = Stack([t1, area, t2, line])
+t1 = Text("AreaChart: series stack, the top edge is the total", "heading")
+area = AreaChart(["Mon", "Tue", "Wed", "Thu", "Fri"], [a, b], null, null, null, 200)
+t2 = Text("LineChart: the same series, each line drawn on its own", "heading")
+line = LineChart(["Mon", "Tue", "Wed", "Thu", "Fri"], [a, b], null, null, null, 200)
+a = Series("chat", [320, 410, 380, 450, 400])
+b = Series("batch", [150, 140, 260, 180, 120])

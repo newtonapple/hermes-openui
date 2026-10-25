@@ -1,0 +1,8 @@
+root = Stack([flow])
+flow = Dag([n1, n2, n3, n4, n5, n6], [["build", "unit"], ["build", "lint"], ["build", "bench"], ["unit", "package"], ["lint", "package"], ["bench", "deploy"]], null, "CI run (sample data)")
+n1 = DagNode("build", "Build image", "done")
+n2 = DagNode("unit", "Unit tests", "done")
+n3 = DagNode("lint", "Lint", "failed")
+n4 = DagNode("bench", "Benchmark", "running")
+n5 = DagNode("package", "Package", "skipped")
+n6 = DagNode("deploy", "Deploy", "pending")

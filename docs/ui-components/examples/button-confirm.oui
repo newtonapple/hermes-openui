@@ -1,0 +1,6 @@
+root = Stack([card], "row")
+card = Card([warning, choices], "Drain spark-3?")
+warning = Callout("12 requests are in flight. Draining waits for them to finish, up to 5 minutes.", "warn")
+choices = Stack([confirm, cancel], "row", "s")
+confirm = Button("Drain spark-3", @ToAssistant("Drain spark-3: stop sending it new requests, wait up to 5 minutes for in-flight requests to finish, then report the final state of the node"))
+cancel = Button("Cancel", @ToAssistant("Do not drain spark-3. Leave the cluster as it is."))

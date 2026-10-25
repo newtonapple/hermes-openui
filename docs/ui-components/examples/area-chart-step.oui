@@ -1,0 +1,6 @@
+root = Stack([title, chart])
+title = Text("Dataset size by type (sample data)", "heading")
+chart = AreaChart(["Jun", "Jul", "Aug", "Sep", "Oct"], [t, i, a], "step", "Month", "Size (GB)")
+t = Series("text", [40, 55, 70, 78, 90])
+i = Series("images", [20, 20, 45, 60, 60])
+a = Series("audio", [5, 12, 12, 30, 44])

@@ -1,0 +1,5 @@
+root = Stack([title, chart])
+title = Text("qwen3-32b, fp16 vs int4, benchmark score (sample data)", "heading")
+chart = RadarChart(["MMLU", "GSM8K", "HumanEval", "ARC", "HellaSwag", "TruthfulQA", "Winogrande", "BBH"], [a, b])
+a = Series("fp16", [83, 91, 78, 88, 85, 62, 80, 72])
+b = Series("int4", [81, 89, 74, 87, 84, 60, 79, 69])

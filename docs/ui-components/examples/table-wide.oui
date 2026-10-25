@@ -1,0 +1,2 @@
+root = Stack([wide])
+wide = Table(["Node name", "GPU model", "Utilisation %", "Memory used GB", "Memory total GB", "Temperature C", "Power draw W", "Driver version", "Last seen"], [["spark-1", "GB10", 91, 104, 128, 71, 212, "570.124", "09:14:03"], ["spark-2", "GB10", 84, 98, 128, 69, 198, "570.124", "09:14:02"], ["spark-3", "GB10", 40, 61, 128, 55, 140, "570.124", "09:14:03"]])

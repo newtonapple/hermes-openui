@@ -1,0 +1,5 @@
+root = Stack([tiles])
+tiles = Stack([gpus, nodes, queue], "row", "m", true)
+gpus = Metric("GPUs", "8")
+nodes = Metric("Nodes up", "4 / 4")
+queue = Metric("Queue", "12", "-3")

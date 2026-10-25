@@ -1,0 +1,2 @@
+root = Stack([code])
+code = CodeBlock("import time\nfrom openai import OpenAI\n\nclient = OpenAI(base_url=\"http://localhost:8000/v1\", api_key=\"none\")\n\ndef ask(prompt):\n    start = time.time()\n    reply = client.chat.completions.create(\n        model=\"qwen3-32b\",\n        messages=[{\"role\": \"user\", \"content\": prompt}],\n    )\n    # seconds taken, then the answer\n    return time.time() - start, reply.choices[0].message.content", "python", "bench.py")

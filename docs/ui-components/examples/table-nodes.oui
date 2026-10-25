@@ -1,0 +1,3 @@
+root = Stack([title, nodes])
+title = Text("Cluster nodes", "heading")
+nodes = Table(["Node", "GPU util %", "Memory GB", "Temp C", "State"], [["spark-1", 91, 104, 71, "busy"], ["spark-2", 84, 98, 69, "busy"], ["spark-3", 40, 61, 55, "draining"], ["spark-4", 62, 77, 63, "busy"], ["spark-5", 0, 4, 38, "idle"]])

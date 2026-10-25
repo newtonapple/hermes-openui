@@ -1,0 +1,7 @@
+root = Stack([title, status, actions])
+title = Text("vllm on spark-1", "heading")
+status = Callout("Queue depth is 48 and rising. GPU memory is at 96%.", "warn")
+actions = Stack([restart, logs, batch], "row", "s", true)
+restart = Button("Restart vllm", @ToAssistant("Restart the vllm service on spark-1 and tell me when it is serving again"))
+logs = Button("Show logs", @ToAssistant("Show the last 50 lines of the vllm log on spark-1"))
+batch = Button("Lower batch size", @ToAssistant("Lower the vllm max batch size on spark-1 to 16 and restart it"))

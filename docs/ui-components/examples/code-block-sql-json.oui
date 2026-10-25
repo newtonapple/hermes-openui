@@ -1,0 +1,3 @@
+root = Stack([sql, json])
+sql = CodeBlock("SELECT node, avg(gpu_util) AS util\nFROM gpu_stats\nWHERE ts > now() - interval '1 hour'\nGROUP BY node\nORDER BY util DESC\nLIMIT 10; -- busiest nodes first", "sql", "top-nodes.sql")
+json = CodeBlock("{\n  \"model\": \"qwen3-32b\",\n  \"temperature\": 0.2,\n  \"max_tokens\": 512,\n  \"stream\": true\n}", "json", "request.json")
