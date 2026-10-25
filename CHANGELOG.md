@@ -4,6 +4,19 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Changed
+
+- The README and AGENTS.md now recommend `hermes plugins install newtonapple/hermes-openui --enable`. They describe `scripts/install.sh` as the alternative for offline use and uncommitted changes, and compare the two. Only a Git install records its source, so only a Git install works with `hermes plugins update`.
+
+### Added
+
+- A "Multiple profiles" section. Hermes keeps plugin files and the enabled list per profile, so the plugin is installed once per profile.
+
+### Fixed
+
+- The README told users to copy `desktop/plugin.js` into `~/.hermes/desktop-plugins/` by hand. The app copies it itself, and a hand-placed file is never refreshed, so it goes stale. If you followed that advice, delete `~/.hermes/desktop-plugins/hermes-openui/`.
+- The README, AGENTS.md and the installer said Hermes cannot install from a local path. A `file://` URL works. A bare path still fails.
+
 ## [0.1.0] - 2026-10-24
 
 First release.

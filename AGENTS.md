@@ -7,18 +7,20 @@ For AI agents that **install**, **use** or **change** this plugin. Humans: read 
 ## 1. Install (do exactly this)
 
 ```sh
-sh scripts/install.sh                 # from the repository root; installs into $HERMES_HOME or ~/.hermes, then enables
-hermes plugins list | grep hermes-openui          # expect: enabled
-hermes plugins doctor ~/.hermes/plugins/hermes-openui   # expect: OK ... registrations: 1 tool(s)
+hermes plugins install newtonapple/hermes-openui --enable            # the default profile
+hermes -p <name> plugins install newtonapple/hermes-openui --enable  # a named profile
+hermes plugins list | grep hermes-openui                             # expect: enabled
+hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: OK ... registrations: 1 tool(s)
 ```
 
-- **Another profile or a test home:** `sh scripts/install.sh --home <dir>` (profiles live in `~/.hermes/profiles/<name>`). To test without touching the real setup, use a fresh scratch directory, then `HERMES_HOME=<dir> hermes plugins list`.
-- **Do not** use `hermes plugins install <path>`: a filesystem path is parsed as GitHub shorthand and fails. From Git: `hermes plugins install newtonapple/hermes-openui --enable`.
-- **After installing, the tool exists only in NEW chats.** Tell the user to start a new chat, or to restart the gateway themselves (`hermes gateway restart` must run in a separate shell, never from inside a gateway-run command).
-- **The desktop half is opt-in and runs with full app authority.** Never switch it on or set `mode: native` for the user without asking; the default `preview` mode needs neither.
+- **Install once per profile.** A profile has its own `plugins/` folder and enabled list (`~/.hermes/profiles/<name>`), and Hermes has no shared plugin folder for this kind of plugin. Settings and generated widgets are per profile too.
+- **After installing, the tool exists only in NEW chats.** A profile with a running gateway needs `hermes -p <name> gateway restart` first. Tell the user to run it in a separate shell, because a command or script that restarts the gateway is blocked inside a gateway-run session.
+- **Alternative from a checkout:** `sh scripts/install.sh [--home <dir>] [--no-enable]` copies the 1.8 MB runtime subset into a Hermes home and enables it. Use it offline or to test uncommitted changes. It leaves no Git record, so `hermes plugins update` fails on the copy, and Hermes skips its install-time security scan. For a local checkout that Hermes does track, use `hermes plugins install file:///absolute/path --enable` (committed code only, and Hermes warns about the local scheme). A bare path is read as GitHub shorthand and fails.
+- **Test without touching the real setup:** make a scratch directory and prefix `plugins` commands with `HERMES_HOME=<dir>`. Only `plugins` commands honor it. `hermes profile ...` ignores `HERMES_HOME` and acts on the real profiles, so never run `profile create` or `profile delete` to test.
+- **The desktop half is opt-in and runs with full app authority.** Never switch it on or set `mode: native` for the user without asking; the default `preview` mode needs neither. Never copy `desktop/plugin.js` into `~/.hermes/desktop-plugins/` by hand. The app copies it itself, and a hand-placed file is never refreshed.
 - **Verify end to end:** in a new desktop chat ask for "a bar chart of 3, 5 and 2 for a, b, c". A widget should appear. You cannot see the desktop render: end with the directive the tool returned and ask the user to confirm.
-- **Update:** `git pull && sh scripts/install.sh` (the old copy moves to `<home>/cache/`, never deleted; enabled state and settings are kept). **Remove:** `hermes plugins remove hermes-openui` (add `-p <name>` for a profile). It deletes the plugin folder, drops it from `plugins.enabled` and clears its settings, and it leaves `<home>/widgets/`, the `previous` copies and any manual `~/.hermes/desktop-plugins/hermes-openui/` file.
-- **`install.sh` always enables** the plugin, even one the user disabled on purpose: pass `--no-enable` when the user did not ask to turn it on. Each profile is separate: install into every profile that needs it.
+- **Update:** `hermes plugins update hermes-openui` for a Hermes install (add `-p <name>` for a profile). For a script install, `git pull && sh scripts/install.sh`; the old copy moves to `<home>/cache/` and the enabled state and settings are kept. **Remove:** `hermes plugins remove hermes-openui`. It deletes the plugin folder, drops it from `plugins.enabled` and clears its settings, and it leaves `<home>/widgets/` and the `previous` copies.
+- **`install.sh` always enables** the plugin, even one the user disabled on purpose: pass `--no-enable` when the user did not ask to turn it on.
 - **`config.yaml` edits:** install already creates a `plugins:` block (`enabled:`). Add `entries:` under it; never append a second top-level `plugins:` key.
 
 ## 2. Use the tool (when you are the agent in a Hermes desktop chat)
@@ -68,7 +70,7 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 
 ## 4. Pitfalls already paid for (details in `docs/development.md`)
 
-- `hermes plugins install` takes a catalog name, Git URL or `owner/repo`, never a path.
+- `hermes plugins install` takes a catalog name, a Git URL, `owner/repo` or a `file://` URL. A bare path is read as GitHub shorthand and fails.
 - The desktop loader rewrites only `import` + whitespace + quote. A minified `import"react"` stays bare and the **whole file is refused**; the build marks externals side-effect-free to prevent it. A harness with a native import map hides this: use `build/tests/plugin-loader-check.mjs`.
 - A disk plugin may import only `@hermes/plugin-sdk`, `react`, `react/jsx-runtime`: no `react-dom` (shimmed), and bundled CommonJS calling `require("react")` needs the banner `require`.
 - The app mirrors only **error-level** console lines into `desktop.log`.

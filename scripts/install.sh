@@ -1,5 +1,7 @@
 #!/bin/sh
-# Install hermes-openui into a Hermes home from a local checkout (Hermes cannot `plugins install` from a filesystem path).
+# Alternative to `hermes plugins install newtonapple/hermes-openui --enable`, which is the recommended route.
+# Copies the plugin's runtime files from a local checkout into a Hermes home. Use it offline, or to try uncommitted
+# changes. It leaves no Git record, so `hermes plugins update` does not work on the copy and Hermes skips its install scan.
 #
 #   scripts/install.sh                      install into $HERMES_HOME (default ~/.hermes) and enable it
 #   scripts/install.sh --home DIR           install into another Hermes home (a profile, or a scratch home for testing)
@@ -16,7 +18,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --home) [ $# -ge 2 ] || { echo "--home needs a directory" >&2; exit 2; }; HOME_DIR=$2; shift 2 ;;
     --no-enable) ENABLE=0; shift ;;
-    -h|--help) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1 (try --help)" >&2; exit 2 ;;
   esac
 done

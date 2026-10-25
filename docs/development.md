@@ -83,7 +83,7 @@ Build guards (each fails the build): a pack that bundles its own React/zod/react
 
 Verified in this repository: 60+ unit tests (Python 3.9); Hermes's own `plugins validate` and `plugins doctor`; install, enable and tool registration in an isolated Hermes home; that the tool is deferred behind Tool Search and enabled for desktop sessions by default; dispatch through Hermes's own function-call path; the desktop half evaluated in the real app (module evaluation about 7 ms, directive registered, file bridge and path guard exercised); structural parity between native and iframe rendering for every example; a clean-room rebuild.
 
-Not verified: how the desktop app *renders* a widget (only a headless-Chrome harness was used); the **Capabilities → Plugins** Desktop switch for a manually copied package (its fallback is to copy `desktop/plugin.js` to `~/.hermes/desktop-plugins/hermes-openui/`); Linux and Windows; any model other than the one used while building.
+Not verified: how the desktop app *renders* a widget (only a headless-Chrome harness was used); the **Capabilities → Plugins** Desktop switch, and the app's automatic copy of `desktop/plugin.js` into `desktop-plugins/` (both come from Hermes's docs; neither was seen in the app); Linux and Windows; any model other than the one used while building.
 
 ## Ideas
 

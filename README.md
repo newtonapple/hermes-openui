@@ -47,52 +47,70 @@ Each picture is a real render of the example code on that component's page, with
 
 ## Install
 
-### On this machine, from a checkout (works today)
-
-```sh
-git clone https://github.com/newtonapple/hermes-openui.git      # or copy the folder
-cd hermes-openui
-sh scripts/install.sh                          # copies the runtime files into ~/.hermes/plugins/hermes-openui and enables it
-```
-
-Then start a **new** chat (or restart the Hermes gateway: `hermes gateway restart`) and ask for a chart. The installer needs only `sh` and `cp`. Options: `--home DIR` installs into another Hermes home (a named profile lives under `~/.hermes/profiles/<name>`), `--no-enable` only copies. An existing copy is moved aside, never deleted.
-
-`hermes plugins install` does not accept a filesystem path (it reads one as GitHub shorthand), which is why the script exists.
-
-### With Hermes's installer, from Git
-
-This installs the default branch:
+### Recommended: Hermes's installer
 
 ```sh
 hermes plugins install newtonapple/hermes-openui --enable
 ```
 
-or in the desktop app: **Capabilities → Plugins → Install from Git**. To install a specific release, see [Versioning](#versioning).
+Hermes clones the repository (about 10 MB with the docs, tests and build sources), runs its security scan, records where the plugin came from and enables it. That record is what lets `hermes plugins update hermes-openui` and `hermes plugins check-updates` work later. Hermes also prints a warning that the source is not from its catalog. That is expected for any plugin installed from a Git URL.
 
-Hermes clones the whole repository, about 10 MB with the docs, tests and build sources. `scripts/install.sh` copies only the 1.8 MB the plugin runs on. Hermes also prints a warning that the source is not from its catalog. That is expected for any plugin installed from a Git URL.
+In the desktop app, the same install is **Capabilities → Plugins → Install from Git**.
 
-### On another computer
+Without `--ref`, the install follows the default branch, `main`, which can be ahead of the latest release. To install an exact release, see [Versioning](#versioning).
 
-Repeat either route there. The plugin keeps no state outside `$HERMES_HOME/widgets/` (generated widgets). Keep this folder in Git, rsync or a synced drive and run `sh scripts/install.sh` on each machine. If you sync it through iCloud Drive, do not run `npm ci` inside the synced folder (see [Development](#development)).
+Then start a **new** chat in that profile and ask for a chart. If the profile's gateway is already running, restart it first (see below).
 
-### Into a profile
+### Multiple profiles
 
-Each Hermes profile has its own home (`~/.hermes/profiles/<name>`), its own `plugins/` folder and its own enabled list in `config.yaml`. Installing the plugin in one profile does not add it to another, so repeat these steps for every profile that should have it.
+Each Hermes profile has its own home (`~/.hermes/profiles/<name>`), its own `plugins/` folder and its own enabled list in `config.yaml`. Hermes has no shared plugin folder for a plugin like this one, so install it once per profile:
 
 ```sh
-hermes profile list                                                  # names and paths
-sh scripts/install.sh --home ~/.hermes/profiles/<name>              # copy the files and enable it in that profile
-hermes -p <name> plugins list | grep hermes-openui                  # status: enabled
+hermes profile list                                                      # profile names
+hermes plugins install newtonapple/hermes-openui --enable                # the default profile
+hermes -p <name> plugins install newtonapple/hermes-openui --enable      # a named profile
 ```
 
-If that profile has a gateway running, restart it from a separate shell (not from inside a chat that the gateway runs): `hermes -p <name> gateway restart`. The desktop app picks the plugin up in a **new** chat of that profile.
+- Each profile gets its own clone, so each one updates on its own: `hermes -p <name> plugins update hermes-openui`. Settings such as `mode` are per profile too.
+- A profile whose gateway is running needs a restart before the tool appears: `hermes -p <name> gateway restart`. Run it in a separate terminal, not from a chat that the gateway serves.
+- The desktop half of the plugin is shared. Per Hermes's docs, the app keeps one copy for every profile.
+- In the desktop app, **Capabilities → Plugins** shows an **Install here** button for a profile that lacks a plugin the app already knows. It opens the same install dialog, using the Git source recorded at the first install. This comes from Hermes's source code and has not been clicked.
+- `hermes profile create <name> --clone-all` copies plugins into the new profile. `--clone` copies the config but not `plugins/`, so the new profile would list the plugin as enabled with no files behind it. Both come from Hermes's docs and were not tested.
+
+### Alternative: copy from a checkout with `scripts/install.sh`
+
+```sh
+git clone https://github.com/newtonapple/hermes-openui.git
+cd hermes-openui
+sh scripts/install.sh                                       # the default profile
+sh scripts/install.sh --home ~/.hermes/profiles/<name>      # a named profile
+```
+
+The script copies the 1.8 MB the plugin needs at run time into `<home>/plugins/hermes-openui` and enables it. It needs only `sh` and `cp`, and no network after the clone. That suits three cases: you are offline, you want to try changes you have not committed, or you already have a checkout and want it in several profiles with one command each.
+
+What you give up:
+
+| | `hermes plugins install` | `scripts/install.sh` |
+|---|---|---|
+| Security scan at install | yes | no |
+| Source recorded by Hermes | yes | no |
+| `hermes plugins update` and `check-updates` | work | do not work, there is no Git record |
+| Disk per profile | about 10 MB | 1.8 MB |
+| Needs the network | yes | no, after the clone |
+| Uncommitted changes | not included | copied as they are |
+
+Options: `--home DIR` picks the Hermes home, and `--no-enable` copies the files without enabling the plugin. An existing copy moves to `<home>/cache/hermes-openui-previous-<time>`, never deleted.
+
+To keep Git tracking for a local checkout, use a `file://` URL instead: `hermes plugins install file:///absolute/path/to/hermes-openui --enable`. Hermes warns about the local scheme, then treats it like any Git install (scan, source record, `update`). It installs committed code only. A bare path such as `./hermes-openui` is read as GitHub shorthand and fails.
 
 ### Check that it worked
 
 ```sh
-hermes plugins list | grep hermes-openui      # status: enabled
+hermes plugins list | grep hermes-openui                  # status: enabled
 hermes plugins doctor ~/.hermes/plugins/hermes-openui
 ```
+
+For a named profile, add `-p <name>` to the first command and use `~/.hermes/profiles/<name>/plugins/hermes-openui` in the second.
 
 In a new desktop chat: *"Draw a bar chart of 3, 5 and 2 for a, b and c."* A widget should appear.
 
@@ -133,7 +151,7 @@ plugins:
 
 Installing already created a `plugins:` block in that file (it holds `enabled:`). Add `entries:` **under it**. A second top-level `plugins:` key is a duplicate and is not valid YAML.
 
-If the **Desktop** switch does not appear after a manual copy, copy `desktop/plugin.js` to `~/.hermes/desktop-plugins/hermes-openui/plugin.js` and use **⌘K → Reload desktop plugins**. (Both the switch and this fallback are untested in the app; the plugin file itself is verified against the app's loader.)
+The desktop half is the file `desktop/plugin.js` inside the plugin folder. Per Hermes's docs, the app copies it into `~/.hermes/desktop-plugins/hermes-openui/` on its own when the plugin lands in a profile's `plugins/` folder, and it stays off until you switch it on. Do not copy the file there by hand. The app treats a hand-placed file as a separate plugin and never refreshes it, so it goes stale after an update. If the switch is missing, try **Rescan** on the Capabilities → Plugins page, or restart the app. This comes from Hermes's docs and has not been checked in the app. The plugin file itself is verified against the app's loader.
 
 Timings and memory were measured in headless Chrome, not in the desktop app, so treat them as indicative. In `native` mode the directive shows as a plain line wherever the desktop half is off; switch back with `mode: preview`.
 
@@ -183,24 +201,27 @@ The bundled skill (`hermes-openui:openui-render`, about 640 tokens) is loaded on
 | "Widget is missing component(s): X" | A component's runtime pack was not embedded. Report it; the tool normally picks packs from the source. |
 | The tool says errors and writes nothing | Read `errors`, fix the source, call again. They name the line or variable. |
 | "checked: structural" instead of "node" | Node is not installed, so only the built-in checks ran. Install Node 18+ for full validation. |
-| `hermes plugins install` of a local path fails | Expected: use `sh scripts/install.sh`. |
+| `hermes plugins install ./path` fails | Hermes reads a bare path as GitHub shorthand. Use a `file://` URL (`file:///absolute/path`) or `sh scripts/install.sh`. |
+| `hermes plugins update` says the plugin "was not installed from git" | It was copied with `scripts/install.sh`, which leaves no Git record. Run `hermes plugins remove hermes-openui`, then `hermes plugins install newtonapple/hermes-openui --enable`. |
 
 ## Update, reinstall and uninstall
 
 Add `-p <name>` to the `hermes` commands (and `--home ~/.hermes/profiles/<name>` to `install.sh`) to act on a profile instead of the default home.
 
-| Goal | Command | What happens |
+| Goal | Installed with `hermes plugins install` | Installed with `scripts/install.sh` |
 |---|---|---|
-| Update or reinstall in place | `git pull && sh scripts/install.sh` | The files are replaced. It stays enabled and keeps your settings (such as `mode`). The old copy moves to `<home>/cache/hermes-openui-previous-<time>`; delete it when you are happy. |
-| Update a Git-installed copy | `hermes plugins update hermes-openui` | |
-| Pause it | `hermes plugins disable hermes-openui` | The files stay. Re-run with `enable` to resume. |
-| Uninstall | `hermes plugins remove hermes-openui` | Deletes the plugin folder, takes it out of the enabled list and clears its settings. The rest of `config.yaml` is untouched. |
-| Clean reinstall | `hermes plugins remove hermes-openui`, then `sh scripts/install.sh` | A fresh copy with default settings (`mode` back to `preview`). |
+| Update | `hermes plugins update hermes-openui`. It pulls the default branch and, per Hermes's docs, runs the security scan on the new code before replacing the files. | `git pull && sh scripts/install.sh`. The files are replaced, the plugin stays enabled and keeps its settings, and the old copy moves to `<home>/cache/`. |
+| Reinstall over the top | `hermes plugins install newtonapple/hermes-openui --force --enable` | Run the script again. |
+| Pause | `hermes plugins disable hermes-openui`. The files stay. Use `enable` to resume. | Same. |
+| Uninstall | `hermes plugins remove hermes-openui`. It deletes the plugin folder, takes it out of the enabled list and clears its settings. The rest of `config.yaml` is untouched. | Same. |
+| Clean reinstall with default settings | `remove`, then install again. | `remove`, then run the script. |
 
 Things to know:
 
-- `install.sh` **enables** the plugin every time it runs, including one you disabled on purpose. Use `sh scripts/install.sh --no-enable` to leave the state alone.
-- `remove` does **not** delete the generated widgets in `<home>/widgets/`, the `previous` copies in `<home>/cache/`, or a manual copy of the desktop file at `~/.hermes/desktop-plugins/hermes-openui/`. Delete those yourself if you want them gone. Old chat messages point at the widget files: delete a file and that message's widget no longer shows.
+- `hermes plugins update` fails on a script-installed copy. Remove it and install with `hermes plugins install` to get updates.
+- `install.sh` enables the plugin every time it runs, including one you disabled on purpose. Use `--no-enable` to leave the state alone.
+- `remove` keeps the generated widgets in `<home>/widgets/` and any `previous` copies in `<home>/cache/`. Delete them yourself if you want them gone. Old chat messages point at the widget files, so deleting one removes that message's widget.
+- If you copied `desktop/plugin.js` into `~/.hermes/desktop-plugins/hermes-openui/` by hand, as an earlier version of this README suggested, delete that folder. The app does not manage a hand-placed file.
 - Widgets already in a chat keep working after an uninstall, because each is a self-contained file.
 
 ## Versioning
@@ -213,7 +234,7 @@ The version is in `plugin.yaml`. Each release has an entry in [CHANGELOG.md](CHA
 | Minor | A new component, argument, setting or display mode. Existing widgets keep working. |
 | Patch | Bug fixes, documentation, or rebuilt assets with no change in behavior. |
 
-`hermes plugins install` follows the default branch. It does not accept a tag for `--ref`, only a full 40-character commit SHA. To install an exact release, look up the commit its tag points to and pin that:
+Without `--ref`, `hermes plugins install` follows the default branch, `main`, which can be ahead of the latest release. It does not accept a tag for `--ref`, only a full 40-character commit SHA. To install an exact release, look up the commit its tag points to and pin that:
 
 ```sh
 SHA=$(git ls-remote https://github.com/newtonapple/hermes-openui 'refs/tags/v0.1.0^{}' | cut -f1)
