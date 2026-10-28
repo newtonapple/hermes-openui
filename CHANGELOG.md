@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-28
+
 ### Changed
 
 - **Native mode fills the chat column.** The desktop half capped every widget at 640 px, a limit copied from the preview frame. The cap is gone: the widget root is `width: 100%`, so charts, tables, the Metric row, tabs and code blocks use the whole column. InfraMap, Dag, Erd and images keep their natural size, left aligned. A column narrower than the content still shrinks a diagram to 78% and then scrolls it, and a Table and a CodeBlock scroll in place. Preview mode is unchanged: the app caps a preview frame at 40rem and never above 640 px (560 px at its default 14 px font), and a page cannot change that.
@@ -101,7 +103,8 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.2
 [0.2.1]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.1
 [0.2.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.0
 [0.1.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.1.0
