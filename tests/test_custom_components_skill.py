@@ -839,9 +839,9 @@ class Docs(unittest.TestCase):
     def test_the_agents_release_steps_cover_the_second_skill(self):
         self.assertIn("skills/*/SKILL.md", read("AGENTS.md"))
 
-    # The newest release already published when this work was written. An entry under it, or under any older one, would be a
-    # change that claims to be in a release that shipped without it.
-    LAST_PUBLISHED = (0, 2, 0)
+    # The skill and its description change shipped in 0.2.1, so their changelog entries stay under that heading. A rule such as
+    # "under Unreleased or the new release" passes only until the next release moves the heading, and then it blocks that release.
+    SHIPPED_IN = "0.2.1"
 
     def changelog_heading_of(self, phrase):
         """The `## [...]` heading whose section holds `phrase`."""
@@ -849,30 +849,14 @@ class Docs(unittest.TestCase):
         self.assertEqual(len(holders), 1, "%r should be in exactly one release section" % phrase)
         return re.match(r"## \[([^\]]+)\]", holders[0]).group(1)
 
-    def assert_unreleased_or_in_the_new_release(self, heading):
-        # Allowed: `Unreleased`, or the release the plugin's own version names, provided it is newer than the published ones.
-        # The release step (AGENTS.md section 5) turns the first into the second, so both must pass.
-        if heading == "Unreleased":
-            return
-        version = tuple(int(n) for n in heading.split("."))
-        self.assertGreater(version, self.LAST_PUBLISHED, "the entry sits under a release that was already published")
-        self.assertGreaterEqual(version, tuple(int(n) for n in helpers_version().split(".")), "older than the plugin's version")
-
-    def test_the_changelog_records_the_skill_and_the_description_change_under_unreleased_or_the_new_release(self):
+    def test_the_changelog_records_the_skill_and_the_description_change_under_the_release_that_shipped_them(self):
         text = read("CHANGELOG.md")
         self.assertRegex(text, r"(?s)### Added.*custom-components")
         self.assertRegex(text, r"(?s)### Changed.*27 of 28.*28 of 28")
         self.assertNotRegex(text, "\u2014|\u2013")
         for phrase in ("A bundled skill, `hermes-openui:custom-components`", "27 of 28"):
             with self.subTest(entry=phrase):
-                self.assert_unreleased_or_in_the_new_release(self.changelog_heading_of(phrase))
-
-    def test_the_placement_rule_refuses_a_published_heading_and_accepts_the_release_rename(self):
-        for bad in ("0.2.0", "0.1.0"):
-            with self.subTest(heading=bad), self.assertRaises(AssertionError):
-                self.assert_unreleased_or_in_the_new_release(bad)
-        self.assert_unreleased_or_in_the_new_release("Unreleased")
-        self.assertGreater((0, 2, 1), self.LAST_PUBLISHED)
+                self.assertEqual(self.changelog_heading_of(phrase), self.SHIPPED_IN)
 
     def test_agents_md_gives_a_measured_test_time_and_the_link_line_form_for_a_release(self):
         text = read("AGENTS.md")
