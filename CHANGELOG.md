@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-28
+
 ### Added
 
 - **A bundled skill, `hermes-openui:custom-components`.** It teaches an agent to write a component pack, check it, link it in the `components` setting (after asking the user), fetch the reference again and draw a sample. It has one complete template, and the tests load, validate and render that template (the pack loader, the Node validator and a Chrome render), so a change that breaks it fails the build. It also has a short path for making a component built in. A plugin skill is not in the prompt's skill index, so a one-line pointer to it now sits in the `render_widget(reference=true)` result, in the first "Unknown component" error and in the `openui-render` skill, which no longer points to a docs path that the installer does not copy.
@@ -82,6 +84,7 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.1
 [0.2.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.0
 [0.1.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.1.0
