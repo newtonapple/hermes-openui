@@ -2,7 +2,7 @@
 
 For AI agents that **install**, **use** or **change** this plugin. Humans: read `README.md`. Long-form design and pitfalls: `docs/development.md`.
 
-`hermes-openui` is a Hermes Agent plugin. It gives the model one tool, `render_widget`, that turns OpenUI Lang source into an inline widget (dashboards, charts, DAG/ER diagrams, maps) in the **Hermes desktop app**. Python half (stdlib only): `__init__.py`, `tools.py`, `page.py`, `lint.py`, `bundle.py`, `schemas.py`. Shipped, generated browser runtime: `assets/`. Optional native renderer: `desktop/plugin.js`. Build sources for the generated files: `build/`.
+`hermes-openui` is a Hermes Agent plugin. It gives the model two tools: `render_widget` turns OpenUI Lang source into an inline widget (dashboards, charts, DAG/ER diagrams, infrastructure and geographic maps) in the **Hermes desktop app**, and `export_widgets` saves widgets or a report as one standalone HTML file. Users can link their own component packs (`packs.py`, guide in `docs/custom-components.md`). Python half (stdlib only): `__init__.py`, `tools.py`, `page.py`, `lint.py`, `bundle.py`, `schemas.py`, `packs.py`, `export.py`, `cli.py`. Shipped, generated browser runtime: `assets/`. Optional native renderer: `desktop/plugin.js`. Build sources for the generated files: `build/`.
 
 ## 1. Install (do exactly this)
 
@@ -31,6 +31,8 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 4. On `ok: true`, put the returned `directive` **alone on its own line** in your reply, after at most one sentence. Do not repeat the widget's data in prose.
 5. One widget per reply (use Tabs/Cards for sections). Plain text for a single value or a short answer. Never invent data to fill a layout. Button and Choice clicks arrive as your next user turn: act, then render a NEW widget.
 6. Patterns and pitfalls: `skill_view("hermes-openui:openui-render")`.
+7. To save, share or export widgets, call `export_widgets` (a separate tool). Each section is `{title?, source | widget}`; `widget` is the file name from an earlier render result without `.html`. Leave `path` out unless the user named a place, and never work around a refusal. Reply with the result's `media_tag` alone on its own line, with no backticks; never paste the HTML.
+8. If `reference=true` ends with "Custom components", the user linked packs: use them like built-ins, in preview mode only. Do not invent a component name.
 
 ## 3. Change the code
 
@@ -40,8 +42,14 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 - **Never edit generated files by hand:** `assets/*`, `desktop/plugin.js`, `THIRD_PARTY_NOTICES.md`. Change `build/src/` and rebuild.
 - **Vet before adding any npm dependency** (postinstall scripts, telemetry). Installs run with `--ignore-scripts`; the lockfile is `build/package-lock.json`; use `npm ci`.
 - **Context discipline.** The schema description (`schemas.py`) is at most about 700 characters, its first sentence is at most 60 characters and names DAG/ER/maps/dashboards (that sentence is all Tool Search lists). The component reference is returned by `render_widget(reference=true)`, never put in the schema. Extra tools or long descriptions cost every chat.
-- **Description words are the search index.** Tool Search finds the tool by the words in its description (BM25, gated on the rarest query word). `tests/test_plugin.py` pins the words; `tools/verify_discovery.py` measures recall (20 of 20 keyword queries). Re-run it after changing the description.
+- **Description words are the search index.** Tool Search finds the tool by the words in its description (BM25, gated on the rarest query word). `tests/test_plugin.py` pins the words; `tools/verify_discovery.py` measures recall (25 of 25 keyword queries, infrastructure and architecture included). Re-run it after changing the description.
 - **Page budget:** a preview page must stay under 480 KB (the app reads at most 512 KiB and silently truncates). Only the packs a widget uses are embedded. Images: 100 KB each.
+- **Packs are an API (`api: 1`).** A pack is a JS file with a JSON header (`packs.py`). Changing the header format, `window.__HM`, the `validate` hook or what the runtime hands to packs breaks users' packs, so it is a major change: bump the `api` number and say so in the changelog. `tests/test_pack_docs.py` runs the guide's example, so keep `docs/custom-components.md` and the code in step.
+- **Packs never run in native mode**, and the forbidden-API lint in `packs.py` is a guard against mistakes, not a boundary. The sandbox is the boundary. Never loosen it, and never let a pack read the app, files or the network.
+- **InfraMap is the built-in `infra` pack** (`build/src/components/infra.jsx`, `build/src/packs/infra.jsx`, checks in `build/src/validate.mjs`). Change its signatures in the zod schemas and rebuild; `assets/components.md` is generated. A user pack that reuses an `Infra*` name is skipped.
+- **`export_widgets` writes only `.html` or `.htm`, and only after `export.check_destination` allows the path.** Hermes's own guard (`agent.file_safety`) runs first and the built-in protected list always runs as well, because the real guard allows `~/.hermes/plugins` and `/etc`. A location that needs approval is refused, never bypassed. The default folder is `<home>/exports`, never `cache/documents` (Hermes prunes it).
+- **`scripts/install.sh` copies every top-level `*.py`.** A hard-coded list once left new modules behind and the plugin failed to import. `tests/test_install.py` installs into a temp home and compares.
+- **Launch Chrome only through `tools/shoot.py`** (it passes the flags that keep it off the keychain). Never start a browser another way.
 - **Do not touch Hermes core** and do not rebind its functions. Paths come from `get_hermes_home()` at call time (one process serves several profiles).
 - **Local installs and iCloud:** never run `npm ci` or create `.git`-heavy trees inside a synced folder (iCloud). Build in a normal directory.
 - Ask the owner before committing, tagging or publishing.
@@ -51,12 +59,16 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 ```sh
 python3 -m unittest discover -s tests              # must pass; ~2 s
 hermes plugins validate .                          # must print `Validation passed` with every check ticked (security scan, desktop surface, declared tools).
-                                                   # One warning is expected: `private core imports` from tools/verify_*.py. Those dev scripts test Hermes's Tool Search
-                                                   # on purpose and the installer does not copy them. Any other warning is new: fix it.
+                                                   # One warning is expected: `private core imports`. It names tools/verify_*.py (dev scripts that test Hermes's Tool Search on purpose,
+                                                   # not installed) and export.py's guarded import of agent.file_safety (the plugin falls back to its own list if that
+                                                   # module moves). Any other warning is new: fix it.
 cd build && npm ci && npm run build                # regenerates assets/ and desktop/plugin.js; commit the results with the source change
 node scripts/notices.mjs                           # after a dependency change (from build/)
 python3 tools/check_docs.py                        # docs/ui-components checks
-python3 tools/shoot.py <file.oui> <out.png>        # screenshot a widget (needs Chrome; see its --help)
+python3 tools/shoot.py <file.oui> <out.png> [--pack P.js]   # screenshot a widget, optionally with a custom pack (needs Chrome)
+python3 tools/shoot.py --html <file.html> <out.png> --theme dark   # screenshot an exported page from file://
+hermes openui components check <pack.js>           # check a pack: header, forbidden APIs, and (with Node) that it loads and registers what it lists
+hermes openui components list | widgets | export   # what is linked | rendered widgets | save widgets as one HTML page
 ```
 
 Runtime checks against a real Hermes, in an isolated home: install with `scripts/install.sh --home <fresh dir>`, then `HERMES_HOME=<dir> ~/.hermes/hermes-agent/venv/bin/python tools/verify_runtime.py` and `tools/verify_discovery.py`.
@@ -65,7 +77,8 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 - [ ] Unit tests pass; `hermes plugins validate .` passes.
 - [ ] If `build/src/` changed: rebuilt, `assets/packs.json` hashes updated, and the **desktop loader check** passed (`build/tests/plugin-loader-check.mjs` runs inside `npm run build`).
 - [ ] If a component changed: its page and example in `docs/ui-components/` updated, `tools/check_docs.py` clean.
-- [ ] If the schema changed: `tools/verify_discovery.py` still finds 20 of 20 keyword queries.
+- [ ] If a schema changed: `tools/verify_discovery.py` still finds 25 of 25 render keyword queries and ranks `export_widgets` first for all 7 export queries.
+- [ ] If the pack API or export changed: its guide (`docs/custom-components.md`, `docs/exporting.md`) and the tests that run the guide's examples still pass.
 - [ ] You rendered at least one widget and looked at it (`tools/shoot.py`); a passing build does not prove it looks right.
 
 ## 4. Pitfalls already paid for (details in `docs/development.md`)
@@ -80,6 +93,9 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 - gzip bytes differ between Node/zlib versions; compare the `sha256` of the uncompressed bundle in `assets/packs.json`.
 - `tools/check_docs.py` ends an ```` ```openui ```` block at the first triple backtick, so an example whose string holds a code fence can never match its `.oui` file. Write the fence as `\u0060\u0060\u0060` inside the string (the parser accepts it and renders the same), as `docs/ui-components/examples/markdown-code-table.oui` does.
 - `build/node_modules` may be a symlink to a local install. Never copy it into a synced folder or a commit; `build/dist/` is regenerable output and is git-ignored.
+- The runtime's accent fallback `AccentColor` is not recognized by Chrome 145: outside Hermes (an exported page, a plain browser) a Button loses its border. The export page defines its own `--accent` for that reason. Fixing `build/src/theme.js` changes the core bundle.
+- Without Node, a source that uses custom components gets no zod check and no `validate` hook, and the browser draws a bad argument as if it were missing, with no error.
+- `hermes profile ...` commands ignore a scratch `HERMES_HOME`. Never run `profile create` to test.
 
 ## 5. Release a new version
 

@@ -6,16 +6,37 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ### Changed
 
+- `scripts/install.sh` copies every top-level `.py` file and the `examples` folder. A fixed file list would have left the new modules behind, and the installed plugin would have failed to import.
+- `assets/validate.cjs` is rebuilt so it accepts `--pack`. The browser core and the built-in packs are byte-identical to before.
 - The README and AGENTS.md now recommend `hermes plugins install newtonapple/hermes-openui --enable`. They describe `scripts/install.sh` as the alternative for offline use and uncommitted changes, and compare the two. Only a Git install records its source, so only a Git install works with `hermes plugins update`.
+- The component reference the agent loads on first use grows from about 2,800 to 3,100 tokens. That is the four InfraMap lines, and every chat that uses `render_widget` pays it once.
+- The `render_widget` description names infrastructure and server maps and architecture diagrams. Before, a search for `infrastructure map` or `architecture diagram` did not find the tool. On the discovery check, keyword recall went from 21 of 25 to 25 of 25, and `export_widgets` still ranks first on all 7 export queries. The description grows by 55 characters, which costs about 14 tokens on every API call when Tool Search is off.
+- The bundled skill picks `InfraMap` for infrastructure, says to link nodes by id and to leave `status` out unless the user or a tool gave it, and no longer sends network diagrams to `Dag`. It tells the agent to reply to an export with the result's `media_tag`.
 
 ### Added
 
+- **Custom component packs.** Link a JavaScript file, or a folder of them, in the new `components` setting and the agent can use the components it adds, in `render_widget` and `export_widgets`. A pack's first comment is a JSON header, so Hermes learns its components without running it. A page embeds a pack only when the source uses one of its components. Preview mode only: native mode refuses them. See `docs/custom-components.md`.
+- **InfraMap**, built in. `InfraMap`, `InfraZone`, `InfraNode` and `InfraLink` draw zones of nodes joined by labeled links, with an icon for each kind of node, status dots and a legend. A link that names a label instead of a node id is rejected, and the message gives the right id. It is an optional `infra` pack, so a page carries it (about 9 KB) only when the source calls one of its components. See `docs/ui-components/InfraMap.md`.
+- **`export_widgets`**, a second tool that saves widgets already shown in the chat, new OpenUI Lang, or both as one standalone offline HTML page. It writes to the path the user names, or to `exports/` in the profile's Hermes home, and refuses protected places. New `export_dir` setting. See `docs/exporting.md`.
+- `export_widgets` results carry `artifact_path` and `media_tag` (`MEDIA:` plus the path), and the reply instruction tells the agent to put the tag alone on its own line, with no backticks. The Desktop app and the messaging gateways read these to present the file. A refused export carries neither. Checked against Hermes's source and its own `extract_media`, not in a live chat.
+- `hermes openui components list` and `check`, `hermes openui widgets`, and `hermes openui export`.
+- `tools/shoot.py --pack` links a pack when taking a screenshot. `--html`, `--eval` and `--before` load a saved page from `file://`.
+- `tools/verify_discovery.py` measures both tools together.
 - A "Multiple profiles" section. Hermes keeps plugin files and the enabled list per profile, so the plugin is installed once per profile.
 
 ### Fixed
 
+- The desktop-loader test failed on a fresh clone after `npm ci`, because the check wrote into `build/dist`, which only a build creates. The check now creates the folder.
 - The README told users to copy `desktop/plugin.js` into `~/.hermes/desktop-plugins/` by hand. The app copies it itself, and a hand-placed file is never refreshed, so it goes stale. If you followed that advice, delete `~/.hermes/desktop-plugins/hermes-openui/`.
 - The README, AGENTS.md and the installer said Hermes cannot install from a local path. A `file://` URL works. A bare path still fails.
+
+### Known issues
+
+- Without Node installed, a source that uses custom components gets no type check and no `validate` hook, and the browser draws a bad argument as if it were missing, with no error.
+- The runtime's accent fallback `AccentColor` is not recognized by Chrome 145, so outside Hermes a Button loses its border. Exported pages define their own accent. The runtime itself is unchanged.
+- An InfraMap with more than about four zones scrolls sideways inside the chat column. In a six-zone test the sixth zone was cut off with no visible cue, and the screenshot tool hides scrollbars, so the desktop app's behavior is unchecked.
+- `hermes plugins validate` warns (catalog rule 9, not a failure) that `export.py` imports Hermes's private `agent.file_safety` to reuse its write guard. The import is guarded: if the module moves, the plugin falls back to its own protected-places list. A catalog submission would need a documented API for this, or a decision to drop the import.
+- Exported pages were checked in Chrome only. Safari, Firefox and the print layout were not tried.
 
 ## [0.1.0] - 2026-10-24
 

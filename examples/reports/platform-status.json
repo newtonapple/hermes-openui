@@ -1,0 +1,17 @@
+{
+  "title": "Platform status",
+  "sections": [
+    {
+      "title": "Architecture",
+      "source": "root = Stack([map])\nmap = InfraMap([zClients, zEdge, zApp, zData], [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11], \"Web platform (sample data)\")\nzClients = InfraZone(\"Clients\", [browsers, mobile])\nbrowsers = InfraNode(\"browsers\", \"Browsers\", \"client\")\nmobile = InfraNode(\"mobile\", \"Mobile app\", \"client\")\nzEdge = InfraZone(\"Edge\", [cdn, lb])\ncdn = InfraNode(\"cdn\", \"CDN\", \"cloud\", \"up\", \"static files\")\nlb = InfraNode(\"lb\", \"Load balancer\", \"gateway\", \"up\", \"HTTPS :443\")\nzApp = InfraZone(\"Application\", [web, api, queue, worker])\nweb = InfraNode(\"web\", \"Web servers\", \"service\", \"up\", \"2 instances\")\napi = InfraNode(\"api\", \"API\", \"service\", \"up\", \"REST\")\nqueue = InfraNode(\"queue\", \"Message queue\", \"queue\", \"up\")\nworker = InfraNode(\"worker\", \"Worker\", \"service\", \"degraded\", \"2 of 3 running\")\nzData = InfraZone(\"Data\", [cache, pgp, pgr, files])\ncache = InfraNode(\"cache\", \"Redis cache\", \"database\", \"up\")\npgp = InfraNode(\"db-primary\", \"Postgres primary\", \"database\", \"up\")\npgr = InfraNode(\"db-replica\", \"Postgres replica\", \"database\", \"up\", \"read only\")\nfiles = InfraNode(\"files\", \"Object storage\", \"storage\", \"up\")\nl1 = InfraLink(\"browsers\", \"cdn\", \"HTTPS\")\nl2 = InfraLink(\"mobile\", \"lb\", \"HTTPS\")\nl3 = InfraLink(\"cdn\", \"lb\", \"cache miss\")\nl4 = InfraLink(\"lb\", \"web\", \"HTTP\")\nl5 = InfraLink(\"web\", \"api\", \"REST\")\nl6 = InfraLink(\"api\", \"queue\", \"enqueue\")\nl7 = InfraLink(\"queue\", \"worker\", \"pull\")\nl8 = InfraLink(\"api\", \"cache\", \"get / set\")\nl9 = InfraLink(\"api\", \"db-primary\", \"SQL\")\nl10 = InfraLink(\"db-primary\", \"db-replica\", \"replicate\", \"dashed\")\nl11 = InfraLink(\"worker\", \"files\", \"uploads\")"
+    },
+    {
+      "title": "Traffic",
+      "source": "root = Stack([tiles, trend])\ntiles = Stack([rpm, errors, p95], \"row\", \"m\", true)\nrpm = Metric(\"Requests / min\", \"2,214\", \"+4% vs 1h ago\", \"good\")\nerrors = Metric(\"Error rate\", \"0.8%\", \"+0.3 pt\", \"warn\")\np95 = Metric(\"p95 latency\", \"240 ms\", \"+30 ms\", \"warn\")\ntrend = LineChart([\"10:00\", \"10:10\", \"10:20\", \"10:30\", \"10:40\"], [Series(\"Web requests / min\", [820, 860, 905, 890, 930]), Series(\"API requests / min\", [1180, 1210, 1260, 1240, 1284])])"
+    },
+    {
+      "title": "Notes",
+      "source": "root = Stack([m])\nm = Markdown(\"**worker** is degraded: 2 of 3 instances are running. Check the queue depth before the next deploy.\\n\\n- restart the failed worker\\n- re-run the smoke test\")"
+    }
+  ]
+}

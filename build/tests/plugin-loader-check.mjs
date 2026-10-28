@@ -15,6 +15,7 @@ const body = ts.slice(a, b);
 const stub = `const sdkImportMap = (): Record<string,string> => ({
   '@hermes/plugin-sdk': 'blob:sdk', 'react/jsx-dev-runtime': 'blob:jsxdev', 'react/jsx-runtime': 'blob:jsx', react: 'blob:react' });\n`;
 const js = (await transform(stub + body + "\nexport { rewriteSpecifiers, unsupportedImports, importSpecifierRe, codeRanges, inCode };\n", { loader: "ts", format: "esm" })).code;
+fs.mkdirSync(path.join(BUILD, "dist"), { recursive: true }); // a fresh clone has no dist/ until the first build
 const tmp = path.join(BUILD, "dist/_loader-replica.mjs");
 fs.writeFileSync(tmp, js);
 const L = await import(tmp);

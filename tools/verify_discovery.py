@@ -47,10 +47,12 @@ noise = [{"type": "function", "function": {"name": "mcp__rea__" + n, "descriptio
 print("catalog: %d curated core tools deferred + %d MCP-style noise tools + render_widget" % (len(core_deferred), len(noise)))
 
 KEYWORD = ["dag", "dag diagram", "chart", "bar chart", "pie chart", "line chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map",
-           "er diagram", "database schema", "network topology", "visualize data", "inline widget", "kpi tiles", "pipeline"]
+           "er diagram", "database schema", "network topology", "visualize data", "inline widget", "kpi tiles", "pipeline",
+           "infrastructure map", "infrastructure diagram", "architecture diagram", "network diagram", "server map"]
 SENTENCE = ["draw a dag", "draw a DAG of my build pipeline", "make a bar chart of these numbers", "show a pie chart of the results",
             "visualize the database schema as an ER diagram", "put these sites on a map", "build a dashboard with KPIs", "network topology diagram",
-            "line chart of tokens per second over time", "show a flowchart of the process"]
+            "line chart of tokens per second over time", "show a flowchart of the process",
+            "map out my infrastructure", "draw my server architecture", "diagram my office network"]
 UNRELATED = ["send an email", "take a screenshot of the screen", "create a calendar event", "restart the service"]
 
 
@@ -84,3 +86,28 @@ for label, desc in (("first draft (before tuning)", V1), ("SHIPPED description",
     if desc is None and listing:
         line = [l for l in listing.splitlines() if "render_widget" in l]
         print("  always-visible listing line:", line[0] if line else "n/a")
+
+
+# --- Both tools together: adding export_widgets must not cost render_widget its recall, and export queries must find export_widgets.
+ex = next((d for d in defs if d["function"]["name"] == "export_widgets"), None)
+if ex is None:
+    print("\n(export_widgets is not registered in this home: skipping the combined check)")
+else:
+    EXPORT = ["export html", "save as html", "export dashboard", "standalone page", "offline report", "share a report", "download chart"]
+    base = [d for d in core_deferred if d["function"]["name"] != "export_widgets"]  # core_deferred already holds it (it is a deferrable plugin tool)
+    combined = build_catalog(base + noise + [copy.deepcopy(rw), copy.deepcopy(ex)])
+    print("\n=== BOTH TOOLS in one catalog (%d chars export description)" % len(ex["function"]["description"]))
+    for label, qs, target in (("render keyword", KEYWORD, "render_widget"), ("render sentence", SENTENCE, "render_widget"), ("export", EXPORT, "export_widgets")):
+        ranks = []
+        for q in qs:
+            top = [e.name for e in search_catalog(combined, q, limit=5)]
+            ranks.append((q, top.index(target) + 1 if target in top else None))
+        miss = [q for q, r in ranks if not r]
+        first = sum(1 for q, r in ranks if r == 1)
+        print("  %-16s found %2d of %2d (rank 1: %2d) | misses: %s" % (label, len(qs) - len(miss), len(qs), first, miss if miss else "none"))
+    wrong = [q for q in EXPORT if [e.name for e in search_catalog(combined, q, limit=5)][:1] != ["export_widgets"]]
+    print("  export queries where export_widgets is NOT first:", wrong if wrong else "none")
+    fp = [q for q in UNRELATED if {e.name for e in search_catalog(combined, q, limit=5)} & {"render_widget", "export_widgets"}]
+    print("  false positives on unrelated requests:", fp if fp else "none")
+    line = [l for l in build_catalog_listing_with_form(base + [copy.deepcopy(rw), copy.deepcopy(ex)], max_tokens=4000)[0].splitlines() if "_widget" in l]
+    print("  always-visible listing lines:", *line, sep="\n    ")

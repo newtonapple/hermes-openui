@@ -23,8 +23,8 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-FILES="plugin.yaml __init__.py schemas.py tools.py bundle.py lint.py page.py README.md LICENSE THIRD_PARTY_NOTICES.md"
-DIRS="assets skills desktop"
+FILES="plugin.yaml __init__.py README.md LICENSE THIRD_PARTY_NOTICES.md"   # the Python modules are copied by glob below: a hard-coded list once left new modules behind
+DIRS="assets skills desktop examples"
 for f in $FILES $DIRS assets/packs.json desktop/plugin.js skills/openui-render/SKILL.md; do
   [ -e "$SRC/$f" ] || { echo "incomplete checkout: $SRC/$f is missing" >&2; exit 1; }
 done
@@ -34,6 +34,7 @@ mkdir -p "$HOME_DIR/plugins" "$HOME_DIR/cache"
 STAGE=$(mktemp -d "$HOME_DIR/cache/hermes-openui-stage.XXXXXX")
 trap 'rm -rf "$STAGE"' EXIT   # a failed copy must not leave a half-built stage behind (after the final mv it no longer exists)
 for f in $FILES; do cp "$SRC/$f" "$STAGE/"; done
+for f in "$SRC"/*.py; do cp "$f" "$STAGE/"; done
 for d in $DIRS; do cp -R "$SRC/$d" "$STAGE/"; done
 
 if [ -e "$DEST" ]; then

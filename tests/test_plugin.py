@@ -52,9 +52,9 @@ class Contract(unittest.TestCase):
         self.ctx = FakeCtx()
         helpers.load().register(self.ctx)
 
-    def test_registers_exactly_the_declared_tool(self):
+    def test_registers_exactly_the_declared_tools(self):
         names = [t["name"] for t in self.ctx.tools]
-        self.assertEqual(names, ["render_widget"])
+        self.assertEqual(names, ["render_widget", "export_widgets"])
         yml = (ROOT / "plugin.yaml").read_text(encoding="utf-8")
         declared = re.findall(r"^\s+-\s+(\w+)\s*$", yml.split("provides_tools:")[1].split("config_schema:")[0], re.M)
         self.assertEqual(sorted(declared), sorted(names))
@@ -73,7 +73,7 @@ class Contract(unittest.TestCase):
     def test_description_carries_the_words_people_say(self):
         # Tool Search finds a tool by the words in its text; each of these was a measured miss before they were added.
         text = self.ctx.tools[0]["schema"]["description"].lower()
-        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar"):
+        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar", "infrastructure", "architecture", "server"):
             with self.subTest(word=word):
                 self.assertIn(word, text)
 
@@ -108,14 +108,14 @@ class Contract(unittest.TestCase):
         self.assertTrue(text.startswith("---\nname: openui-render\n"))
         self.assertLess(len(text), 4000, "loaded in full each time the skill is used")
 
-    def test_a_hermes_without_register_skill_still_gets_the_tool(self):
+    def test_a_hermes_without_register_skill_still_gets_the_tools(self):
         class Old(FakeCtx):
             def register_skill(self, *a, **k):
                 raise AttributeError("no register_skill")
 
         ctx = Old()
         helpers.load().register(ctx)
-        self.assertEqual(len(ctx.tools), 1)
+        self.assertEqual([t["name"] for t in ctx.tools], ["render_widget", "export_widgets"])
 
 
 @unittest.skipUnless(shutil.which("node") and (ROOT / "build" / "node_modules" / "esbuild").exists(), "needs Node and `npm ci` in build/")

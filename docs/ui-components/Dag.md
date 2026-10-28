@@ -110,4 +110,4 @@ n7 = DagNode("archive", "Archive")
 
 ## Related
 
-[Erd](Erd.md) draws database tables. [Table](Table.md) lists steps with details. [Card](Card.md) wraps a graph under a heading.
+[InfraMap](InfraMap.md) draws servers and services in zones, with labeled links. [Erd](Erd.md) draws database tables. [Table](Table.md) lists steps with details. [Card](Card.md) wraps a graph under a heading.

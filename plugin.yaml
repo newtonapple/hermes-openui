@@ -3,15 +3,26 @@ version: 0.1.0
 manifest_version: 2
 api_version: 1
 requires_hermes: ">=0.22.5"
-description: "Draw charts, DAG/ER diagrams, maps, tables and dashboards as rich inline widgets in the Hermes desktop app. OpenUI Lang, fully local, no network."
+description: "Draw charts, DAG/ER diagrams, infrastructure maps, geographic maps, tables and dashboards as rich inline widgets in the Hermes desktop app. OpenUI Lang, fully local, no network."
 author: "David Dai"
 license: MIT
 tags: [desktop, widgets, charts, diagrams, openui]
 provides_tools:
   - render_widget
+  - export_widgets
 config_schema:
   mode:
     type: str
     default: preview
     choices: [preview, native]
     description: "preview = a self-contained HTML widget shown by the app's built-in ::preview (works out of the box). native = OpenUI source rendered by this plugin's desktop half via ::openui (enable the desktop half first, in Capabilities > Plugins)."
+  components:
+    type: list
+    default: []
+    label: "Custom component packs"
+    description: "Paths to component pack files (.js), or to folders of them. Their components become available to render_widget and export_widgets in preview mode. See docs/custom-components.md."
+  export_dir:
+    type: str
+    default: ""
+    label: "Export folder"
+    description: "Where export_widgets saves HTML files when the request names no path. Empty means the exports folder in this profile's Hermes home."

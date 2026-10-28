@@ -100,4 +100,4 @@ p6 = GeoPoint("nyc-1", 40.71, -74.01)
 
 ## Related
 
-[Table](Table.md) lists sites with details. [Metric](Metric.md) shows one number per site. [Card](Card.md) wraps a map under a heading.
+[InfraMap](InfraMap.md) draws machines and services by role instead of by place. [Table](Table.md) lists sites with details. [Metric](Metric.md) shows one number per site. [Card](Card.md) wraps a map under a heading.

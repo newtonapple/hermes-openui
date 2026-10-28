@@ -33,11 +33,45 @@ A widget page must fit the app's 512 KiB file read (it truncates silently and a 
 | `charts` | LineChart, AreaChart, PieChart, RadarChart, Series | +84 KB |
 | `map` | GeoMap, GeoPoint | +15 KB |
 | `diagrams` | Dag, DagNode, Erd, Entity, Relation | +7 KB |
+| `infra` | InfraMap, InfraZone, InfraNode, InfraLink | +9 KB |
 | `text` | Markdown, CodeBlock, Faq, FaqItem, Choice | +6 KB |
 
 `page.select_packs` scans the source for `Name(` calls (text inside strings is blanked first) and embeds only the packs those names live in (`assets/packs.json` maps component → pack). A dashboard with no charts is about 275 KB; every pack is about 390 KB. If detection ever misses, the page prints `Widget is missing component(s): X` instead of showing a silently partial widget.
 
 Of the core's 267 KB, `zod` is 444 KB raw and React DOM 205 KB; OpenUI's own visual components are about 12 %. OpenUI's ready-made wrappers for tabs, cards and the like pull in syntax highlighting, math and markdown engines (hundreds of KB each), so those components are written locally; only the four charts are OpenUI's own code. Provenance: `build/src/core-components.jsx` and `build/src/packs/*.jsx`.
+
+## Custom component packs
+
+The runtime already had a plugin point: a pack is a script that calls `window.__HM.register({name, components})`, with React, zod and `defineComponent` taken from `window.__HM.mods`, and `page.build_page` already embedded packs as blobs. User-linked packs reuse that, so **the core and the built-in packs did not change** and stay byte-identical to a clean rebuild.
+
+What was added around it:
+
+| Piece | Job |
+|---|---|
+| `packs.py` | Reads the JSON header (`api`, `name`, a component to reference-line map) so Python knows a pack's components without running JavaScript. Checks names against the built-ins and other packs, size (200 KB) and forbidden APIs. A broken pack is skipped and reported, never fatal. |
+| `lint.py`, `tools.py` | Take the built-in names plus the packs' names, append the packs' reference lines to `reference=true`, refuse custom components in native mode, and report broken packs as `pack_warnings`. |
+| `page.py` | Embeds only the packs whose components the source calls, gzipped with a fixed timestamp so the bytes are reproducible. |
+| `build/src/validate.mjs` | `--pack FILE` evaluates the pack in a bare `vm` context against the same React, zod and `defineComponent`, so zod schemas are enforced as in the page. It runs the pack's `validate(typeName, props)` hook on each of its nodes, and fails if the header and the registered components disagree. |
+
+Decisions worth knowing:
+
+- **A header, not introspection.** Running the script to learn its components needs Node and a sandbox on every call. The header costs the author one JSON comment, and the validator then checks the header against reality.
+- **Plain scripts, no imports.** A pack needs no build step. Authors who want JSX can bundle it themselves the way `build.mjs` bundles the built-in packs.
+- **Preview mode only.** The sandboxed frame already contains any script an agent can put in `::preview`. Native mode renders in the app with full authority, so it refuses packs.
+- **The lint is not a boundary.** It matches words in code with strings and comments blanked. The sandbox is the boundary.
+- **Without Node a custom component is unchecked.** The structural lint passes, and the browser draws a bad argument as if it were missing, with no error (seen when rendering the guide's example).
+
+InfraMap is the built-in `infra` pack. It started as a user pack, and the port is pixel-identical to it in both themes on the four sample sources. Its renderer is `build/src/components/infra.jsx`, its schemas are `build/src/packs/infra.jsx`, and the cross-reference checks (unknown id, label used as id, duplicate id, empty zone) are in `build/src/validate.mjs`. It is a separate pack so a page that only draws a Dag does not get heavier. A user pack that reuses one of its names is skipped, with a message. The four reference lines add about 320 tokens to the on-demand reference for every user, because built-ins always appear in it.
+
+## Export
+
+`export_widgets` is a second tool so `render_widget`'s schema and discoverability stay as they were. Measured with Tool Search's own ranking against a catalog of 172 unrelated tools: `render_widget` keeps 25 of 25 keyword queries, and all 7 export queries rank `export_widgets` first. The export description avoids `render_widget`'s vocabulary on purpose: in the export agent's measurement the first draft cost `render_widget` one top-5 hit.
+
+- **The page** (`page.build_export_page`) is the widget template plus page chrome: a centered column, a heading per section, a footer, print rules, and one `HermesOpenUI.mount` per section. Runtime and packs are embedded once. It defines its own `--accent`, because the runtime's `AccentColor` fallback is not recognized by Chrome 145.
+- **`window.hermes`** is shimmed, only when the host did not provide one, so a Button shows a notice instead of failing silently. A forced theme installs a `matchMedia` shim before the runtime runs, so the runtime's own dark check agrees.
+- **Where files go.** The default is `<home>/exports`. `cache/documents` looks like the obvious "assets" folder, but it is the gateway's inbound media cache, and housekeeping prunes old files from it. A user-chosen `path` is checked by `export.check_destination`: Hermes's guard first, then a built-in list that always applies, because the real guard allows `~/.hermes/plugins`, `skills`, `auth.json` and `/etc` (measured). The tool never routes around an approval.
+- **Artifacts.** Hermes has no artifacts folder, so the default stays `<home>/exports`. The result also carries `artifact_path` and `media_tag`, which the Desktop's Artifacts view and the messaging gateways read, and the `next` text tells the agent to put the tag alone on its own line without backticks. A reply that wraps the tag in inline code is not delivered. Parsing was checked with the gateway's own `extract_media`; how the Desktop lists the file was not watched in a live chat.
+- **Widgets by name.** A `widget` section recovers its source from the saved page's `oui-src` JSON. The name must be a plain file name inside `widgets/`.
 
 ## Why a tool, and why it stays cheap
 
@@ -48,9 +82,9 @@ How that search works (`tools/tool_search_catalog.py` in Hermes):
 - It gates on the query word with the highest IDF: a tool that lacks that word is not offered at all, and a word no tool carries offers nothing. Recall therefore depends on which everyday words the description contains.
 - The listing shows only the first sentence, clipped to 60 characters: `- render_widget: Draw charts, graphs, DAG/ER diagrams, maps and dashboards.`
 
-Measured against a 178-tool catalog (Hermes's own deferred tools plus 172 names shaped like a large MCP server): the first draft of the description found 13 of 20 keyword queries; adding graph, plot, flowchart, schema, topology and KPI found 20 of 20, with no false hits on unrelated requests. Whole-sentence queries still miss when a word is absent from every tool; that is the engine's design, and a model that sees the listing line usually goes straight to `tool_describe`. Re-measure with `tools/verify_discovery.py` after any wording change.
+Measured against a 178-tool catalog (Hermes's own deferred tools plus 172 names shaped like a large MCP server): the first draft of the description found 13 of 20 keyword queries; adding graph, plot, flowchart, schema, topology and KPI found 20 of 20, with no false hits on unrelated requests. Whole-sentence queries still miss when a word is absent from every tool; that is the engine's design, and a model that sees the listing line usually goes straight to `tool_describe`. Re-measure with `tools/verify_discovery.py` after any wording change. When InfraMap became a built-in, the four new infrastructure queries (`infrastructure map`, `infrastructure diagram`, `architecture diagram`, `server map`) all missed, and the set stood at 21 of 25. Adding "infrastructure and server maps, architecture diagrams" to the description (55 more characters) took it to 25 of 25, with `export_widgets` still first on all 7 export queries. The three new whole-sentence infrastructure queries still miss, like five of the ten older ones.
 
-The component reference (about 2,800 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
+The component reference (about 3,100 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
 
 ## Display modes
 
@@ -83,10 +117,12 @@ Build guards (each fails the build): a pack that bundles its own React/zod/react
 
 Verified in this repository: 60+ unit tests (Python 3.9); Hermes's own `plugins validate` and `plugins doctor`; install, enable and tool registration in an isolated Hermes home; that the tool is deferred behind Tool Search and enabled for desktop sessions by default; dispatch through Hermes's own function-call path; the desktop half evaluated in the real app (module evaluation about 7 ms, directive registered, file bridge and path guard exercised); structural parity between native and iframe rendering for every example; a clean-room rebuild.
 
-Not verified: how the desktop app *renders* a widget (only a headless-Chrome harness was used); the **Capabilities → Plugins** Desktop switch, and the app's automatic copy of `desktop/plugin.js` into `desktop-plugins/` (both come from Hermes's docs; neither was seen in the app); Linux and Windows; any model other than the one used while building.
+Also verified for packs and export: a pack and an export tested through Hermes's own `handle_function_call` in an installed Git copy, with the pack linked through `config.yaml`; the real `hermes openui` CLI; the export destination policy against the real `agent.file_safety`; exported pages from `file://` in headless Chrome with no console errors and no requests; every commit on the branch passing the suite on its own.
+
+Not verified: how the desktop app *renders* a widget (only a headless-Chrome harness was used); the **Capabilities → Plugins** Desktop switch, and the app's automatic copy of `desktop/plugin.js` into `desktop-plugins/` (both come from Hermes's docs; neither was seen in the app); Linux and Windows; any model other than the one used while building; exported pages in Safari or Firefox; the print layout of an export; a six-zone InfraMap's scrollbar in the desktop app; custom packs under native mode (refused by design, so never rendered).
 
 ## Ideas
 
 - A hidden-turn option for plugins (`host.composer.submit(sessionId, text, { hidden: true })`) would remove the main `native` trade-off. It needs an SDK change in Hermes.
 - Pruning old widgets (they are never deleted automatically, because old messages still point at them).
-- A tool-side `list_components` or per-component reference to shrink the 2,800-token first use.
+- A tool-side `list_components` or per-component reference to shrink the 3,100-token first use.

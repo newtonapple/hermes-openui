@@ -8,19 +8,29 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from . import schemas, tools
+from . import cli, export, schemas, tools
 
 logger = logging.getLogger(__name__)
 
 
 def register(ctx):
+    def settings():
+        """The plugin's settings, read at call time so a change in Capabilities > Plugins applies without a restart."""
+        out = {}
+        for key, default in (("components", []), ("export_dir", "")):
+            try:
+                out[key] = ctx.get_config(key, default)
+            except Exception:
+                out[key] = default
+        return out
+
     def render_widget(params, **kwargs):
-        # Read the mode at call time so a change in Capabilities > Plugins applies without a restart.
         try:
             mode = ctx.get_config("mode", "preview")
         except Exception:
             mode = "preview"
-        return tools.render_widget(params, mode=mode if mode in ("preview", "native") else "preview", **kwargs)
+        kwargs.pop("settings", None)
+        return tools.render_widget(params, mode=mode if mode in ("preview", "native") else "preview", settings=settings(), **kwargs)
 
     ctx.register_tool(
         name="render_widget",
@@ -30,6 +40,26 @@ def register(ctx):
         description="Draw charts, graphs, DAG/ER diagrams, maps and dashboards.",
         emoji="🧩",
     )
+
+    def export_widgets(params, **kwargs):
+        kwargs.pop("settings", None)
+        return export.export_widgets(params, settings=settings(), **kwargs)
+
+    ctx.register_tool(
+        name="export_widgets",
+        toolset="widgets",
+        schema=schemas.EXPORT_WIDGETS,
+        handler=export_widgets,
+        description="Export widgets or a report as one standalone HTML file.",
+        emoji="\U0001F4E4",
+    )
+
+    register_cli = getattr(ctx, "register_cli_command", None)
+    if register_cli:  # an older Hermes without CLI commands must not take the tool down with it
+        try:
+            register_cli("openui", "Manage hermes-openui component packs", cli.setup_parser, lambda args: cli.run(args, settings()))
+        except Exception:
+            logger.debug("hermes-openui: could not register the openui CLI command", exc_info=True)
 
     skills_dir = Path(__file__).parent / "skills"
     if skills_dir.is_dir():

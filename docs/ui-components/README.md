@@ -1,6 +1,6 @@
 # UI components
 
-Every component the `render_widget` tool can draw, with a screenshot, the exact signature, an explanation of each argument, two or three runnable examples and the pitfalls found by rendering them. There are 21 components, plus 7 small helpers that live on their parent's page (`TabItem`, `Series`, `DagNode`, `Entity`, `Relation`, `GeoPoint`, `FaqItem`).
+Every component the `render_widget` tool can draw, with a screenshot, the exact signature, an explanation of each argument, two or three runnable examples and the pitfalls found by rendering them. There are 22 components, plus 10 small helpers that live on their parent's page (`TabItem`, `Series`, `DagNode`, `Entity`, `Relation`, `GeoPoint`, `FaqItem`, `InfraNode`, `InfraZone`, `InfraLink`).
 
 Click a preview to open the page. All screenshots are real renders of the example beside them (dark theme, 2x), produced by [`tools/shoot.py`](../../tools/shoot.py). Charts and the data in them are sample data.
 
@@ -54,6 +54,7 @@ Read it top-down: `root` is a column holding a heading and a row of two Metric t
 | [**Dag**](Dag.md) | <a href="Dag.md"><img src="images/dag-pipeline.png" width="260" alt="Dag example"></a> | A directed graph of boxes and arrows, laid out in layers for you. Use it for pipelines, task graphs and dependency chains. Each box can carry a status such as done or failed. |
 | [**Erd**](Erd.md) | <a href="Erd.md"><img src="images/erd-schema.png" width="260" alt="Erd example"></a> | An entity-relationship diagram. Each table is a box with its columns, and lines with crow's-foot ends show how the tables relate. Use it to explain a database schema. |
 | [**GeoMap**](GeoMap.md) | <a href="GeoMap.md"><img src="images/geo-map-regional.png" width="260" alt="GeoMap example"></a> | An offline world map with coloured pins and optional dashed links. It draws coastlines from data shipped with the plugin, so it needs no network and no map tiles. The view zooms to fit your pins. |
+| [**InfraMap**](InfraMap.md) | <a href="InfraMap.md"><img src="images/infra-map-web-platform.png" width="260" alt="InfraMap example"></a> | A map of infrastructure. Zones such as networks, racks or clouds hold nodes such as servers, databases and queues, and labelled arrows show which node talks to which. A node can carry an icon for its kind and a health status. |
 
 ### Rich content
 
@@ -85,6 +86,7 @@ Found by rendering every example. Each is explained, with a screenshot where it 
 | [PieChart](PieChart.md) | The `donut` variant renders poorly (a thin ring over a grey disc). The default pie is fine. |
 | [Dag](Dag.md) | Direction switches to top-to-bottom for any graph of four or more layers. Only an edge that closes a cycle is dropped, silently. |
 | [GeoMap](GeoMap.md) | Links are straight lines on a flat map. Pins close together print overlapping labels. |
+| [InfraMap](InfraMap.md) | Shrinks to fit the 640 px column, then scrolls sideways with no visual cue (about 4 zones fit). `InfraLink` takes node **id strings**, not variable names or labels, and the validator rejects a mistake with the ids it knows. |
 | [Markdown](Markdown.md) | Lists are flat (no nesting), and strikethrough, `_italics_` and HTML print as typed. |
 | [CodeBlock](CodeBlock.md) | Any language gets some colouring (strings, numbers, a word before `(`), not only the listed ones. |
 | [Tabs](Tabs.md) | Only the first tab shows in a screenshot. Items in a tab have no spacing: use one Stack per tab. |

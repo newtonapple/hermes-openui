@@ -45,6 +45,18 @@
     "Erd"
    ]
   },
+  "infra": {
+   "file": "packs/infra.js.gz",
+   "raw": 15611,
+   "gz": 6913,
+   "sha256": "ebc67e4962bb0bf9201599515de18fa814698b231461ee49746757f0d5205a89",
+   "components": [
+    "InfraNode",
+    "InfraZone",
+    "InfraLink",
+    "InfraMap"
+   ]
+  },
   "map": {
    "file": "packs/map.js.gz",
    "raw": 27404,
@@ -80,6 +92,10 @@
   "Entity": "diagrams",
   "Relation": "diagrams",
   "Erd": "diagrams",
+  "InfraNode": "infra",
+  "InfraZone": "infra",
+  "InfraLink": "infra",
+  "InfraMap": "infra",
   "GeoPoint": "map",
   "GeoMap": "map",
   "Markdown": "text",
