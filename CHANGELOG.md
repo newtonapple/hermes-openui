@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-27
+
 ### Changed
 
 - `scripts/install.sh` copies every top-level `.py` file and the `examples` folder. A fixed file list would have left the new modules behind, and the installed plugin would have failed to import.
@@ -72,5 +74,6 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.0
 [0.1.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.1.0
