@@ -12,7 +12,7 @@ RENDER_WIDGET = {
         "Draw charts, graphs, DAG/ER diagrams, maps and dashboards. "
         "Show data visually in the Hermes desktop chat as an interactive inline widget written in OpenUI Lang: KPI metric tiles, tables, tabs, cards, "
         "bar/line/area/pie/radar charts and plots, flowcharts, DAG pipelines, ER database schemas, network topology, infrastructure and server maps, architecture diagrams, offline maps, code blocks, markdown, "
-        "FAQs and clickable Choice questions. "
+        "FAQs, custom components and clickable Choice questions. "
         "Pass the OpenUI Lang as `source`; the tool validates it and returns a one-line directive to put ALONE on its own line in your reply. "
         "Call it once with reference=true first to get the exact component signatures. "
         "Desktop app only. For a single value or a short answer, reply in plain text instead."

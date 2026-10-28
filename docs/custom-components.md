@@ -4,6 +4,21 @@ You can add your own components to the widgets Hermes draws. A custom component 
 
 Packs work in **preview mode** only. Native mode renders inside the app itself and does not run user scripts, so it refuses a source that calls a custom component.
 
+## Ask the agent to write one
+
+You do not have to write the JavaScript yourself. Describe the component in a chat, for example "make me a custom component, a progress bar with a label and a percentage". The bundled skill `hermes-openui:custom-components` tells the agent to do these things, in order:
+
+1. Agree the name and the arguments with you.
+2. Write the pack into a `packs` folder in the profile's Hermes home.
+3. Check it with `hermes openui components check`.
+4. Link that folder in the `components` setting.
+5. Fetch the component reference again, so the new component is listed.
+6. Draw a sample for you to confirm, and change it until you are happy.
+
+The skill tells the agent to ask before it edits `config.yaml`. If you would rather link the pack yourself, say so and it gives you the folder to add under **Capabilities → Plugins → hermes-openui**. A folder entry links every `.js` file in it, so the next component you ask for needs no change to the setting.
+
+The pack runs in the widget sandbox, like any pack. Read the code the agent wrote before you rely on it. If the agent does not reach for the skill, ask it to load `hermes-openui:custom-components`.
+
 ## Link a pack
 
 Open **Capabilities → Plugins → hermes-openui** and add paths to the `components` setting, or edit `config.yaml`:

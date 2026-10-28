@@ -48,11 +48,12 @@ print("catalog: %d curated core tools deferred + %d MCP-style noise tools + rend
 
 KEYWORD = ["dag", "dag diagram", "chart", "bar chart", "pie chart", "line chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map",
            "er diagram", "database schema", "network topology", "visualize data", "inline widget", "kpi tiles", "pipeline",
-           "infrastructure map", "infrastructure diagram", "architecture diagram", "network diagram", "server map"]
+           "infrastructure map", "infrastructure diagram", "architecture diagram", "network diagram", "server map",
+           "custom component", "new component", "add a component"]
 SENTENCE = ["draw a dag", "draw a DAG of my build pipeline", "make a bar chart of these numbers", "show a pie chart of the results",
             "visualize the database schema as an ER diagram", "put these sites on a map", "build a dashboard with KPIs", "network topology diagram",
             "line chart of tokens per second over time", "show a flowchart of the process",
-            "map out my infrastructure", "draw my server architecture", "diagram my office network"]
+            "map out my infrastructure", "draw my server architecture", "diagram my office network", "make me a new component"]
 UNRELATED = ["send an email", "take a screenshot of the screen", "create a calendar event", "restart the service"]
 
 

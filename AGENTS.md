@@ -2,7 +2,7 @@
 
 For AI agents that **install**, **use** or **change** this plugin. Humans: read `README.md`. Long-form design and pitfalls: `docs/development.md`.
 
-`hermes-openui` is a Hermes Agent plugin. It gives the model two tools: `render_widget` turns OpenUI Lang source into an inline widget (dashboards, charts, DAG/ER diagrams, infrastructure and geographic maps) in the **Hermes desktop app**, and `export_widgets` saves widgets or a report as one standalone HTML file. Users can link their own component packs (`packs.py`, guide in `docs/custom-components.md`). Python half (stdlib only): `__init__.py`, `tools.py`, `page.py`, `lint.py`, `bundle.py`, `schemas.py`, `packs.py`, `export.py`, `cli.py`. Shipped, generated browser runtime: `assets/`. Optional native renderer: `desktop/plugin.js`. Build sources for the generated files: `build/`.
+`hermes-openui` is a Hermes Agent plugin. It gives the model two tools: `render_widget` turns OpenUI Lang source into an inline widget (dashboards, charts, DAG/ER diagrams, infrastructure and geographic maps) in the **Hermes desktop app**, and `export_widgets` saves widgets or a report as one standalone HTML file. Users can link their own component packs (`packs.py`, guide in `docs/custom-components.md`), and the bundled skill `hermes-openui:custom-components` teaches an agent to write, link and reload one. Python half (stdlib only): `__init__.py`, `tools.py`, `page.py`, `lint.py`, `bundle.py`, `schemas.py`, `packs.py`, `export.py`, `cli.py`. Shipped, generated browser runtime: `assets/`. Optional native renderer: `desktop/plugin.js`. Build sources for the generated files: `build/`.
 
 ## 1. Install (do exactly this)
 
@@ -15,13 +15,13 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 
 - **Install once per profile.** A profile has its own `plugins/` folder and enabled list (`~/.hermes/profiles/<name>`), and Hermes has no shared plugin folder for this kind of plugin. Settings and generated widgets are per profile too.
 - **After installing, the tool exists only in NEW chats.** A profile with a running gateway needs `hermes -p <name> gateway restart` first. Tell the user to run it in a separate shell, because a command or script that restarts the gateway is blocked inside a gateway-run session.
-- **Alternative from a checkout:** `sh scripts/install.sh [--home <dir>] [--no-enable]` copies the 1.8 MB runtime subset into a Hermes home and enables it. Use it offline or to test uncommitted changes. It leaves no Git record, so `hermes plugins update` fails on the copy, and Hermes skips its install-time security scan. For a local checkout that Hermes does track, use `hermes plugins install file:///absolute/path --enable` (committed code only, and Hermes warns about the local scheme). A bare path is read as GitHub shorthand and fails.
+- **Alternative from a checkout:** `sh scripts/install.sh [--home <dir>] [--no-enable]` copies the 1.8 MB runtime subset into a Hermes home and enables it. Use it offline or to test uncommitted changes. It leaves no Git record, so `hermes plugins update` fails on the copy, and Hermes skips its install-time security scan. For a local checkout that Hermes does track, use `hermes plugins install file:///absolute/path --enable` (committed code only, and Hermes warns about the local scheme). To reload a changed checkout, commit and run the same command with `--force`. It keeps the settings and turns a script copy back into a tracked install. `hermes plugins update hermes-openui` also pulls new commits from a `file://` source. Neither installs uncommitted changes. A bare path is read as GitHub shorthand and fails.
 - **Test without touching the real setup:** make a scratch directory and prefix `plugins` commands with `HERMES_HOME=<dir>`. Only `plugins` commands honor it. `hermes profile ...` ignores `HERMES_HOME` and acts on the real profiles, so never run `profile create` or `profile delete` to test.
 - **The desktop half is opt-in and runs with full app authority.** Never switch it on or set `mode: native` for the user without asking; the default `preview` mode needs neither. Never copy `desktop/plugin.js` into `~/.hermes/desktop-plugins/` by hand. The app copies it itself, and a hand-placed file is never refreshed.
 - **Verify end to end:** in a new desktop chat ask for "a bar chart of 3, 5 and 2 for a, b, c". A widget should appear. You cannot see the desktop render: end with the directive the tool returned and ask the user to confirm.
 - **Update:** `hermes plugins update hermes-openui` for a Hermes install (add `-p <name>` for a profile). For a script install, `git pull && sh scripts/install.sh`; the old copy moves to `<home>/cache/` and the enabled state and settings are kept. **Remove:** `hermes plugins remove hermes-openui`. It deletes the plugin folder, drops it from `plugins.enabled` and clears its settings, and it leaves `<home>/widgets/` and the `previous` copies.
 - **`install.sh` always enables** the plugin, even one the user disabled on purpose: pass `--no-enable` when the user did not ask to turn it on.
-- **`config.yaml` edits:** install already creates a `plugins:` block (`enabled:`). Add `entries:` under it; never append a second top-level `plugins:` key.
+- **`config.yaml` edits:** install already creates a `plugins:` block (`enabled:`). Add `entries:` under it; never append a second top-level `plugins:` key. `hermes config set plugins.entries.hermes-openui.settings.components '["/abs/packs"]'` merges under the existing block and replaces the whole list.
 
 ## 2. Use the tool (when you are the agent in a Hermes desktop chat)
 
@@ -32,7 +32,7 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 5. One widget per reply (use Tabs/Cards for sections). Plain text for a single value or a short answer. Never invent data to fill a layout. Button and Choice clicks arrive as your next user turn: act, then render a NEW widget.
 6. Patterns and pitfalls: `skill_view("hermes-openui:openui-render")`.
 7. To save, share or export widgets, call `export_widgets` (a separate tool). Each section is `{title?, source | widget}`; `widget` is the file name from an earlier render result without `.html`. Leave `path` out unless the user named a place, and never work around a refusal. Reply with the result's `media_tag` alone on its own line, with no backticks; never paste the HTML.
-8. If `reference=true` ends with "Custom components", the user linked packs: use them like built-ins, in preview mode only. Do not invent a component name.
+8. If `reference=true` ends with "Custom components", the user linked packs: use them like built-ins, in preview mode only. Do not invent a component name. To write a new component for the user, load `skill_view("hermes-openui:custom-components")`. The reference result and the "Unknown component" error point to it, because a plugin skill is not in the prompt's skill index.
 
 ## 3. Change the code
 
@@ -41,8 +41,9 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 - **No network access, no telemetry, anywhere.** `tests/test_plugin.py` and both build scripts fail on `fetch(`, `XMLHttpRequest`, `sendBeacon`, `WebSocket(`, `posthog`, `cloudfront` in any shipped browser file. Never `import * as` a whole OpenUI package into a bundle (it keeps their dormant telemetry); import named exports.
 - **Never edit generated files by hand:** `assets/*`, `desktop/plugin.js`, `THIRD_PARTY_NOTICES.md`. Change `build/src/` and rebuild.
 - **Vet before adding any npm dependency** (postinstall scripts, telemetry). Installs run with `--ignore-scripts`; the lockfile is `build/package-lock.json`; use `npm ci`.
-- **Context discipline.** The schema description (`schemas.py`) is at most about 700 characters, its first sentence is at most 60 characters and names DAG/ER/maps/dashboards (that sentence is all Tool Search lists). The component reference is returned by `render_widget(reference=true)`, never put in the schema. Extra tools or long descriptions cost every chat.
-- **Description words are the search index.** Tool Search finds the tool by the words in its description (BM25, gated on the rarest query word). `tests/test_plugin.py` pins the words; `tools/verify_discovery.py` measures recall (25 of 25 keyword queries, infrastructure and architecture included). Re-run it after changing the description.
+- **Context discipline.** The schema description (`schemas.py`) is at most about 750 characters, its first sentence is at most 60 characters and names DAG/ER/maps/dashboards (that sentence is all Tool Search lists). The component reference is returned by `render_widget(reference=true)`, never put in the schema. Extra tools or long descriptions cost every chat.
+- **Skill size.** A bundled skill is loaded in full each time it is used. `skills/custom-components/SKILL.md` stays within 8,000 characters and `skills/openui-render/SKILL.md` within 4,000; `tests/test_plugin.py` and `tests/test_custom_components_skill.py` pin both, and the README table gives the size in tokens (characters / 4).
+- **Description words are the search index.** Tool Search finds the tool by the words in its description (BM25, gated on the rarest query word). `tests/test_plugin.py` pins the words; `tools/verify_discovery.py` measures recall (28 of 28 keyword queries, infrastructure, architecture and custom component included). Re-run it after changing the description.
 - **Page budget:** a preview page must stay under 480 KB (the app reads at most 512 KiB and silently truncates). Only the packs a widget uses are embedded. Images: 100 KB each.
 - **Packs are an API (`api: 1`).** A pack is a JS file with a JSON header (`packs.py`). Changing the header format, `window.__HM`, the `validate` hook or what the runtime hands to packs breaks users' packs, so it is a major change: bump the `api` number and say so in the changelog. `tests/test_pack_docs.py` runs the guide's example, so keep `docs/custom-components.md` and the code in step.
 - **Packs never run in native mode**, and the forbidden-API lint in `packs.py` is a guard against mistakes, not a boundary. The sandbox is the boundary. Never loosen it, and never let a pack read the app, files or the network.
@@ -57,7 +58,7 @@ hermes plugins doctor ~/.hermes/plugins/hermes-openui                # expect: O
 **Commands (run from the repository root)**
 
 ```sh
-python3 -m unittest discover -s tests              # must pass; ~2 s
+python3 -m unittest discover -s tests              # must pass; about 40 s with Node and Chrome
 hermes plugins validate .                          # must print `Validation passed` with every check ticked (security scan, desktop surface, declared tools).
                                                    # One warning is expected: `private core imports`. It names tools/verify_*.py (dev scripts that test Hermes's Tool Search on purpose,
                                                    # not installed) and export.py's guarded import of agent.file_safety (the plugin falls back to its own list if that
@@ -77,7 +78,7 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 - [ ] Unit tests pass; `hermes plugins validate .` passes.
 - [ ] If `build/src/` changed: rebuilt, `assets/packs.json` hashes updated, and the **desktop loader check** passed (`build/tests/plugin-loader-check.mjs` runs inside `npm run build`).
 - [ ] If a component changed: its page and example in `docs/ui-components/` updated, `tools/check_docs.py` clean.
-- [ ] If a schema changed: `tools/verify_discovery.py` still finds 25 of 25 render keyword queries and ranks `export_widgets` first for all 7 export queries.
+- [ ] If a schema changed: `tools/verify_discovery.py` still finds 28 of 28 render keyword queries and ranks `export_widgets` first for all 7 export queries.
 - [ ] If the pack API or export changed: its guide (`docs/custom-components.md`, `docs/exporting.md`) and the tests that run the guide's examples still pass.
 - [ ] You rendered at least one widget and looked at it (`tools/shoot.py`); a passing build does not prove it looks right.
 
@@ -88,7 +89,7 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 - A disk plugin may import only `@hermes/plugin-sdk`, `react`, `react/jsx-runtime`: no `react-dom` (shimmed), and bundled CommonJS calling `require("react")` needs the banner `require`.
 - The app mirrors only **error-level** console lines into `desktop.log`.
 - A plugin cannot send a hidden turn: `host.composer.submit` types a visible message.
-- Plugin skills are not in the system prompt's skill index; the tool description is what makes the agent find the tool.
+- Plugin skills are not in the system prompt's skill index; the tool description is what makes the agent find the tool, and the `next` text of the reference result, the "Unknown component" error and `openui-render` are what lead it to `custom-components`.
 - Headless Chrome one-shot flags (`--screenshot`, `--dump-dom`) can hang on macOS; `tools/shoot.py` drives Chrome over its debugging port instead.
 - gzip bytes differ between Node/zlib versions; compare the `sha256` of the uncompressed bundle in `assets/packs.json`.
 - `tools/check_docs.py` ends an ```` ```openui ```` block at the first triple backtick, so an example whose string holds a code fence can never match its `.oui` file. Write the fence as `\u0060\u0060\u0060` inside the string (the parser accepts it and renders the same), as `docs/ui-components/examples/markdown-code-table.oui` does.
@@ -99,11 +100,11 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 
 ## 5. Release a new version
 
-Ask the owner before you commit, tag or push. The version lives in three files and `tests/test_version.py` fails if they disagree.
+Ask the owner before you commit, tag or push. The version lives in four files and `tests/test_version.py` fails if they disagree.
 
 1. Pick the number by the table in the README ([Versioning](README.md#versioning)). Removing or renaming a component, an argument, a setting or a `render_widget` parameter is a major change.
-2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `## [Unreleased]` above it, and update the two link lines at the bottom.
-3. Set `version:` to `X.Y.Z` in `plugin.yaml` and in `skills/openui-render/SKILL.md`.
+2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `## [Unreleased]` above it, and update the two link lines at the bottom: `[Unreleased]` compares `vX.Y.Z...HEAD`, and the new `[X.Y.Z]: https://github.com/newtonapple/hermes-openui/releases/tag/vX.Y.Z` has the same form as the others.
+3. Set `version:` to `X.Y.Z` in `plugin.yaml` and in every `skills/*/SKILL.md` (two skills today).
 4. If `build/src/` changed, rebuild first. The generated files are committed.
 5. Run `python3 -m unittest discover -s tests`, `hermes plugins validate .` and `python3 tools/check_docs.py`. All three must pass.
 6. Commit as `Release X.Y.Z`, then tag that commit: `git tag -a vX.Y.Z -m "hermes-openui X.Y.Z"`. Push the branch and the tag.

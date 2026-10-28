@@ -73,7 +73,7 @@ class Contract(unittest.TestCase):
     def test_description_carries_the_words_people_say(self):
         # Tool Search finds a tool by the words in its text; each of these was a measured miss before they were added.
         text = self.ctx.tools[0]["schema"]["description"].lower()
-        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar", "infrastructure", "architecture", "server"):
+        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar", "infrastructure", "architecture", "server", "custom", "component"):
             with self.subTest(word=word):
                 self.assertIn(word, text)
 
@@ -102,11 +102,14 @@ class Contract(unittest.TestCase):
                 else:
                     os.environ["HERMES_HOME"] = old
 
-    def test_bundled_skill_is_registered_and_has_frontmatter(self):
-        self.assertEqual([n for n, _ in self.ctx.skills], ["openui-render"])
-        text = self.ctx.skills[0][1].read_text(encoding="utf-8")
-        self.assertTrue(text.startswith("---\nname: openui-render\n"))
-        self.assertLess(len(text), 4000, "loaded in full each time the skill is used")
+    def test_bundled_skills_are_registered_and_have_frontmatter(self):
+        self.assertEqual([n for n, _ in self.ctx.skills], ["custom-components", "openui-render"])
+        longest = {"custom-components": 8000, "openui-render": 3999}  # loaded in full each time a skill is used
+        for name, path in self.ctx.skills:
+            with self.subTest(skill=name):
+                text = path.read_text(encoding="utf-8")
+                self.assertTrue(text.startswith("---\nname: %s\n" % name))
+                self.assertLessEqual(len(text), longest[name])
 
     def test_a_hermes_without_register_skill_still_gets_the_tools(self):
         class Old(FakeCtx):

@@ -255,8 +255,8 @@ class Fixtures(unittest.TestCase):
             with self.subTest(fixture=name):
                 self.assertIsNone(re.search(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", text), "an IP address")
                 self.assertIsNone(re.search(r"https?://|\.local\b|\.lan\b|\.internal\b|@|password|token|secret|sk-", text, re.I))
-                # public fixtures describe an ordinary web platform, not the owner's own stack
-                self.assertIsNone(re.search(r"litellm|vllm|dgx|spark-?\d|qwen|llama|ollama|homelab|tailnet|onlygens", text, re.I), "a real name")
+                # public fixtures describe an ordinary web platform: no host, address or product that identifies a real setup
+                self.assertEqual(helpers.private_setup_hits(text), [])
 
     def test_the_main_fixture_shows_the_four_zones_and_the_requested_nodes(self):
         text = source("map.oui")

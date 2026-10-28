@@ -21,8 +21,12 @@ class Version(unittest.TestCase):
     def test_plugin_version_is_semver(self):
         self.assertRegex(field("plugin.yaml", "version") or "", "^%s$" % SEMVER)
 
-    def test_bundled_skill_has_the_same_version(self):
-        self.assertEqual(field("skills/openui-render/SKILL.md", "version"), field("plugin.yaml", "version"))
+    def test_every_bundled_skill_has_the_same_version(self):
+        skills = sorted(p.relative_to(ROOT).as_posix() for p in (ROOT / "skills").glob("*/SKILL.md"))
+        self.assertEqual(len(skills), 2, "update this test when a skill is added or removed")
+        for path in skills:
+            with self.subTest(skill=path):
+                self.assertEqual(field(path, "version"), field("plugin.yaml", "version"))
 
     def test_changelog_has_an_unreleased_section(self):
         self.assertRegex(changelog(), r"(?m)^## \[Unreleased\]\s*$")

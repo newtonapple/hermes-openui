@@ -16,6 +16,8 @@ from . import bundle, lint, packs, page
 MAX_SOURCE_CHARS = 200_000
 NODE_TIMEOUT_S = 20
 _ERR_LINE = re.compile(r"^- (.+)$", re.M)
+# A plugin skill is not in the system prompt's skill index, so the tool's own text has to point to it.
+CUSTOM_SKILL_HINT = "To add your own component, see skill_view('hermes-openui:custom-components')."
 
 
 def hermes_home() -> Path:
@@ -73,6 +75,15 @@ def _fail(errors: List[str], hint: str = "Fix exactly these and call render_widg
     return json.dumps({"ok": False, "errors": errors, "fix": hint}, ensure_ascii=False)
 
 
+def _point_unknown_component_to_skill(problems: List[str]) -> List[str]:
+    """Add the hint to the first `Unknown component` error only; the others and the Node validator's wording stay as they are."""
+    for i, text in enumerate(problems):
+        if text.startswith("Unknown component `"):
+            problems[i] = "%s %s" % (text, CUSTOM_SKILL_HINT)
+            break
+    return problems
+
+
 def load_custom(settings: Optional[dict]):
     """(packs, problems) for the `components` setting. A broken pack is reported, never fatal."""
     return packs.load((settings or {}).get("components") or [], bundle.component_names())
@@ -89,7 +100,7 @@ def render_widget(params: dict, mode: str = "preview", settings: Optional[dict] 
             "ok": True,
             "reference": bundle.reference_text() + packs.reference(custom),
             "next": "Call render_widget with source=<OpenUI Lang>. One statement per line, root first, positional arguments. "
-            "Patterns and pitfalls: skill_view('hermes-openui:openui-render').",
+            "Patterns and pitfalls: skill_view('hermes-openui:openui-render'). " + CUSTOM_SKILL_HINT,
         }
         if pack_problems:
             out["pack_warnings"] = pack_problems[:5]
@@ -101,7 +112,7 @@ def render_widget(params: dict, mode: str = "preview", settings: Optional[dict] 
 
     problems = lint.check(source, bundle.component_names() | set(packs.by_component(custom)))
     if problems:
-        return _fail(problems[:12])
+        return _fail(_point_unknown_component_to_skill(problems)[:12])
     used = packs.used(source, custom)
     if used and mode == "native":
         names = packs.called_components(source, used)

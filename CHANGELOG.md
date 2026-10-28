@@ -4,6 +4,14 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Added
+
+- **A bundled skill, `hermes-openui:custom-components`.** It teaches an agent to write a component pack, check it, link it in the `components` setting (after asking the user), fetch the reference again and draw a sample. It has one complete template, and the tests load, validate and render that template (the pack loader, the Node validator and a Chrome render), so a change that breaks it fails the build. It also has a short path for making a component built in. A plugin skill is not in the prompt's skill index, so a one-line pointer to it now sits in the `render_widget(reference=true)` result, in the first "Unknown component" error and in the `openui-render` skill, which no longer points to a docs path that the installer does not copy.
+
+### Changed
+
+- The `render_widget` description now says "custom components". With three new keyword queries (`custom component`, `new component`, `add a component`), the discovery check found 27 of 28 before the change (`custom component` missed) and 28 of 28 after it. `export_widgets` still ranks first on all 7 export queries and there are no false positives. The description grows by 19 characters, which costs about 5 tokens on every API call when Tool Search is off. The new sentence query `make me a new component` still misses, like 8 of the 13 older ones.
+
 ## [0.2.0] - 2026-10-27
 
 ### Changed

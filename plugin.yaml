@@ -20,7 +20,7 @@ config_schema:
     type: list
     default: []
     label: "Custom component packs"
-    description: "Paths to component pack files (.js), or to folders of them. Their components become available to render_widget and export_widgets in preview mode. See docs/custom-components.md."
+    description: "Paths to component pack files (.js), or to folders of them. Their components become available to render_widget and export_widgets in preview mode. To have the agent write a pack, ask it to load skill_view('hermes-openui:custom-components')."
   export_dir:
     type: str
     default: ""

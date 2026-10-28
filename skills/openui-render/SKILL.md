@@ -51,7 +51,7 @@ When the user asks to save, share or export what you drew, or wants a report as 
 
 ## Custom components
 
-If the end of `render_widget(reference=true)` has a "Custom components" section, the user linked packs. Use them like built-ins (preview mode only). For a component that does not exist, point the user to docs/custom-components.md in the plugin. Do not invent a name.
+If the end of `render_widget(reference=true)` has a "Custom components" section, the user linked packs. Use them like built-ins (preview mode only). To add a component the user asks for, load `skill_view('hermes-openui:custom-components')`. Do not invent a name.
 
 ## When not to use it
 

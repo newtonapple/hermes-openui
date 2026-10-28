@@ -48,7 +48,7 @@ class ExampleReport(unittest.TestCase):
 
     def test_no_example_names_a_real_stack(self):
         text = (ROOT / "examples" / "reports" / "platform-status.json").read_text(encoding="utf-8")
-        self.assertNotRegex(text, r"(?i)litellm|vllm|dgx|spark-?\d|qwen|homelab|tailnet|onlygens")
+        self.assertEqual(helpers.private_setup_hits(text), [])
 
 
 if __name__ == "__main__":

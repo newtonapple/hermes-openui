@@ -55,6 +55,46 @@ class Reference(WithHome):
         self.assertEqual(self.files(), [])
 
 
+SKILL_POINTER = "skill_view('hermes-openui:custom-components')"
+
+
+class SkillPointers(WithHome):
+    """A plugin skill is not in the system prompt's index, so the tool's own text has to point to the custom-components skill."""
+
+    def test_the_reference_result_points_to_the_skill(self):
+        self.assertIn(SKILL_POINTER, self.call(reference=True)["next"])
+
+    def test_an_unknown_component_error_points_to_the_skill(self):
+        r = self.call(source='root = Stack([g])\ng = Gauge(5)')
+        self.assertFalse(r["ok"])
+        unknown = [e for e in r["errors"] if e.startswith("Unknown component `Gauge`")]
+        self.assertEqual(len(unknown), 1, r)
+        self.assertIn(SKILL_POINTER, unknown[0])
+
+    def test_several_unknown_components_carry_the_pointer_once(self):
+        r = self.call(source='root = Stack([a, b])\na = Gauge(5)\nb = Dial(6)')
+        self.assertEqual(sum(e.count(SKILL_POINTER) for e in r["errors"]), 1, r)
+
+    def test_a_close_match_still_gets_its_suggestion_first(self):
+        r = self.call(source='root = Stack([m])\nm = Metrik("a", "1")')
+        self.assertIn("Did you mean `Metric`?", r["errors"][0])
+        self.assertIn(SKILL_POINTER, r["errors"][0])
+
+    def test_other_errors_do_not_carry_it(self):
+        r = self.call(source='root = Stack([a])\na = Text("x")\nlost = Text("y")')
+        self.assertFalse(r["ok"])
+        self.assertNotIn("custom-components", " ".join(r["errors"]))
+
+    def test_a_successful_render_does_not_carry_it(self):
+        self.assertNotIn("custom-components", json.dumps(self.call(source=GOOD)))
+
+    @unittest.skipUnless(HAS_NODE, "Node not available")
+    def test_an_error_from_the_node_validator_is_left_as_it_is(self):
+        r = self.call(source='root = Stack([m])\nm = Metric(1, 2)')
+        self.assertFalse(r["ok"])
+        self.assertNotIn("custom-components", " ".join(r["errors"]))
+
+
 class Preview(WithHome):
     def test_happy_path(self):
         r = self.call(source=GOOD, name="gpu status")

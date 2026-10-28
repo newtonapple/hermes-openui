@@ -20,7 +20,7 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG and ER diagrams, infr
 - **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself and makes widgets tiny, at the price of running with full app authority. See [Display modes](#display-modes).
 - **Interactive.** Buttons and choices send their text back to the agent as your next turn.
 - **Export to HTML.** Ask for a few widgets, or a whole report, as one standalone offline HTML file, saved where you say. See [Export to HTML](#export-to-html).
-- **Your own components.** Link a small JavaScript file in the plugin's settings and the agent can use the components it adds. See [Custom components](#custom-components).
+- **Your own components.** Link a small JavaScript file in the plugin's settings and the agent can use the components it adds, or ask the agent to write one. See [Custom components](#custom-components).
 
 ## Gallery
 
@@ -195,6 +195,8 @@ plugins:
 
 Packs work in preview mode only, and run inside the same sandbox as the rest of a widget. The guide has a complete small pack to copy. Check a pack before linking it with `hermes openui components check FILE`, and see what is linked with `hermes openui components list`.
 
+You can also ask the agent to write a component, for example "make me a progress bar component". The bundled skill `hermes-openui:custom-components` has it write the pack, check it, link it (the skill tells it to ask before it edits `config.yaml`) and draw a sample.
+
 Writing a pack, the rules and the safety model: [docs/custom-components.md](docs/custom-components.md).
 
 ## Configuration
@@ -214,7 +216,7 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | What | When | Tokens |
 |---|---|---|
 | Tool listing line | every chat, with Tool Search on (the default) | about 20 |
-| Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 325 |
+| Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 330 |
 | `export_widgets` listing line | every chat, with Tool Search on | about 20 |
 | `export_widgets` schema (1.6 KB) | every API call **only if** Tool Search is off | about 400 |
 | Component reference | the first use in a chat | about 3,100 |
@@ -222,7 +224,7 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | Your widget source | each widget, stays in the history | about 250–600 |
 | Tool result | each widget | about 100 |
 
-The bundled skill (`hermes-openui:openui-render`, about 1,000 tokens) is loaded on demand only.
+The bundled skills (`hermes-openui:openui-render`, about 1,000 tokens, and `hermes-openui:custom-components`, about 1,995 tokens) are loaded on demand only. The first `render_widget(reference=true)` result of a chat and an "Unknown component" error each carry a one-line pointer to the second one, about 20 tokens.
 
 ## Security and privacy
 

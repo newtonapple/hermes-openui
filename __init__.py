@@ -1,7 +1,7 @@
 """hermes-openui: rich inline widgets (charts, DAG/ER diagrams, maps, dashboards) for the Hermes desktop app.
 
-Python half of a unified Hermes plugin: the `render_widget` tool and a bundled skill. The optional desktop half
-(desktop/plugin.js) renders widgets natively in the transcript; see README.md.
+Python half of a unified Hermes plugin: the `render_widget` and `export_widgets` tools and two bundled skills (`openui-render` and
+`custom-components`). The optional desktop half (desktop/plugin.js) renders widgets natively in the transcript; see README.md.
 """
 from __future__ import annotations
 

@@ -18,7 +18,7 @@ from . import bundle, export, packs, tools
 
 LINK_HELP = (
     "Add file or folder paths to the plugin's `components` setting (Capabilities > Plugins > hermes-openui), "
-    "or in config.yaml under plugins.entries.hermes-openui.settings.components. See docs/custom-components.md."
+    "or in config.yaml under plugins.entries.hermes-openui.settings.components. To have the agent write a pack, ask it to load skill_view('hermes-openui:custom-components')."
 )
 
 
