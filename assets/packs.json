@@ -59,9 +59,9 @@
   },
   "map": {
    "file": "packs/map.js.gz",
-   "raw": 27404,
-   "gz": 11608,
-   "sha256": "805a73b003f75d0a1760401f64b4c57425947022cde451c64194b9124eb27184",
+   "raw": 27432,
+   "gz": 11628,
+   "sha256": "403e6860e821d45a8ba20cd677221d937e9024742577137e9d63feb1e5173a49",
    "components": [
     "GeoPoint",
     "GeoMap"

@@ -85,7 +85,7 @@ jsCode = CodeBlock("const res = await fetch(\"http://localhost:8000/v1/models\")
 - Items in a tab's `content` array are placed one after another with no space between them. Before I wrapped them in a Stack, the metric tiles touched the chart title. Use one Stack per tab, as the first example does.
 - Clicking a tab only switches the view. It does not send anything to the AI.
 - You cannot start on another tab. The first item always opens first.
-- Eight tabs with labels of up to three words fit in 640 px by wrapping the longer labels onto two lines. Keep to about five short labels.
+- Eight tabs with labels of up to three words fit in a 640 px column by wrapping the longer labels onto two lines. Keep to about five short labels.
 - Tabs of different height make the widget grow and shrink as the reader switches. I did not check how the chat handles that.
 
 ## Related

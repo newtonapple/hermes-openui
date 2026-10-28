@@ -99,6 +99,15 @@ class Detector(unittest.TestCase):
                         self.assertEqual(helpers.private_setup_hits(p.read_text(encoding="utf-8")), [])
         self.assertGreater(scanned, 3)
 
+    def test_the_native_harness_sample_widget_passes_the_same_check(self):
+        # It is a Python string, so the file scan above never sees it.
+        sys.path.insert(0, str(helpers.ROOT / "tools"))
+        try:
+            import verify_native  # pyright: ignore[reportMissingImports] (path added above)
+        finally:
+            sys.path.remove(str(helpers.ROOT / "tools"))
+        self.assertEqual(helpers.private_setup_hits(verify_native.BUTTON_AND_CHOICE), [])
+
 
 if __name__ == "__main__":
     unittest.main()

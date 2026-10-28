@@ -13,7 +13,7 @@ BarChart(labels: string[], values: number[], title?: string, unit?: string)
 ## When to use
 
 - One number per category: load per node, tokens per second per model, requests per hour.
-- Up to about 24 bars. A test with 24 two-digit labels still fit the 640 px column.
+- Up to about 24 bars. A test with 24 two-digit labels still fit a 640 px column (the widest a preview frame gets).
 
 Not for several series (use [LineChart](LineChart.md)), parts of a whole (use [PieChart](PieChart.md)) or exact values you want to compare closely (use [Table](Table.md)).
 

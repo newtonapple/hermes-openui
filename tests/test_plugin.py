@@ -121,6 +121,78 @@ class Contract(unittest.TestCase):
         self.assertEqual([t["name"] for t in ctx.tools], ["render_widget", "export_widgets"])
 
 
+class NativeFillsTheColumn(unittest.TestCase):
+    """The 640 px cap belongs to the app's preview frame. Native mode draws in the chat column, so the widget root must fill
+    whatever width the column has (and may shrink below it) instead of stopping at 640. These tests read the source and the
+    built file, so any spelling of a cap is found without Chrome; the opt-in tests/test_native_layout.py draws it."""
+
+    ROOT_CLASS = "hermes-openui-root"
+    ALLOWED_LIMITS = {"720px", "960px"}  # native-only: the pie with its legend, the map
+    ANY_LIMIT = re.compile(r"max-?(?:width|inline-?size)", re.I)
+    LIMIT_VALUE = re.compile(r"""max-?(?:width|inline-?size)["']?\s*:\s*["'`]?([^;,}"'`\s]+)""", re.I)
+
+    def built(self):
+        return (ROOT / "desktop" / "plugin.js").read_text(encoding="utf-8")
+
+    def source(self):
+        """plugin.jsx without its comments (they may say 640 when they explain the old cap)."""
+        text = (ROOT / "build" / "src" / "plugin" / "plugin.jsx").read_text(encoding="utf-8")
+        text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+        return re.sub(r"(?m)(^|[ \t])//.*$", "", text)
+
+    def root_style(self):
+        m = re.search(r'"data-hermes-openui-widget":"",style:\{([^{}]*)\}', self.built())
+        if m is None:
+            self.fail("the widget root element was not found in desktop/plugin.js")
+        return m.group(1)
+
+    def source_rules(self):
+        src = self.source()
+        m = re.search(r"const NATIVE_CSS = \[(.*?)\]\.join\(", src, re.S)
+        self.assertIsNotNone(m, "NATIVE_CSS was not found in plugin.jsx")
+        name = re.search(r'const ROOT_CLASS = "([^"]+)"', src).group(1)
+        self.assertEqual(name, self.ROOT_CLASS)
+        return [r.replace("${ROOT_CLASS}", name) for r in re.findall(r"`([^`]*)`", m.group(1))]
+
+    def built_rules(self):
+        found = [m for m in re.finditer(r"\[((?:`[^`]*`,?)+)\]\.join\(`(?:\\n|\n)`\)([;,)])", self.built()) if "[data-hermes-openui-map]" in m.group(1)]
+        self.assertEqual(len(found), 1, "NATIVE_CSS was not found in desktop/plugin.js (did the minifier change its shape?)")
+        return [re.sub(r"\$\{[A-Za-z_$][\w$]*\}", self.ROOT_CLASS, r) for r in re.findall(r"`([^`]*)`", found[0].group(1))]
+
+    def test_the_built_widget_root_has_no_max_width_in_any_spelling(self):
+        self.assertIsNone(self.ANY_LIMIT.search(self.root_style()), self.root_style())
+
+    def test_the_built_widget_root_fills_and_may_shrink(self):
+        style = self.root_style()
+        self.assertIn('width:"100%"', style)
+        self.assertIn("minWidth:0", style)
+
+    def test_the_source_has_no_column_cap_left(self):
+        src = self.source()
+        self.assertFalse("MAX_COLUMN_WIDTH" in src, "plugin.jsx still defines a column cap")
+        self.assertIsNone(re.search(r"\b640\b", src), "plugin.jsx names 640 in code")
+
+    def test_every_limit_in_the_source_is_a_known_native_only_one(self):
+        src = self.source()
+        values = [m.group(1) for m in self.LIMIT_VALUE.finditer(src)]
+        self.assertEqual(len(self.ANY_LIMIT.findall(src)), len(values), "a max-width / maxWidth is written in a form this test cannot read")
+        self.assertTrue(values, "no limit found: the pie and map rules are gone, or this test reads the wrong file")
+        self.assertLessEqual(set(values), self.ALLOWED_LIMITS, "an unexpected max-width in plugin.jsx: %s" % values)
+
+    def test_the_built_stylesheet_is_the_one_in_the_source(self):
+        rules = self.source_rules()
+        self.assertTrue(rules)
+        self.assertEqual(self.built_rules(), rules)
+
+    def test_the_built_stylesheet_has_only_the_known_limits(self):
+        limits = [m.group(1) for r in self.built_rules() for m in self.LIMIT_VALUE.finditer(r)]
+        self.assertEqual(sorted(limits), ["720px", "960px"])
+
+    def test_the_widget_does_not_inherit_the_apps_message_text_rules(self):
+        self.assertIn(".%s{overflow-wrap:normal}" % self.ROOT_CLASS, self.built_rules())
+        self.assertIsNotNone(re.search(r'className:[^{}]*not-prose[^{}]*"data-hermes-openui-widget"', self.built()), "the built widget root lost not-prose")
+
+
 @unittest.skipUnless(shutil.which("node") and (ROOT / "build" / "node_modules" / "esbuild").exists(), "needs Node and `npm ci` in build/")
 class DesktopHalf(unittest.TestCase):
     def test_app_loader_accepts_the_bundle(self):

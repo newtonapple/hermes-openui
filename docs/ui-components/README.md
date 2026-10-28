@@ -80,13 +80,13 @@ Found by rendering every example. Each is explained, with a screenshot where it 
 |---|---|
 | [Card](Card.md), [Metric](Metric.md) | Have a minimum size (160 px and 120 px) along the stack's main axis. Directly in a column that is a minimum **height**, so a lone one looks tall and empty. Wrap it in a one-item row. |
 | [Text](Text.md), [Callout](Callout.md) | Plain text only. A newline collapses to a space and `**bold**` prints as typed. Use [Markdown](Markdown.md) to format. |
-| [Table](Table.md) | Wider than the 640 px column, it scrolls sideways with no visual cue. A row with too few or too many cells is accepted. |
+| [Table](Table.md) | Wider than its column (a preview frame is at most 640 px), it scrolls sideways with no visual cue. A row with too few or too many cells is accepted. |
 | [BarChart](BarChart.md) | Bars scale to the largest value, not to 0-100. |
 | [LineChart](LineChart.md), [AreaChart](AreaChart.md) | A series shorter than `labels` is drawn as zeros for the missing points. The y axis always starts at 0. |
 | [PieChart](PieChart.md) | The `donut` variant renders poorly (a thin ring over a grey disc). The default pie is fine. |
 | [Dag](Dag.md) | Direction switches to top-to-bottom for any graph of four or more layers. Only an edge that closes a cycle is dropped, silently. |
 | [GeoMap](GeoMap.md) | Links are straight lines on a flat map. Pins close together print overlapping labels. |
-| [InfraMap](InfraMap.md) | Shrinks to fit the 640 px column, then scrolls sideways with no visual cue (about 4 zones fit). `InfraLink` takes node **id strings**, not variable names or labels, and the validator rejects a mistake with the ids it knows. |
+| [InfraMap](InfraMap.md) | Shrinks to fit its column (a preview frame is at most 640 px), then scrolls sideways with no visual cue (about 4 zones fit 640 px). `InfraLink` takes node **id strings**, not variable names or labels, and the validator rejects a mistake with the ids it knows. |
 | [Markdown](Markdown.md) | Lists are flat (no nesting), and strikethrough, `_italics_` and HTML print as typed. |
 | [CodeBlock](CodeBlock.md) | Any language gets some colouring (strings, numbers, a word before `(`), not only the listed ones. |
 | [Tabs](Tabs.md) | Only the first tab shows in a screenshot. Items in a tab have no spacing: use one Stack per tab. |

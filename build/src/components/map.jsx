@@ -34,7 +34,8 @@ export function MapView({ points, links = [], title }) {
   for (let gx = Math.ceil(v.x / step) * step; gx <= v.x + v.w; gx += step) grat.push(<line key={"x" + gx} x1={gx} x2={gx} y1={v.y} y2={v.y + v.h} />);
   for (let gy = Math.ceil(v.y / step) * step; gy <= v.y + v.h; gy += step) grat.push(<line key={"y" + gy} x1={v.x} x2={v.x + v.w} y1={gy} y2={gy} />);
   return (
-    <div style={{ minWidth: 0 }}>
+    // data-hermes-openui-map is a styling hook for native mode (plugin.jsx NATIVE_CSS); it changes nothing elsewhere.
+    <div data-hermes-openui-map="" style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
       <svg viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: 10, border: `1px solid ${C.border}`, background: "color-mix(in srgb, var(--foreground, CanvasText) 3%, transparent)" }}>
         <g stroke={C.border} strokeWidth={0.7 * k} opacity="0.45">{grat}</g>

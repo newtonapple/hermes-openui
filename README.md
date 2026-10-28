@@ -17,7 +17,7 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG and ER diagrams, infr
 - **22 components** (32 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, infrastructure maps, offline maps, code, markdown, FAQs, and clickable choices. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
 - **Plain English works.** You do not name the tool. Hermes's Tool Search keeps it out of the model's context until a request needs it.
 - **Cheap on context.** About 20 tokens always on; about 3,000 tokens the first time it is used (the component reference); a few hundred per widget.
-- **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself and makes widgets tiny, at the price of running with full app authority. See [Display modes](#display-modes).
+- **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself, so the widget files are tiny (1 to 2 KB), at the price of running with full app authority. See [Display modes](#display-modes).
 - **Interactive.** Buttons and choices send their text back to the agent as your next turn.
 - **Export to HTML.** Ask for a few widgets, or a whole report, as one standalone offline HTML file, saved where you say. See [Export to HTML](#export-to-html).
 - **Your own components.** Link a small JavaScript file in the plugin's settings and the agent can use the components it adds, or ask the agent to write one. See [Custom components](#custom-components).
@@ -141,6 +141,7 @@ How it works behind the scenes, in order: the agent calls `render_widget(referen
 | File per widget | 275–390 KB self-contained HTML | 1–2 KB of source |
 | Cost to show 20 widgets | about 530 ms and roughly 300 MB of extra memory | about 50 ms and about 4 MB, one shared runtime |
 | Isolation | Sandboxed (opaque-origin iframe) | **None**: runs with the app's full authority |
+| Width | The app caps a preview frame at 40rem and never above 640 px (560 px at the app's default 14 px font), and a page cannot change that | Fills the chat column. Content too wide for it shrinks, then scrolls inside its own box |
 | Buttons | Send a **hidden** turn to the agent | Type a **visible** user message (the plugin SDK cannot send hidden ones) |
 | Remote gateways | Works | Local files only |
 | Setup | none | enable the desktop half **and** set `mode` |

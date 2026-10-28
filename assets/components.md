@@ -101,6 +101,6 @@ Before finishing, walk your output and verify:
 - All data must be literal values you already have (numbers, strings, arrays). There are no tools, queries, mutations or $variables in a widget.
 - Never use @OpenUrl: the widget is sandboxed and cannot navigate. Put links in a Text instead.
 - @ToAssistant("...") sends that text back to the agent as the user's next turn. Write it as a clear instruction (max 500 chars), e.g. @ToAssistant("Restart the vllm service on dgx-spark-1").
-- The widget renders in a ~640px chat column. Prefer Stack/Card/Metric/Table/BarChart/Tabs; keep tables under ~12 rows and labels short.
+- Design for a column of up to 640px (native mode may be wider). Prefer Stack/Card/Metric/Table/BarChart/Tabs; keep tables under ~12 rows and labels short.
 - Chart choice: LineChart for trends over time (several series), AreaChart for volume/cumulative trends, PieChart for parts of a whole (<= 8 slices; keep the default filled variant), RadarChart to compare entities across several metrics, BarChart for one simple series of categories. Series values are parallel to the chart's labels and must be the same length.
 - Metric values and deltas are strings ("87%", "+3 since yesterday"). Table cells and chart values must be literal numbers/strings, not expressions.

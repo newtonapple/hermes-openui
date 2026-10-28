@@ -68,6 +68,7 @@ node scripts/notices.mjs                           # after a dependency change (
 python3 tools/check_docs.py                        # docs/ui-components checks
 python3 tools/shoot.py <file.oui> <out.png> [--pack P.js]   # screenshot a widget, optionally with a custom pack (needs Chrome)
 python3 tools/shoot.py --html <file.html> <out.png> --theme dark   # screenshot an exported page from file://
+python3 tools/verify_native.py [--png OUT.png]     # draw desktop/plugin.js at 360..2400 px columns in one Chrome launch and check the layout (needs Node, Chrome)
 hermes openui components check <pack.js>           # check a pack: header, forbidden APIs, and (with Node) that it loads and registers what it lists
 hermes openui components list | widgets | export   # what is linked | rendered widgets | save widgets as one HTML page
 ```
@@ -80,6 +81,7 @@ Runtime checks against a real Hermes, in an isolated home: install with `scripts
 - [ ] If a component changed: its page and example in `docs/ui-components/` updated, `tools/check_docs.py` clean.
 - [ ] If a schema changed: `tools/verify_discovery.py` still finds 28 of 28 render keyword queries and ranks `export_widgets` first for all 7 export queries.
 - [ ] If the pack API or export changed: its guide (`docs/custom-components.md`, `docs/exporting.md`) and the tests that run the guide's examples still pass.
+- [ ] If `build/src/plugin/` or a component changed: also run `OPENUI_TEST_CHROME=1 python3 -m unittest tests.test_native_layout` (native layout in Chrome; skips when Chrome is missing).
 - [ ] You rendered at least one widget and looked at it (`tools/shoot.py`); a passing build does not prove it looks right.
 
 ## 4. Pitfalls already paid for (details in `docs/development.md`)

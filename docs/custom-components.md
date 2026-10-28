@@ -96,7 +96,7 @@ Then `StatusPill("Postgres up", "ok")` works anywhere a built-in component does.
 | Size | At most 200 KB. A widget page carries the pack, and the desktop reads at most 512 KB of a page. |
 | Forbidden | `fetch`, `XMLHttpRequest`, `sendBeacon`, `WebSocket`, `EventSource`, `importScripts`, `eval(`, `new Function`, `Function(` and `import(`. Words inside strings and comments do not count. |
 | Colors | Use CSS variables with fallbacks, such as `var(--foreground, CanvasText)`, `var(--muted-foreground, GrayText)`, `var(--accent, AccentColor)`, `var(--border, ...)` and `var(--card, Canvas)`. The component then follows Hermes in light and dark, and also looks right on an exported HTML page. |
-| Width | The chat column is 640 px wide. Scale to the container, and scroll sideways instead of clipping. |
+| Width | A preview frame is at most 640 px wide (40rem; 560 px at the app's default 14 px font). Scale to the container, and scroll sideways instead of clipping. |
 
 ### Child components
 

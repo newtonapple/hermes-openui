@@ -61,7 +61,7 @@ queue = Metric("Queue", "12", "-3")
 ## Tips and pitfalls
 
 - `tone` only colours the `delta`. With no `delta` there is nothing to colour, so a tone alone has no visible effect.
-- Tiles share a row equally and wrap. Use `Stack([...], "row", "m", true)` (the last argument is `wrap`) so more than about four still fit the 640 px chat column.
+- Tiles share a row equally and wrap. Use `Stack([...], "row", "m", true)` (the last argument is `wrap`) so more than about four still fit a 640 px column (the widest a preview frame gets).
 - A Metric has a minimum size of 120 px along the stack's main direction (the code sets `flex: 1 1 120px`). In a row that is a starting width. In a column it is a starting **height**, so a lone Metric placed directly under `root` is about 120 px tall with empty space. Put it in a one-item row, `Stack([tile], "row")`, to fit its content. [Card](Card.md) has the same behaviour at 160 px.
 - Values are plain text. Nothing formats numbers for you, so write `"1,284"` or `"840 ms"` yourself.
 - The tone is your judgement, not computed: higher latency is `"warn"` and higher uptime is `"good"` only because you say so.

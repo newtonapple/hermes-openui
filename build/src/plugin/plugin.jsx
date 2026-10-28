@@ -17,7 +17,6 @@ import { openuiTheme } from "../oui-theme.js";
 
 const ROOT_CLASS = "hermes-openui-root";
 const STYLE_ATTR = "data-hermes-openui";
-const MAX_COLUMN_WIDTH = 640; // same column cap the iframe version adopts
 const MAX_INTENT_LENGTH = 500; // same cap as window.hermes.send
 const MIN_INTENT_GAP_MS = 1000; // same rate limit as window.hermes.send
 const SOURCE_MAX_BYTES = 512 * 1024; // the file bridge truncates here; refuse instead of rendering half a widget
@@ -38,6 +37,14 @@ const THEME_BRIDGE = {
 const library = createLibrary({ root: "Stack", components: [...coreComponents, ...packs.flatMap((p) => p.components)] });
 const COMPONENT_COUNT = coreComponents.length + packs.reduce((n, p) => n + p.components.length, 0);
 const WIDGET_CSS = packs.map((p) => p.css).filter(Boolean).join("\n");
+// Native only: the preview iframe is 640 px wide at most, where none of these rules binds. In a wide chat column they keep
+// parts from being stretched until they look wrong.
+const NATIVE_CSS = [
+  `.${ROOT_CLASS}{overflow-wrap:normal}`, // the app's message text sets overflow-wrap:anywhere and the widget would inherit it; the preview page has the default
+  `.${ROOT_CLASS} img,.${ROOT_CLASS} svg{box-sizing:border-box}`, // a 1 px border on top of max-width:100% pushed an image or a map 2 px past the column
+  `.${ROOT_CLASS} .openui-chart-with-stacked-legend--row{max-width:720px}`, // a pie and its legend each took half the column and ended up far apart
+  `.${ROOT_CLASS} [data-hermes-openui-map]{max-width:960px}`, // a map keeps its 2:1 shape, so its height grew with the column (1,200 px at 2,400)
+].join("\n");
 
 // A hot reload re-evaluates this module: drop the previous copy's stylesheet first.
 if (typeof document !== "undefined") document.querySelectorAll(`style[${STYLE_ATTR}]`).forEach((n) => n.remove());
@@ -56,7 +63,7 @@ function useWidgetStyles() {
     if (styleUsers++ === 0) {
       styleEl = document.createElement("style");
       styleEl.setAttribute(STYLE_ATTR, "");
-      styleEl.textContent = WIDGET_CSS;
+      styleEl.textContent = WIDGET_CSS + "\n" + NATIVE_CSS;
       document.head.appendChild(styleEl);
     }
     return () => {
@@ -144,7 +151,11 @@ function OpenUIWidget({ file }) {
   if (state.status === "loading") return <Notice>Loading widget…</Notice>;
   if (state.status === "error") return <Notice>OpenUI widget unavailable: {state.message}</Notice>;
   return (
-    <div className={ROOT_CLASS} data-hermes-openui-widget="" style={{ ...THEME_BRIDGE, maxWidth: MAX_COLUMN_WIDTH, minWidth: 0, color: "var(--foreground)" }}>
+    // No width cap: the 640 px column belongs to the app's preview frame. Here the widget takes the chat column's width, and
+    // the components shrink first and then scroll inside themselves when the column is narrower than their content.
+    // `not-prose`: the widget sits inside the message's Tailwind Typography `.prose` block, whose table width and margins
+    // would otherwise restyle the Markdown table and others. The preview iframe has none of those rules.
+    <div className={ROOT_CLASS + " not-prose"} data-hermes-openui-widget="" style={{ ...THEME_BRIDGE, width: "100%", minWidth: 0, color: "var(--foreground)" }}>
       <ThemeProvider mode={mode} lightTheme={openuiTheme} darkTheme={openuiTheme} cssSelector={"." + ROOT_CLASS}>
         <Renderer
           response={state.text}

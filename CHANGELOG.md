@@ -4,6 +4,23 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Changed
+
+- **Native mode fills the chat column.** The desktop half capped every widget at 640 px, a limit copied from the preview frame. The cap is gone: the widget root is `width: 100%`, so charts, tables, the Metric row, tabs and code blocks use the whole column. InfraMap, Dag, Erd and images keep their natural size, left aligned. A column narrower than the content still shrinks a diagram to 78% and then scrolls it, and a Table and a CodeBlock scroll in place. Preview mode is unchanged: the app caps a preview frame at 40rem and never above 640 px (560 px at its default 14 px font), and a page cannot change that.
+- In native mode a pie chart and its legend sit together (at most 720 px) instead of taking half a wide column each, and a map stops at 960 px instead of growing as tall as it is wide (1,200 px high in a 2,400 px column). The map pack gets a `data-hermes-openui-map` attribute for this. The preview render of the map at 640 px gives identical PNG bytes before and after (same sha256); the map pack's JavaScript differs by that one attribute plus the minifier's renames of short identifiers.
+- The hint in the component reference (`render_widget(reference=true)`) no longer says the widget renders in a ~640px chat column; it says to design for a column of up to 640px and that native mode may be wider.
+
+### Fixed
+
+- In native mode an image or a map with its 1 px border no longer ends 2 px past the edge of a narrow column.
+- In native mode the widget root has the class `not-prose` and `overflow-wrap: normal`. The app draws a message inside a Tailwind Typography `.prose` block that sets `overflow-wrap: anywhere`, so without them a Markdown table takes the whole column instead of its own width, and a Table or a Markdown block with a table is about 50 px taller (harness numbers). This is derived from the app's source and compiled stylesheet and checked in the harness with the stylesheet inlined; nobody has seen it in the running app.
+- The preview docs said the app's cap is 640 px; it is 40rem and never above 640 px, which is 560 px at the app's default 14 px font.
+
+### Added
+
+- `tools/verify_native.py`, with `build/tests/native-harness.mjs`: draws the real `desktop/plugin.js` against a stub SDK in chat columns of 360, 640, 1000, 1800 and 2400 px, in one headless Chrome launch, and measures every widget (width, height, scrollers, overflow). `tests/test_native_layout.py` runs it when `OPENUI_TEST_CHROME=1`. It shows layout in plain Chrome, not in Hermes Desktop. `--app-css auto` also inlines the stylesheet of an installed Hermes Desktop and wraps each widget in the classes of the app's message elements (a copy, not the app's React tree); `--theme light` uses light stub tokens (approximations of the app's); the scroller check is evaluated at the 360 px column only.
+- Tests that need no Chrome: every `max-width` in `build/src/plugin/plugin.jsx` is one of the two native-only limits, there is no 640 there, and the built `desktop/plugin.js` holds exactly the `NATIVE_CSS` rules of the source. The opt-in Chrome test skips when Chrome is missing. `AGENTS.md` says to run it after a change to `build/src/plugin/` or a component.
+
 ## [0.2.1] - 2026-10-28
 
 ### Added

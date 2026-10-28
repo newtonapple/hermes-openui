@@ -33,7 +33,7 @@ First use: call `render_widget(reference=true)` for the exact component signatur
 - `root = Stack([...])` comes first. Every other variable must be reachable from `root` or it will not render.
 - Chart `labels` and every series `values` array must be the same length.
 - Edges, relations and links name the node id, entity name or point label as a STRING, never a variable.
-- `InfraMap`: an `InfraLink` names a node id, never a label (`InfraLink("web", "pg")`). About four zones and twelve nodes fit the column; more scroll sideways unseen. Set `status` only if the user or a tool gave it.
+- `InfraMap`: an `InfraLink` names a node id, never a label. A preview frame is 40rem, at most 640 px (560 at the default font); about four zones and twelve nodes fit 640 px, more scroll sideways unseen. Never invent `status`.
 - `Dag`: leave `direction` as `null`; it picks left-to-right or top-to-bottom to fit the column. Keep labels short (about ten characters). Edges have no labels; put link details in a `Table`. Layout is layered: a linked node sits one layer after its source, and only an edge that closes a cycle is dropped, silently. It suits hierarchies and pipelines, not meshes.
 - Data must be literals you already have. Never invent numbers to fill a layout. A widget is a snapshot: new data means a new widget.
 - Images: an absolute local path, 100 KB or less per image.

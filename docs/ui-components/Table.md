@@ -53,7 +53,7 @@ slow = Table(["Request", "Model", "Prompt tokens", "Output tokens", "Latency ms"
 
 ### A table wider than the column
 
-Nine columns do not fit in 640 px, so the table scrolls sideways. The image shows only the left part: the last three columns are off to the right.
+Nine columns do not fit in a 640 px column (the widest a preview frame gets), so the table scrolls sideways. The image shows only the left part: the last three columns are off to the right.
 
 ```openui
 root = Stack([wide])
