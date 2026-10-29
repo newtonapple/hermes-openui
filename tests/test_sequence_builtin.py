@@ -1018,11 +1018,16 @@ class Skill(unittest.TestCase):
 
 
 class Changelog(unittest.TestCase):
-    def test_the_unreleased_section_lists_the_component_under_added(self):
+    # The component ships in 0.3.0, so its entry stays under that heading. A rule such as "under Unreleased" passes only until
+    # the release moves the heading, and then it blocks that release.
+    SHIPPED_IN = "0.3.0"
+
+    def test_the_release_section_lists_the_component_under_added(self):
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
-        self.assertIn("### Added", unreleased)
-        self.assertIn("SequenceDiagram", unreleased)
+        holders = [sec for sec in re.split(r"(?m)^(?=## \[)", text)[1:] if "**SequenceDiagram**" in sec]
+        self.assertEqual(len(holders), 1, "the SequenceDiagram entry should be in exactly one release section")
+        self.assertRegex(holders[0], r"^## \[%s\]" % re.escape(self.SHIPPED_IN))
+        self.assertIn("### Added", holders[0])
 
 
 if __name__ == "__main__":
