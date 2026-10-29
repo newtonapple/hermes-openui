@@ -68,6 +68,8 @@ Without `--ref`, the install follows the default branch, `main`, which can be ah
 
 Then start a **new** chat in that profile and ask for a chart. If the profile's gateway is already running, restart it first (see below).
 
+Widgets show up in `preview` mode right away. To make them fill the chat column, switch on the **Desktop** half of the plugin in the app: see [Turn on native mode](#turn-on-native-mode).
+
 ### Multiple profiles
 
 Each Hermes profile has its own home (`~/.hermes/profiles/<name>`), its own `plugins/` folder and its own enabled list in `config.yaml`. Hermes has no shared plugin folder for a plugin like this one, so install it once per profile:
@@ -145,9 +147,15 @@ How it works behind the scenes, in order: the agent calls `render_widget(referen
 | Width | The app caps a preview frame at 40rem and never above 640 px (560 px at the app's default 14 px font), and a page cannot change that | Fills the chat column. Content too wide for it shrinks, then scrolls inside its own box |
 | Buttons | Send a **hidden** turn to the agent | Type a **visible** user message (the plugin SDK cannot send hidden ones) |
 | Remote gateways | Works | Local files only |
-| Setup | none | enable the desktop half **and** set `mode` |
+| Setup | none | enable the desktop half **and** set `mode`: see [Turn on native mode](#turn-on-native-mode) |
 
-To use `native`: open **Capabilities → Plugins**, switch **Desktop** on for *OpenUI widgets* (review it first: it is a desktop plugin with full app authority), then set `mode: native` in the plugin's settings, or in `config.yaml`:
+#### Turn on native mode
+
+`preview` needs nothing. `native` needs two things, one switch in the app and one setting:
+
+1. In the Hermes desktop app, open **Capabilities → Plugins** and find **OpenUI widgets** (type `openui` in the search box). Click it to open its page.
+2. Switch **Desktop** on. That loads the plugin's desktop half, which runs with the app's full authority, so review it first.
+3. Set `mode: native` for the profile you use, in the plugin's settings or in `config.yaml`:
 
 ```yaml
 plugins:
@@ -159,9 +167,16 @@ plugins:
 
 Installing already created a `plugins:` block in that file (it holds `enabled:`). Add `entries:` **under it**. A second top-level `plugins:` key is a duplicate and is not valid YAML.
 
-The desktop half is the file `desktop/plugin.js` inside the plugin folder. Per Hermes's docs, the app copies it into `~/.hermes/desktop-plugins/hermes-openui/` on its own when the plugin lands in a profile's `plugins/` folder, and it stays off until you switch it on. Do not copy the file there by hand. The app treats a hand-placed file as a separate plugin and never refreshes it, so it goes stale after an update. If the switch is missing, try **Rescan** on the Capabilities → Plugins page, or restart the app. This comes from Hermes's docs and has not been checked in the app. The plugin file itself is verified against the app's loader.
+4. Quit the app and open it again. It copies the plugin's desktop file when it starts, so a new or updated desktop half shows up only after a restart. A restart is also the fix when the **Desktop** switch is missing.
+5. Start a new chat and ask for a chart.
 
-Timings and memory were measured in headless Chrome, not in the desktop app, so treat them as indicative. In `native` mode the directive shows as a plain line wherever the desktop half is off; switch back with `mode: preview`.
+![The OpenUI widgets page in Capabilities → Plugins, with the Desktop switch on](docs/images/capabilities-plugins-desktop.png)
+
+Both steps are needed. With **Desktop** off, a `native` widget shows as a plain `::openui{…}` line. With **Desktop** on and `mode` left at `preview`, widgets are still drawn in preview frames. `mode` is set per profile; the Desktop switch belongs to the app. Widgets drawn earlier stay as they were, and only new ones use `native`.
+
+The desktop half is the file `desktop/plugin.js` inside the plugin folder. Per Hermes's docs, the app copies it into `~/.hermes/desktop-plugins/hermes-openui/` on its own when the plugin lands in a profile's `plugins/` folder, and it stays off until you switch it on. Do not copy the file there by hand. The app treats a hand-placed file as a separate plugin and never refreshes it, so it goes stale after an update. The Desktop switch and the copy the app makes when it starts were seen in the desktop app. **Rescan** on the Capabilities → Plugins page may do the same as a restart; that was not tried. The plugin file itself is verified against the app's loader.
+
+Timings and memory were measured in headless Chrome, not in the desktop app, so treat them as indicative. Switch back with `mode: preview`.
 
 ## Components
 
