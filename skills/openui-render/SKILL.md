@@ -22,6 +22,7 @@ First use: call `render_widget(reference=true)` for the exact component signatur
 | One series of categories | `BarChart` |
 | Pipeline, dependency graph, tree of steps | `Dag` |
 | How servers and services connect (infrastructure, network) | `InfraMap` |
+| Calls between services in order (request flow, login, API call sequence) | `SequenceDiagram` |
 | Database schema | `Erd` |
 | Places | `GeoMap` (country or region scale; coastlines only) |
 | Ask the user to choose | `Choice` |
@@ -34,6 +35,7 @@ First use: call `render_widget(reference=true)` for the exact component signatur
 - Chart `labels` and every series `values` array must be the same length.
 - Edges, relations and links name the node id, entity name or point label as a STRING, never a variable.
 - `InfraMap`: an `InfraLink` names a node id, never a label. A preview frame is 40rem, at most 640 px (560 at the default font); about four zones and twelve nodes fit 640 px, more scroll sideways unseen. Never invent `status`.
+- `SequenceDiagram`: ids and labels short; a message names participant ids, never labels; mark answers `"return"` (a sync call with a later return gets an activation bar); one `SeqGroup` per decision, the other side in `elseSteps`, not a second group. About 20 steps; split longer flows. At most 10 participants, 5 fit a preview frame.
 - `Dag`: leave `direction` as `null`; it picks left-to-right or top-to-bottom to fit the column. Keep labels short (about ten characters). Edges have no labels; put link details in a `Table`. Layout is layered: a linked node sits one layer after its source, and only an edge that closes a cycle is dropped, silently. It suits hierarchies and pipelines, not meshes.
 - Data must be literals you already have. Never invent numbers to fill a layout. A widget is a snapshot: new data means a new widget.
 - Images: an absolute local path, 100 KB or less per image.

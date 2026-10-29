@@ -3,19 +3,20 @@
 Keep the description SHORT, but rich in the words people actually say. With Tool Search on (the default) only the first sentence appears
 in the always-visible listing (clipped to ~60 characters) and the whole description is what the BM25 search indexes; with it off, the whole
 description rides on every API call. The component reference is deliberately NOT here: render_widget(reference=true) returns it on demand.
-Recall was measured (tools/verify_discovery.py): adding graph/plot/flowchart/schema/topology/KPI took keyword recall from 13/20 to 20/20. Adding infrastructure/server/architecture took the 25-query set from 21 to 25.
+Recall was measured (tools/verify_discovery.py): adding graph/plot/flowchart/schema/topology/KPI took keyword recall from 13/20 to 20/20. Adding infrastructure/server/architecture took the 25-query set from 21 to 25. Adding the sequence words (call flow, request flow, message sequence chart) is measured the same way.
 """
 
 RENDER_WIDGET = {
     "name": "render_widget",
     "description": (
         "Draw charts, graphs, DAG/ER diagrams, maps and dashboards. "
-        "Show data visually in the Hermes desktop chat as an interactive inline widget written in OpenUI Lang: KPI metric tiles, tables, tabs, cards, "
-        "bar/line/area/pie/radar charts and plots, flowcharts, DAG pipelines, ER database schemas, network topology, infrastructure and server maps, architecture diagrams, offline maps, code blocks, markdown, "
-        "FAQs, custom components and clickable Choice questions. "
-        "Pass the OpenUI Lang as `source`; the tool validates it and returns a one-line directive to put ALONE on its own line in your reply. "
-        "Call it once with reference=true first to get the exact component signatures. "
-        "Desktop app only. For a single value or a short answer, reply in plain text instead."
+        "Show data visually in the Hermes desktop chat as an inline widget in OpenUI Lang: KPI tiles, tables, tabs, cards, "
+        "bar/line/area/pie/radar charts and plots, flowcharts, DAG pipelines, ER database schemas, network topology, infrastructure and server maps, architecture diagrams, "
+        "sequence diagrams (call flow, request flow, message sequence chart, API call sequence), maps, code, markdown, "
+        "FAQs, custom components and Choice questions. "
+        "Pass OpenUI Lang as `source`; the tool validates it and returns a directive to put ALONE on its own line in your reply. "
+        "Call it with reference=true first for exact component signatures. "
+        "Desktop app only. For one value or a short answer, reply in plain text."
     ),
     "parameters": {
         "type": "object",

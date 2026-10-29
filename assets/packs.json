@@ -67,6 +67,19 @@
     "GeoMap"
    ]
   },
+  "sequence": {
+   "file": "packs/sequence.js.gz",
+   "raw": 16646,
+   "gz": 6918,
+   "sha256": "193640a018b239b74ebb5c661ef13f57b409d1a9de7d508c0de90201f21799bc",
+   "components": [
+    "SeqParticipant",
+    "SeqMessage",
+    "SeqNote",
+    "SeqGroup",
+    "SequenceDiagram"
+   ]
+  },
   "text": {
    "file": "packs/text.js.gz",
    "raw": 11590,
@@ -98,6 +111,11 @@
   "InfraMap": "infra",
   "GeoPoint": "map",
   "GeoMap": "map",
+  "SeqParticipant": "sequence",
+  "SeqMessage": "sequence",
+  "SeqNote": "sequence",
+  "SeqGroup": "sequence",
+  "SequenceDiagram": "sequence",
   "Markdown": "text",
   "CodeBlock": "text",
   "FaqItem": "text",

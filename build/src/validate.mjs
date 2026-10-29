@@ -8,6 +8,7 @@ import * as Zod from "zod/v4";
 import { createLibrary, defineComponent, action, useTriggerAction, useIsQueryLoading } from "@openuidev/react-lang";
 import { createParser } from "@openuidev/lang-core";
 import { library as builtinLibrary, components as builtinComponents } from "./library.jsx";
+import { checkSequence } from "./components/sequence-check.js";
 
 // usage: node validate.cjs [--pack FILE]... <file.oui>
 // A --pack is a user-linked component pack (see packs.py). It is evaluated in a bare vm context against the SAME React, zod and
@@ -102,6 +103,7 @@ walk(root, (n) => {
     for (const l of p.links ?? []) for (const x of l) if (!labels.includes(x)) problems.push(`GeoMap link uses unknown point label \`${x}\` (known: ${labels.join(", ")}).`);
   }
   if (n.typeName === "InfraZone" && !list(p.nodes).length) problems.push(`InfraZone \`${str(p.name)}\` has no nodes (give it at least one InfraNode, or remove the zone).`);
+  if (n.typeName === "SequenceDiagram") for (const m of checkSequence(p)) problems.push(m);
   if (n.typeName === "InfraMap") {
     const zones = list(p.zones).map((z) => z?.props ?? {});
     if (!zones.length) problems.push("InfraMap needs at least one InfraZone in `zones`.");

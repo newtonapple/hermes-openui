@@ -4,11 +4,12 @@
 usage: python3 tools/verify_native.py [--plugin FILE] [--png OUT.png] [--json OUT.json] [--widths 360,640,1000,1800,2400]
                                       [--theme dark|light] [--app-css FILE|auto]
 
-Builds one page (build/tests/native-harness.mjs) that draws the same 15 widgets, through the plugin's own directive render, in
+Builds one page (build/tests/native-harness.mjs) that draws the same 16 widgets, through the plugin's own directive render, in
 chat columns of several widths, then screenshots it and measures every widget through tools/shoot.py --html --eval. It prints a
 table (column width, widget width and height, scrollers, left offset and size of the first diagram, image or table) and checks:
 widgets fill their column, nothing overflows its column, diagrams stay left aligned, images never grow past their natural size,
-the widget does not inherit `overflow-wrap:anywhere`, and in a 360 px column the wide components get their own scroller.
+the widget does not inherit `overflow-wrap:anywhere`, and in a 360 px column the wide components get their own scroller. With --app-css it
+also checks that the sequence sample's svg computes to `user-select:text` (the app's own sheet says `svg{user-select:none}`).
 Exit 1 when a check fails.
 
 --app-css FILE inlines the Hermes Desktop stylesheet and wraps every widget in the wrapper elements the app puts around a message
@@ -39,7 +40,7 @@ import shoot  # noqa: E402
 EXAMPLES = ROOT / "docs" / "ui-components" / "examples"
 WIDGETS = (
     "metric-tones", "table-wide", "bar-chart-load", "line-chart-series", "pie-chart-default", "tabs-overview", "dag-pipeline",
-    "erd-schema", "infra-map-web-platform", "geo-map-world", "radar-chart-compare", "markdown-code-table", "code-block-python",
+    "erd-schema", "infra-map-web-platform", "sequence-diagram-cache-lookup", "geo-map-world", "radar-chart-compare", "markdown-code-table", "code-block-python",
     "image-caption",
 )
 BUTTON_AND_CHOICE = (  # Button and Choice together, in one small widget
@@ -50,8 +51,9 @@ BUTTON_AND_CHOICE = (  # Button and Choice together, in one small widget
     'b = Button("Show logs", @ToAssistant("Show the last 50 lines of the nginx log on web-1"))\n'
 )
 NARROW = 360  # the narrow chat column the scroller check is about
-NEEDS_SCROLLER_AT_360 = ("infra-map-web-platform", "dag-pipeline", "erd-schema", "table-wide", "code-block-python")
-DIAGRAMS = ("infra-map-web-platform", "dag-pipeline", "erd-schema")
+NEEDS_SCROLLER_AT_360 = ("infra-map-web-platform", "sequence-diagram-cache-lookup", "dag-pipeline", "erd-schema", "table-wide", "code-block-python")
+DIAGRAMS = ("infra-map-web-platform", "sequence-diagram-cache-lookup", "dag-pipeline", "erd-schema")
+SELECTABLE = "sequence-diagram-cache-lookup"  # with --app-css, its svg must compute to user-select:text
 
 
 def load_widgets():
@@ -107,7 +109,7 @@ def measure(plugin: Path, widths, png: Path, theme="dark", app_css=None):
     return rows, out.splitlines()[0]
 
 
-def problems(rows):
+def problems(rows, app_css=False):
     bad = []
     for r in rows:
         tag = "%s @%d" % (r["widget"], r["width"])
@@ -127,6 +129,8 @@ def problems(rows):
             bad.append("%s: inherits overflow-wrap %s (the preview page has normal)" % (tag, r["cellWrap"] if r["wrap"] == "normal" else r["wrap"]))
         if r["width"] == NARROW and r["widget"] in NEEDS_SCROLLER_AT_360 and not r["scrollers"]:
             bad.append("%s: expected its own scroller" % tag)
+        if app_css and r["widget"] == SELECTABLE and m and m.get("select") != "text":  # the app's sheet says svg{user-select:none}
+            bad.append("%s: the diagram's computed user-select is %s, labels cannot be selected" % (tag, m.get("select")))
     return bad
 
 
@@ -165,7 +169,7 @@ def main(argv=None):
         Path(a.json).write_text(json.dumps(rows, indent=1), encoding="utf-8")
     print(summary)
     print(table(rows))
-    bad = problems(rows)
+    bad = problems(rows, bool(app_css))
     print("\n%d widgets x %d widths, %d problem(s)" % (len(rows) // len(widths), len(widths), len(bad)))
     for b in bad:
         print("  - " + b)

@@ -4,6 +4,18 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Added
+
+- **SequenceDiagram**, a built-in component in a new `sequence` pack (with `SeqParticipant`, `SeqMessage`, `SeqNote` and `SeqGroup`). Participants are columns with dashed lifelines; messages are numbered arrows from top to bottom, in three styles (`sync`, `async`, `return`), with self-calls, activation bars worked out from the messages, notes over one participant or spanning several, and `alt`, `opt`, `loop` and `par` groups that nest and can have a second branch. It keeps its natural size, left aligned, and shrinks to 78% and then scrolls like the other diagrams. The layout is a pure function (`build/src/components/sequence-layout.js`) that Node tests run without a browser. The validator rejects an unknown or duplicate participant id, a duplicate message id, more than 10 participants or 100 steps, groups nested deeper than 3, and a step or a participant that is not a Seq item. A user pack that reuses one of the five names is skipped, like the `Infra*` names. The page is [docs/ui-components/SequenceDiagram.md](docs/ui-components/SequenceDiagram.md), with three examples.
+- The native layout check (`tools/verify_native.py`) draws a sequence diagram too, and checks that it stays left aligned and gets its own scroller in a 360 px column. With `--app-css` it also checks that the diagram's text can be selected.
+
+### Changed
+
+- In native mode the text of every diagram (Dag, Erd, InfraMap, SequenceDiagram) can now be selected and copied: the app's own `svg{user-select:none}` rule is overridden by one line in `NATIVE_CSS`.
+- The `render_widget` description now says "sequence diagrams (call flow, request flow, message sequence chart, API call sequence)". On the discovery check, the five new keyword queries (`sequence diagram`, `call flow`, `request flow`, `message sequence chart`, `API call sequence`) and the 28 older ones all rank the tool in the top 5, 33 of 33, and `export_widgets` still ranks first on all 7 export queries. The description stays at about 750 characters: a few filler words (`interactive`, `written`, `clickable`) were cut to make room.
+- The component reference the agent loads on first use grows from about 3,100 to 3,700 tokens (the five SequenceDiagram lines). Every chat that uses `render_widget` pays it once.
+- The `openui-render` skill has a row and a rule line for sequences of calls. Its size limit goes from 4,000 to 4,500 characters (it was at 3,995), about 1,100 tokens.
+
 ## [0.2.2] - 2026-10-28
 
 ### Changed

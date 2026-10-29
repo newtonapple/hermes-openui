@@ -134,10 +134,10 @@ class Manifest(unittest.TestCase):
 
     def test_infra_is_a_pack_of_its_own_so_pages_without_it_do_not_get_heavier(self):
         m = bundle.manifest()
-        self.assertEqual(sorted(m["packs"]), ["charts", "diagrams", "infra", "map", "text"])
+        self.assertEqual(sorted(m["packs"]), ["charts", "diagrams", "infra", "map", "sequence", "text"])
         for name in NAMES:
             self.assertNotIn(name, m["core"]["components"])
-            for other in ("charts", "diagrams", "map", "text"):
+            for other in ("charts", "diagrams", "map", "sequence", "text"):
                 self.assertNotIn(name, m["packs"][other]["components"], "%s leaked into the %s pack" % (name, other))
 
     def test_the_pack_file_is_shipped_small_and_matches_its_recorded_hash(self):
@@ -191,10 +191,12 @@ class Reference(unittest.TestCase):
                     self.assertIn(fact, desc)
 
     def test_the_four_come_after_every_older_component_so_the_existing_order_is_unchanged(self):
+        # the five sequence components were added after them (tests/test_sequence_builtin.py), so the four end the older order
         order = re.findall(r"^([A-Z]\w*)\(", bundle.reference_text(), re.M)
-        self.assertEqual(order[-4:], NAMES)
-        self.assertEqual(order[:-4], [n for n in order if not n.startswith("Infra")])
-        self.assertEqual(order.index("RadarChart"), len(order) - 5)
+        older = order[:-5]
+        self.assertEqual(older[-4:], NAMES)
+        self.assertEqual(older[:-4], [n for n in older if not n.startswith("Infra")])
+        self.assertEqual(order.index("RadarChart"), len(older) - 5)
 
     def test_argument_order_and_optionality_follow_the_documented_signature(self):
         want = {n: split_args(s[s.index("(") + 1:s.rindex(")")]) for n, s in SIGNATURES.items()}

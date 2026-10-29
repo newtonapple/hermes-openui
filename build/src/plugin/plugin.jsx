@@ -44,6 +44,7 @@ const NATIVE_CSS = [
   `.${ROOT_CLASS} img,.${ROOT_CLASS} svg{box-sizing:border-box}`, // a 1 px border on top of max-width:100% pushed an image or a map 2 px past the column
   `.${ROOT_CLASS} .openui-chart-with-stacked-legend--row{max-width:720px}`, // a pie and its legend each took half the column and ended up far apart
   `.${ROOT_CLASS} [data-hermes-openui-map]{max-width:960px}`, // a map keeps its 2:1 shape, so its height grew with the column (1,200 px at 2,400)
+  `.${ROOT_CLASS} svg{user-select:text}`, // the app's sheet has img,picture,video,canvas,svg{user-select:none}; this is more specific, so labels in every diagram can be selected and copied
 ].join("\n");
 
 // A hot reload re-evaluates this module: drop the previous copy's stylesheet first.

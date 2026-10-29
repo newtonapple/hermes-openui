@@ -97,7 +97,7 @@ window.measureAll = () =>
       const tag = el.tagName.toLowerCase();
       const r = el.getBoundingClientRect();
       if ((tag === "svg" && r.width >= 100) || tag === "img" || tag === "canvas" || tag === "table")
-        media.push({ tag, w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.left - box.left), nat: tag === "img" ? el.naturalWidth : undefined });
+        media.push({ tag, w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.left - box.left), nat: tag === "img" ? el.naturalWidth : undefined, select: tag === "svg" ? getComputedStyle(el).userSelect : undefined });
     }
     return {
       ...row,

@@ -788,7 +788,7 @@ class OtherSkill(unittest.TestCase):
         text = (ROOT / "skills" / "openui-render" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("skill_view('hermes-openui:custom-components')", text)
         self.assertNotIn("docs/custom-components.md", text)
-        self.assertLess(len(text), 4000)
+        self.assertLessEqual(len(text), 4500)
 
 
 class Docs(unittest.TestCase):
@@ -827,12 +827,13 @@ class Docs(unittest.TestCase):
 
     def test_agents_md_states_the_current_discovery_numbers(self):
         text = read("AGENTS.md")
-        self.assertIn("28 of 28", text)
+        self.assertIn("33 of 33", text)
         self.assertNotIn("25 of 25", text)
+        self.assertNotIn("28 of 28 keyword", text)
         # one source of truth for the numbers: the harness itself
         harness = read("tools/verify_discovery.py")
         queries = re.search(r"KEYWORD = \[(.*?)\]", harness, re.S).group(1)
-        self.assertEqual(len(re.findall(r'"[^"]+"', queries)), 28)
+        self.assertEqual(len(re.findall(r'"[^"]+"', queries)), 33)
         for q in ("custom component", "new component", "add a component", "make me a new component"):
             self.assertIn('"%s"' % q, harness)
 

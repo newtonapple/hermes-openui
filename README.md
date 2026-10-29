@@ -1,6 +1,6 @@
 # hermes-openui
 
-Ask your Hermes agent to **draw**: dashboards, charts, DAG and ER diagrams, infrastructure and geographic maps, tables. They appear as interactive widgets inside the Hermes desktop chat. Everything runs locally: no network, no accounts, no telemetry.
+Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diagrams, infrastructure and geographic maps, tables. They appear as interactive widgets inside the Hermes desktop chat. Everything runs locally: no network, no accounts, no telemetry.
 
 <table>
 <tr>
@@ -14,9 +14,9 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG and ER diagrams, infr
 ## What you get
 
 - **One tool, `render_widget`.** The agent writes a few lines of *OpenUI Lang* (a compact component language); the plugin validates it, saves a widget, and the agent puts one line in its reply. The widget appears in the chat when the turn finishes.
-- **22 components** (32 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, infrastructure maps, offline maps, code, markdown, FAQs, and clickable choices. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
+- **23 components** (37 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, sequence diagrams, infrastructure maps, offline maps, code, markdown, FAQs, and clickable choices. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
 - **Plain English works.** You do not name the tool. Hermes's Tool Search keeps it out of the model's context until a request needs it.
-- **Cheap on context.** About 20 tokens always on; about 3,000 tokens the first time it is used (the component reference); a few hundred per widget.
+- **Cheap on context.** About 20 tokens always on; about 3,700 tokens the first time it is used (the component reference); a few hundred per widget.
 - **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself, so the widget files are tiny (1 to 2 KB), at the price of running with full app authority. See [Display modes](#display-modes).
 - **Interactive.** Buttons and choices send their text back to the agent as your next turn.
 - **Export to HTML.** Ask for a few widgets, or a whole report, as one standalone offline HTML file, saved where you say. See [Export to HTML](#export-to-html).
@@ -38,10 +38,11 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG and ER diagrams, infr
 <tr>
 <td valign="top" width="33%"><a href="docs/ui-components/InfraMap.md"><img src="docs/ui-components/images/infra-map-web-platform.png" width="270" alt="Four zones of a web platform, with labeled links and a status legend"></a><br><b>Infrastructure</b> &middot; <a href="docs/ui-components/InfraMap.md">InfraMap</a><br><sub>Four zones of a web platform, with labeled links and a status legend</sub></td>
 <td valign="top" width="33%"><a href="docs/ui-components/InfraMap.md"><img src="docs/ui-components/images/infra-map-office-network.png" width="270" alt="An office network drawn top to bottom, with zone tones and a dashed remote link"></a><br><b>Network</b> &middot; <a href="docs/ui-components/InfraMap.md">InfraMap</a><br><sub>An office network drawn top to bottom, with zone tones and a dashed remote link</sub></td>
+<td valign="top" width="33%"><a href="docs/ui-components/SequenceDiagram.md"><img src="docs/ui-components/images/sequence-diagram-cache-lookup.png" width="270" alt="A cache lookup with an alt group, notes and a self-call"></a><br><b>Sequence</b> &middot; <a href="docs/ui-components/SequenceDiagram.md">SequenceDiagram</a><br><sub>A cache lookup with an alt group, notes and a self-call</sub></td>
 </tr>
 </table>
 
-Each picture is a real render of the example code on that component's page, with sample data. All 22 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
+Each picture is a real render of the example code on that component's page, with sample data. All 23 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
 
 ## Requirements
 
@@ -164,7 +165,7 @@ Timings and memory were measured in headless Chrome, not in the desktop app, so 
 
 ## Components
 
-Every component has a page with its signature, arguments, rendered examples and pitfalls: **[docs/ui-components](docs/ui-components/README.md)**. Layout and data: Stack, Text, Card, Metric, Table, Tabs, Callout, Button. Charts: LineChart, AreaChart, PieChart, RadarChart, BarChart. Diagrams: Dag, Erd, GeoMap, InfraMap. Rich content: Markdown, CodeBlock, Image, Faq, Choice.
+Every component has a page with its signature, arguments, rendered examples and pitfalls: **[docs/ui-components](docs/ui-components/README.md)**. Layout and data: Stack, Text, Card, Metric, Table, Tabs, Callout, Button. Charts: LineChart, AreaChart, PieChart, RadarChart, BarChart. Diagrams: Dag, Erd, GeoMap, InfraMap, SequenceDiagram. Rich content: Markdown, CodeBlock, Image, Faq, Choice.
 
 ## Export to HTML
 
@@ -220,12 +221,12 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 330 |
 | `export_widgets` listing line | every chat, with Tool Search on | about 20 |
 | `export_widgets` schema (1.6 KB) | every API call **only if** Tool Search is off | about 400 |
-| Component reference | the first use in a chat | about 3,100 |
-| Custom component reference | the first use, **only when packs are linked** | one line per component. The four InfraMap lines, now built in, add about 320 |
+| Component reference | the first use in a chat | about 3,700 |
+| Custom component reference | the first use, **only when packs are linked** | one line per component. The four InfraMap lines and the five SequenceDiagram lines, now built in, add about 320 and 470 |
 | Your widget source | each widget, stays in the history | about 250–600 |
 | Tool result | each widget | about 100 |
 
-The bundled skills (`hermes-openui:openui-render`, about 1,000 tokens, and `hermes-openui:custom-components`, about 1,995 tokens) are loaded on demand only. The first `render_widget(reference=true)` result of a chat and an "Unknown component" error each carry a one-line pointer to the second one, about 20 tokens.
+The bundled skills (`hermes-openui:openui-render`, about 1,100 tokens, and `hermes-openui:custom-components`, about 1,995 tokens) are loaded on demand only. The first `render_widget(reference=true)` result of a chat and an "Unknown component" error each carry a one-line pointer to the second one, about 20 tokens.
 
 ## Security and privacy
 

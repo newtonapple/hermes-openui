@@ -73,7 +73,8 @@ class Contract(unittest.TestCase):
     def test_description_carries_the_words_people_say(self):
         # Tool Search finds a tool by the words in its text; each of these was a measured miss before they were added.
         text = self.ctx.tools[0]["schema"]["description"].lower()
-        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar", "infrastructure", "architecture", "server", "custom", "component"):
+        for word in ("chart", "graph", "plot", "diagram", "flowchart", "dashboard", "table", "map", "dag", "schema", "topology", "widget", "kpi", "pie", "bar", "infrastructure", "architecture", "server", "custom", "component",
+                     "sequence diagram", "call flow", "request flow", "message sequence chart", "api call sequence"):
             with self.subTest(word=word):
                 self.assertIn(word, text)
 
@@ -104,7 +105,7 @@ class Contract(unittest.TestCase):
 
     def test_bundled_skills_are_registered_and_have_frontmatter(self):
         self.assertEqual([n for n, _ in self.ctx.skills], ["custom-components", "openui-render"])
-        longest = {"custom-components": 8000, "openui-render": 3999}  # loaded in full each time a skill is used
+        longest = {"custom-components": 8000, "openui-render": 4500}  # loaded in full each time a skill is used
         for name, path in self.ctx.skills:
             with self.subTest(skill=name):
                 text = path.read_text(encoding="utf-8")
@@ -187,6 +188,12 @@ class NativeFillsTheColumn(unittest.TestCase):
     def test_the_built_stylesheet_has_only_the_known_limits(self):
         limits = [m.group(1) for r in self.built_rules() for m in self.LIMIT_VALUE.finditer(r)]
         self.assertEqual(sorted(limits), ["720px", "960px"])
+
+    def test_svg_text_can_be_selected_in_native_mode(self):
+        # the app's own sheet has `img,picture,video,canvas,svg{user-select:none}`; this rule is more specific, so it wins
+        rule = ".%s svg{user-select:text}" % self.ROOT_CLASS
+        self.assertIn(rule, self.source_rules())
+        self.assertIn(rule, self.built_rules())
 
     def test_the_widget_does_not_inherit_the_apps_message_text_rules(self):
         self.assertIn(".%s{overflow-wrap:normal}" % self.ROOT_CLASS, self.built_rules())
