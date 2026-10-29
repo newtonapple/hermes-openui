@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
 ### Added
 
 - **SequenceDiagram**, a built-in component in a new `sequence` pack (with `SeqParticipant`, `SeqMessage`, `SeqNote` and `SeqGroup`). Participants are columns with dashed lifelines; messages are numbered arrows from top to bottom, in three styles (`sync`, `async`, `return`), with self-calls, activation bars worked out from the messages, notes over one participant or spanning several, and `alt`, `opt`, `loop` and `par` groups that nest and can have a second branch. It keeps its natural size, left aligned, and shrinks to 78% and then scrolls like the other diagrams. The layout is a pure function (`build/src/components/sequence-layout.js`) that Node tests run without a browser. The validator rejects an unknown or duplicate participant id, a duplicate message id, more than 10 participants or 100 steps, groups nested deeper than 3, and a step or a participant that is not a Seq item. A user pack that reuses one of the five names is skipped, like the `Infra*` names. The page is [docs/ui-components/SequenceDiagram.md](docs/ui-components/SequenceDiagram.md), with three examples.
@@ -115,7 +117,8 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.3.0
 [0.2.2]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.2
 [0.2.1]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.1
 [0.2.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.0
