@@ -1,7 +1,7 @@
 ---
 name: custom-components
 description: Write, check and link a custom render_widget component (a one-file JS pack).
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Custom components

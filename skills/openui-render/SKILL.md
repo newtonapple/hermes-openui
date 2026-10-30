@@ -1,7 +1,7 @@
 ---
 name: openui-render
 description: "Patterns and pitfalls for render_widget: dashboards, charts, DAG/ER diagrams, maps."
-version: 0.3.0
+version: 0.4.0
 ---
 
 # render_widget patterns

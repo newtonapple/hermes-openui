@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-29
+
 ### Added
 
 - **Tooltip**, a new built-in component: a hover tooltip with an optional click-to-open detail panel for one element of a Dag, Erd, InfraMap or SequenceDiagram. Each of the four takes it in a new last argument, `tooltips`. `Tooltip(target, hint, detail, code, language, tone, link, linkLabel)`: an element with a tooltip gets a small dot in the tone colour (`info`, `good`, `warn`, `bad`), a pointer cursor and a Tab stop; hovering it or tabbing to it shows the hint, and a click, Enter or Space opens one panel under the diagram with the detail text, the code (highlighted, with a Copy button) and a link line. A second click, the close button, Escape or the diagram background closes it; an Escape that closes a panel is marked handled, so in the desktop app it does not also stop a running turn, and an Escape with no panel open is left alone. A target is a node id (Dag), an entity name or `entity.column` (Erd), a node id, `zone:<name>` or `<from>><to>` (InfraMap), or a participant id or a `SeqMessage` id (SequenceDiagram; a message without an id cannot have a tooltip). The validator rejects an unknown, duplicate or ambiguous target, an item that is not a Tooltip, a Tooltip that is not in the `tooltips` of a diagram, a tooltip with nothing to show, more than 60 per diagram, and a `hint` over 140 characters, a `detail` over 800, a `code` over 2,000 characters or 40 lines, a `language` over 20, a `linkLabel` over 60 or a `link` over 300. The one interaction module is `build/src/components/tooltips.jsx`; the rules and checks are pure modules that Node tests run without a bundler. The tooltip stays inside the diagram (it never makes the page taller) and does not cover the element: beside it, it wraps to the room it has, and in a diagram too short for the text it is cut with an ellipsis. In preview mode the panel opens below the diagram and the frame stops at 1,200 px, so keep a diagram with tooltips under about 800 px. It works in preview and native mode with the same code. The page is [docs/ui-components/Tooltip.md](docs/ui-components/Tooltip.md), with three examples and a Tooltips section on each diagram page.
@@ -131,7 +133,8 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.4.0
 [0.3.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.3.0
 [0.2.2]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.2
 [0.2.1]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.2.1
