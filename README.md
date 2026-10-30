@@ -184,6 +184,12 @@ The desktop half is the file `desktop/plugin.js` inside the plugin folder. Per H
 
 Timings and memory were measured in headless Chrome, not in the desktop app, so treat them as indicative. Switch back with `mode: preview`.
 
+#### Notes on a widget (native mode only)
+
+Every native widget has a small **Notes** chip in its top right corner, shown when the pointer or focus is in the widget. Click it, then click an item or select some words, write a note, and collect a few. **Add N notes to your message** puts them into the chat's message box as one message that names each item by its id (`tbl`, `row 3`, `column status`, the quoted words), so the agent can answer them by number. Nothing is sent until you press send, and the notes are lost when the app quits. This is a prototype. It has been used in the real desktop app (drafting, follow-up drafts and sending worked); touch, screen readers and two chats side by side are untried. See **[docs/notes.md](docs/notes.md)**.
+
+![A widget with three pins and the notes tray under it](docs/images/notes-tray.png)
+
 ## Components
 
 Every component has a page with its signature, arguments, rendered examples and pitfalls: **[docs/ui-components](docs/ui-components/README.md)**. Layout and data: Stack, Text, Card, Metric, Table, Tabs, Callout, Button. Charts: LineChart, AreaChart, PieChart, RadarChart, BarChart. Diagrams: Dag, Erd, GeoMap, InfraMap, SequenceDiagram. Rich content: Markdown, CodeBlock, Image, Faq, Choice. Diagram details: Tooltip.

@@ -21,7 +21,10 @@ computed in the finished page (e.g. --eval 'document.querySelectorAll(".mount").
 JavaScript call cannot do (a hover, the keyboard focus ring, Tab, Space). A JSON list; each step has exactly one action:
   {"move": SELECTOR | [x, y], "at": [fx, fy]}   mouse move to the element's centre, or to fractions fx, fy of its box
   {"click": SELECTOR | [x, y], "at": [fx, fy]}  move, press, release
-  {"key": "Tab" | "Shift+Tab" | "Enter" | "Escape" | "Space" | "ArrowDown" | "ArrowUp"}
+  {"dblclick": SELECTOR, "at": [fx, fy]}        two clicks (a word gets selected)
+  {"drag": SELECTOR, "from": [fx, fy], "to": [fx, fy]}  press at one point of the element, move, release at another (selects text)
+  {"type": "text"}                              insert text into the focused element (a real input event, not a key press)
+  {"key": "Tab" | "Enter" | "Escape" | "Space" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight", optionally "Shift+..." }
   {"js": EXPR}                                  run an expression (for example to focus an element or install a stub)
   {"eval": EXPR, "name": NAME}                  record the JSON value of an expression
   {"shot": "name.png"}                          an extra screenshot, written next to OUT.png, of the whole page
@@ -219,8 +222,9 @@ def docs_source(text: str) -> str:
 KEYS = {  # name -> (key, code, windowsVirtualKeyCode, text)
     "Tab": ("Tab", "Tab", 9, ""), "Enter": ("Enter", "Enter", 13, "\r"), "Escape": ("Escape", "Escape", 27, ""), "Space": (" ", "Space", 32, " "),
     "ArrowDown": ("ArrowDown", "ArrowDown", 40, ""), "ArrowUp": ("ArrowUp", "ArrowUp", 38, ""),
+    "ArrowLeft": ("ArrowLeft", "ArrowLeft", 37, ""), "ArrowRight": ("ArrowRight", "ArrowRight", 39, ""),
 }
-STEP_ACTIONS = ("move", "click", "key", "js", "eval", "shot")
+STEP_ACTIONS = ("move", "click", "dblclick", "drag", "type", "key", "js", "eval", "shot")
 
 
 def parse_steps(text):
@@ -244,9 +248,18 @@ def parse_steps(text):
             ok = isinstance(v, str) and v or (isinstance(v, list) and len(v) == 2 and all(isinstance(n, (int, float)) for n in v))
             if not ok:
                 raise SystemExit("%s: %s takes a CSS selector or [x, y]" % (where, a))
+        elif a == "dblclick":
+            if not (isinstance(v, str) and v):
+                raise SystemExit("%s: dblclick takes a CSS selector" % where)
+        elif a == "drag":
+            if not (isinstance(v, str) and v):
+                raise SystemExit("%s: drag takes a CSS selector (the press and the release are two points inside that element: \"from\" and \"to\", fractions of its box)" % where)
+        elif a == "type":
+            if not (isinstance(v, str) and v):
+                raise SystemExit("%s: type takes the text to insert into the focused element" % where)
         elif a == "key":
-            if v != "Shift+Tab" and v not in KEYS:
-                raise SystemExit("%s: key must be one of %s or Shift+Tab" % (where, ", ".join(sorted(KEYS))))
+            if v.replace("Shift+", "", 1) not in KEYS:
+                raise SystemExit("%s: key must be one of %s, each optionally with a Shift+ prefix" % (where, ", ".join(sorted(KEYS))))
         elif a in ("js", "eval"):
             if not isinstance(v, str) or not v:
                 raise SystemExit("%s: %s takes a JavaScript expression" % (where, a))
@@ -287,9 +300,26 @@ def run_steps(ws, steps, out: Path, win_w, measure_js, scale):
             if "click" in s:
                 ws.call("Input.dispatchMouseEvent", type="mousePressed", x=x, y=y, button="left", buttons=1, clickCount=1)
                 ws.call("Input.dispatchMouseEvent", type="mouseReleased", x=x, y=y, button="left", buttons=0, clickCount=1)
+        elif "dblclick" in s:
+            refit(ws, win_w, measure_js, scale)
+            x, y = _point(ws, s["dblclick"], at)
+            ws.call("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="none")
+            for n in (1, 2):
+                ws.call("Input.dispatchMouseEvent", type="mousePressed", x=x, y=y, button="left", buttons=1, clickCount=n)
+                ws.call("Input.dispatchMouseEvent", type="mouseReleased", x=x, y=y, button="left", buttons=0, clickCount=n)
+        elif "drag" in s:
+            refit(ws, win_w, measure_js, scale)
+            (x0, y0), (x1, y1) = _point(ws, s["drag"], s.get("from") or [0.1, 0.5]), _point(ws, s["drag"], s.get("to") or [0.9, 0.5])
+            ws.call("Input.dispatchMouseEvent", type="mouseMoved", x=x0, y=y0, button="none")
+            ws.call("Input.dispatchMouseEvent", type="mousePressed", x=x0, y=y0, button="left", buttons=1, clickCount=1)
+            for i in range(1, 5):
+                ws.call("Input.dispatchMouseEvent", type="mouseMoved", x=x0 + (x1 - x0) * i / 4, y=y0 + (y1 - y0) * i / 4, button="left", buttons=1)
+            ws.call("Input.dispatchMouseEvent", type="mouseReleased", x=x1, y=y1, button="left", buttons=0, clickCount=1)
+        elif "type" in s:
+            ws.call("Input.insertText", text=s["type"])  # real text input into the focused element (beforeinput and input fire)
         elif "key" in s:
-            shift = s["key"] == "Shift+Tab"
-            key, code, vk, text = KEYS["Tab" if shift else s["key"]]
+            shift = s["key"].startswith("Shift+")
+            key, code, vk, text = KEYS[s["key"].replace("Shift+", "", 1)]
             mods = 8 if shift else 0
             ws.call("Input.dispatchKeyEvent", type="keyDown" if text else "rawKeyDown", key=key, code=code, windowsVirtualKeyCode=vk, modifiers=mods, **({"text": text} if text else {}))
             ws.call("Input.dispatchKeyEvent", type="keyUp", key=key, code=code, windowsVirtualKeyCode=vk, modifiers=mods)

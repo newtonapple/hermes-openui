@@ -1,9 +1,9 @@
 {
  "core": {
   "file": "core.js.gz",
-  "raw": 833045,
-  "gz": 213469,
-  "sha256": "5d730fa7b9059802077b38f85b1772bc7fb33b953cb9463255fac2f11c239e78",
+  "raw": 833817,
+  "gz": 213682,
+  "sha256": "ca7e4bc16636ac0c3f3567c73ee26964725262bcc15aee264f421cc99573e865",
   "components": [
    "Stack",
    "Text",
@@ -70,9 +70,9 @@
   },
   "sequence": {
    "file": "packs/sequence.js.gz",
-   "raw": 17655,
-   "gz": 7306,
-   "sha256": "1cee12e0a1161d834945bbb2fcf9cfa089bd8ed1f2369c60b76bd2da0d680532",
+   "raw": 17670,
+   "gz": 7314,
+   "sha256": "9db8abbb4df3244adecdb851c254a09da85d85353f5a26923d4703d1b3a0790c",
    "components": [
     "SeqParticipant",
     "SeqMessage",

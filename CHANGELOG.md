@@ -4,6 +4,11 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+### Added
+
+- **Notes** (native mode only, a first prototype): a **Notes** chip in the corner of every widget starts a mode in which you click an item or select words, write a note, and collect them in a tray under the widget. **Add N notes to your message** inserts one message into the chat's message box (`host.composer.insertText`, never `submit`, never `setDraft`) that names every item by the widget's own ids (`tbl`, `row 3`, `column status`, the quoted words), so the agent can answer by number. Items are the `Tooltip` targets of Dag, Erd, InfraMap, SequenceDiagram, Table, Metric, BarChart, GeoMap and Image; charts and text components are noted whole, or by selecting words. At most 20 notes of 1,000 characters, 6,000 characters in all; control and invisible characters are removed from quoted words. Notes are kept in memory and `sessionStorage` and are lost when the app quits. No setting, no change to the tool description, the component reference or the skills. See [docs/notes.md](docs/notes.md). Words quoted from the widget cannot attach anything to your message: `@file:`, `@url:` and the other reference kinds are written with `(at)`. The message goes to the composer of the chat that holds the widget, a half typed note is never thrown away by a click, the 21st note is refused where you are looking, and notes written for an earlier version of the widget are set aside until you keep them. A second draft does not repeat notes that are already in your message box: each note remembers whether it went into a message (the tray says **in your message** or **edited**), the button then reads **Add 1 new note to your message** and inserts a follow-up with only the new or edited notes (`More notes on widget ...`, edited notes marked and keeping their number), numbers stay put once a draft has gone through (a removed note leaves a gap and a removed highest number is not reused; **Clear notes** starts again at 1), and with nothing new the tray offers **Add all again** and **Clear notes**.
+- `tools/shoot.py --steps` learned `drag`, `dblclick`, `type` and `Shift+` keys.
+
 ## [0.4.0] - 2026-10-29
 
 ### Added

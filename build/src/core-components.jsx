@@ -6,7 +6,7 @@ import { z } from "zod/v4";
 
 import { C, TONES } from "./theme.js";
 import { Tooltip } from "./components/tooltip-schema.js";
-import { Tipped, TipBox, HotBox, TipDot, useTipHas, hasTips } from "./components/tooltips.jsx";
+import { Tipped, TipBox, HotBox, TipDot, useTipHas, hasTips, notesEnabled } from "./components/tooltips.jsx";
 
 const GAP = { none: 0, xs: 4, s: 8, m: 12, l: 20, xl: 28 };
 
@@ -294,8 +294,8 @@ const Tabs = defineComponent({
     const items = props.items ?? [];
     const cur = items[Math.min(active, items.length - 1)];
     return (
-      <div>
-        <div style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
+      <div data-oui-tab={notesEnabled() && cur ? cur.props.label : undefined}>
+        <div data-oui-tabbar={notesEnabled() ? "" : undefined} style={{ display: "flex", gap: 4, borderBottom: `1px solid ${C.border}`, marginBottom: 10 }}>
           {items.map((it, i) => (
             <button
               key={i}
@@ -331,7 +331,7 @@ const Image = defineComponent({
     const pic = bad ? (
       <div style={{ border: `1px dashed ${C.border}`, borderRadius: 10, padding: 18, color: C.muted, fontSize: 13 }}>Image failed to load{props.alt ? `: ${props.alt}` : ""}</div>
     ) : (
-      <img src={props.src} alt={props.alt ?? ""} onError={() => setBad(true)} style={{ maxWidth: "100%", height: "auto", borderRadius: 10, border: `1px solid ${C.border}`, display: "block", alignSelf: "flex-start" }} />
+      <img src={props.src} alt={props.alt ?? ""} data-oui-k={notesEnabled() && !hasTips(props.tooltips) ? "image" : undefined} onError={() => setBad(true)} style={{ maxWidth: "100%", height: "auto", borderRadius: 10, border: `1px solid ${C.border}`, display: "block", alignSelf: "flex-start" }} />
     );
     return (
       <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>

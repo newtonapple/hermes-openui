@@ -6,6 +6,7 @@ import plugin from "native-plugin";
 
 const cfg = window.__CFG; // { widths: [...], widgets: [{ name, source }], wrap: bool }
 const sources = Object.fromEntries(cfg.widgets.map((w) => [w.name, w.source]));
+window.__sources = sources; // a check can change a widget's file before it remounts it (the agent redrew the widget)
 window.hermesDesktop = {
   readFileText: async (file) => {
     const text = sources[file.split("/").pop().replace(/\.oui$/, "")];
@@ -64,7 +65,17 @@ for (const width of cfg.widths) {
   }
   page.appendChild(col);
 }
-for (const { host, name } of slots) createRoot(host).render(render({ attrs: { file: "/h/widgets/" + name + ".oui" } }));
+const mounted = slots.map(({ host, name }) => {
+  const m = { host, name, root: createRoot(host) };
+  m.root.render(render({ attrs: { file: "/h/widgets/" + name + ".oui" } }));
+  return m;
+});
+// Notes: the transcript unmounts and remounts a widget; these let a check do the same.
+window.__unmount = (i) => mounted[i].root.unmount();
+window.__mount = (i) => {
+  mounted[i].root = createRoot(mounted[i].host);
+  mounted[i].root.render(render({ attrs: { file: "/h/widgets/" + mounted[i].name + ".oui" } }));
+};
 
 // shoot.py waits for every `.mount` to hold a child: the gate gets one once each slot drew its widget.
 const gate = document.getElementById("gate");

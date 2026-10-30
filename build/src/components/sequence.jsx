@@ -76,7 +76,7 @@ export function SequenceDiagramView({ participants, steps, title, numbered, tool
     const lb = m.labelBox;
     const name = m.from + " \u2192 " + m.to + ": " + m.full;
     return (
-      <Hot key={"m" + i} k={m.id || ""} label={name} full={m.full !== m.label ? m.full : undefined} shape={{ t: "path", d: m.d }} marker={[n1(lb.x + lb.w + 3), n1(lb.y + 1)]}>
+      <Hot key={"m" + i} k={m.id || ""} what="message" label={name} full={m.full !== m.label ? m.full : undefined} shape={{ t: "path", d: m.d }} marker={[n1(lb.x + lb.w + 3), n1(lb.y + 1)]}>
         <g data-seq-id={m.id || undefined}>
           {m.id && marked.has(m.id) ? null : <title>{name}</title>}
           <path d={m.d} fill="none" stroke={LINE} strokeOpacity={0.85} strokeWidth={1.4} strokeDasharray={m.dashed ? "6 4" : undefined} strokeLinecap="round" />

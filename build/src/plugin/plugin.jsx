@@ -7,14 +7,16 @@
 // authority (no sandbox), and the SDK's composer.submit types a VISIBLE user message where the iframe's
 // window.hermes.send is a hidden turn.
 import { t0 } from "./t0.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { host, TRANSCRIPT_DIRECTIVE_AREA } from "@hermes/plugin-sdk";
 import { Renderer, createLibrary } from "@openuidev/react-lang";
 import { ThemeProvider } from "../../node_modules/@openuidev/react-ui/dist/components/ThemeProvider/index.js";
 import { coreComponents } from "../core-components.jsx";
 import { packs } from "../packs/index.js";
 import { openuiTheme } from "../oui-theme.js";
-import { enableNativeLinks } from "../components/tooltips.jsx";
+import { enableNativeLinks, enableNotes } from "../components/tooltips.jsx";
+import { NotesHost, withIds } from "./notes.jsx";
+import { stemOf } from "../components/notes-core.js";
 
 const ROOT_CLASS = "hermes-openui-root";
 const STYLE_ATTR = "data-hermes-openui";
@@ -38,8 +40,10 @@ const THEME_BRIDGE = {
 // Native only: a tooltip's link may open through the app's own bridge when the user clicks it (tooltips.jsx checks the bridge and the
 // scheme again at click time). The preview frame and exported pages never call this, so their links stay text to copy.
 enableNativeLinks();
+enableNotes(); // items carry the keys notes.jsx reads (data-oui-k); a preview page does not
 
-const library = createLibrary({ root: "Stack", components: [...coreComponents, ...packs.flatMap((p) => p.components)] });
+// Notes (native only): every component is wrapped in a display:contents element that carries its source variable name and type (notes.jsx).
+const library = createLibrary({ root: "Stack", components: withIds([...coreComponents, ...packs.flatMap((p) => p.components)]) });
 const COMPONENT_COUNT = coreComponents.length + packs.reduce((n, p) => n + p.components.length, 0);
 const WIDGET_CSS = packs.map((p) => p.css).filter(Boolean).join("\n");
 // Native only: the preview iframe is 640 px wide at most, where none of these rules binds. In a wide chat column they keep
@@ -51,7 +55,21 @@ const NATIVE_CSS = [
   `.${ROOT_CLASS} [data-hermes-openui-map]{max-width:960px}`, // a map keeps its 2:1 shape, so its height grew with the column (1,200 px at 2,400)
   `.${ROOT_CLASS} [data-tip]{user-select:text;-webkit-user-select:text}`, // the app's sheet has button,[role='button']{user-select:none}; a Metric tile, a bar or an image with a tooltip is a role=button and a table row, header or cell with one sits inside the same rule's reach, so their text could not be selected or copied. The Copy and close buttons of the panel are not under [data-tip] and stay as the app has them
   `.${ROOT_CLASS} svg{user-select:text}`, // the app's sheet has img,picture,video,canvas,svg{user-select:none}; this is more specific, so labels in every diagram can be selected and copied
+  // Notes (notes.jsx). The chip shows when the pointer or focus is in the widget, in notes mode, and while notes exist; on a screen with no hover it is always there.
+  `.${ROOT_CLASS} [data-oui-chip]{opacity:0}`,
+  `.${ROOT_CLASS}:hover [data-oui-chip],.${ROOT_CLASS}:focus-within [data-oui-chip],.${ROOT_CLASS}[data-oui-active] [data-oui-chip]{opacity:1}`,
+  `@media (hover:none){.${ROOT_CLASS} [data-oui-chip]{opacity:1}}`,
+  `.${ROOT_CLASS}[data-oui-mode] [data-oui-type] *{cursor:pointer!important;user-select:text!important;-webkit-user-select:text!important}`, // in notes mode every item is clickable and its words can be selected (the app's sheet blocks buttons and svg)
+  `.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Button] *,.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Choice] *{cursor:not-allowed!important}`,
+  `.${ROOT_CLASS} [data-oui-notes-ui] button:focus-visible,.${ROOT_CLASS} [data-oui-notes-ui] textarea:focus-visible,.${ROOT_CLASS} [data-oui-chip]:focus-visible{outline:2px solid var(--accent,#5B9CF6);outline-offset:2px}`,
+  `.${ROOT_CLASS} [data-oui-hit]{pointer-events:none}`, // the transparent hit shapes of notes (tooltips.jsx) catch the pointer only in notes mode, so with notes off they change nothing
+  `.${ROOT_CLASS}[data-oui-mode] [data-oui-hit=all]{pointer-events:all}`,
+  `.${ROOT_CLASS}[data-oui-mode] [data-oui-hit=stroke]{pointer-events:stroke}`,
+  `.${ROOT_CLASS}[data-oui-mode]:focus{outline:none}`, // the root takes the focus on a click in notes mode (notes.jsx)
+  `.${ROOT_CLASS} [data-oui-stop]:focus-visible{outline:none}`, // the hover outline of notes.jsx marks the focused item
 ].join("\n");
+// Notes rules that name no widget class (a highlight pseudo-element and an animation).
+const NOTES_CSS = "::highlight(oui-note){background-color:rgba(255,196,0,.38);color:inherit}\n::highlight(oui-note-pending){background-color:rgba(255,196,0,.2);color:inherit}\n@keyframes oui-flash{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.03)}}\n@keyframes oui-pulse-a{0%{box-shadow:0 0 0 0 var(--accent,#5B9CF6)}100%{box-shadow:0 0 0 7px transparent}}\n@keyframes oui-pulse-b{0%{box-shadow:0 0 0 0 var(--accent,#5B9CF6)}100%{box-shadow:0 0 0 7px transparent}}";
 
 // A hot reload re-evaluates this module: drop the previous copy's stylesheet first.
 if (typeof document !== "undefined") document.querySelectorAll(`style[${STYLE_ATTR}]`).forEach((n) => n.remove());
@@ -70,7 +88,7 @@ function useWidgetStyles() {
     if (styleUsers++ === 0) {
       styleEl = document.createElement("style");
       styleEl.setAttribute(STYLE_ATTR, "");
-      styleEl.textContent = WIDGET_CSS + "\n" + NATIVE_CSS;
+      styleEl.textContent = WIDGET_CSS + "\n" + NATIVE_CSS + "\n" + NOTES_CSS;
       document.head.appendChild(styleEl);
     }
     return () => {
@@ -141,6 +159,7 @@ function OpenUIWidget({ file }) {
   const [state, setState] = useState({ status: "loading" });
   const [missing, setMissing] = useState("");
   const mode = useColorMode();
+  const rootRef = useRef(null);
   useWidgetStyles();
   useEffect(() => {
     let alive = true;
@@ -162,7 +181,8 @@ function OpenUIWidget({ file }) {
     // the components shrink first and then scroll inside themselves when the column is narrower than their content.
     // `not-prose`: the widget sits inside the message's Tailwind Typography `.prose` block, whose table width and margins
     // would otherwise restyle the Markdown table and others. The preview iframe has none of those rules.
-    <div className={ROOT_CLASS + " not-prose"} data-hermes-openui-widget="" style={{ ...THEME_BRIDGE, width: "100%", minWidth: 0, color: "var(--foreground)" }}>
+    <div ref={rootRef} className={ROOT_CLASS + " not-prose"} data-hermes-openui-widget="" style={{ ...THEME_BRIDGE, position: "relative", width: "100%", minWidth: 0, color: "var(--foreground)" }}>
+      <NotesHost stem={stemOf(file)} rootRef={rootRef} source={state.text}>
       <ThemeProvider mode={mode} lightTheme={openuiTheme} darkTheme={openuiTheme} cssSelector={"." + ROOT_CLASS}>
         <Renderer
           response={state.text}
@@ -176,6 +196,7 @@ function OpenUIWidget({ file }) {
         />
       </ThemeProvider>
       {missing ? <Notice>Unknown component(s): {missing}</Notice> : null}
+      </NotesHost>
     </div>
   );
 }

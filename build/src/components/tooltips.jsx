@@ -28,6 +28,14 @@ let nativeLinks = false;
 export function enableNativeLinks() {
   nativeLinks = true;
 }
+// Notes (desktop/plugin.js turns this on): items carry data-oui-k and friends, and an element without a Tooltip gets a wrapper and a hit shape,
+// so a click can find it (the hit shapes take pointer events only in notes mode: NATIVE_CSS in plugin.jsx, so with notes off they change nothing,
+// the native title tooltips of a thin line included). Off in a preview page and an exported page: their markup is exactly what it was.
+let notesOn = false;
+export function enableNotes() {
+  notesOn = true;
+}
+export const notesEnabled = () => notesOn;
 function bridge() {
   if (!nativeLinks) return null;
   try {
@@ -53,11 +61,24 @@ const toneColor = (tone) => TONES[tone] || TONES.info;
 // and the outline) or { t: "path", d } (a transparent 12 px hit path over the element, so a thin line can be hovered). marker: [x, y], the centre of the 6 px dot. proxy: a second piece of an element that is already a Hot (a link's
 // label pill): it reacts to the mouse but is not a tab stop of its own. full: the whole label when the drawn one is cut.
 // scale: the user units of one css pixel, for an svg whose viewBox is zoomed (a map); the dot, the outline and the hit path grow with it.
-export function Hot({ k, label, shape, marker, proxy, full, scale = 1, children }) {
+export function Hot({ k, label, shape, marker, proxy, full, what, scale = 1, children }) {
   const ctx = useContext(Ctx);
   const a = ctx && ctx.byKey.get(k);
-  if (!a) return children == null ? null : children;
-  const common = { "data-tip": k, "data-tip-label": label, "data-tip-full": full || undefined };
+  // Notes (native only, desktop/plugin.js) read the same keys with or without a Tooltip: data-oui-k is the key, data-oui-label the drawn name,
+  // data-oui-what the kind where the key alone does not say it. Without a Tooltip the element only gains a wrapper <g> and a transparent hit shape.
+  const note = notesOn && k ? { "data-oui-k": k, "data-oui-label": label, "data-oui-what": what } : null;
+  if (!a) {
+    if (children == null) return null;
+    if (!note || proxy || !shape) return children;
+    return (
+      <g {...note}>
+        {shape.t === "rect" ? <rect x={shape.x} y={shape.y} width={shape.w} height={shape.h} rx={shape.rx || 0} fill="transparent" data-oui-hit="all" /> : null}
+        {children}
+        {shape.t === "path" ? <path d={shape.d} fill="none" stroke="transparent" strokeWidth={12 * scale} strokeLinecap="round" strokeLinejoin="round" data-oui-hit="stroke" /> : null}
+      </g>
+    );
+  }
+  const common = { "data-tip": k, "data-tip-label": label, "data-tip-full": full || undefined, ...note };
   const col = toneColor(a.tone);
   const dot = marker ? <circle data-tip-dot="" cx={marker[0]} cy={marker[1]} r={3 * scale} fill={col} stroke={C.card} strokeWidth={1.2 * scale} pointerEvents="none" /> : null;
   if (proxy) return <g {...common} style={{ cursor: "pointer" }}>{children}{dot}</g>;
@@ -119,7 +140,8 @@ export function TipDot({ k, top, right, bottom, left, marginTop, marginLeft, inl
 export function HotBox({ as: Tag = "div", k, label, name, dot = { top: 3, right: 3 }, inset, style, children, ...rest }) {
   const ctx = useContext(Ctx);
   const a = ctx && ctx.byKey.get(k);
-  if (!a) return <Tag style={style} {...rest}>{children}</Tag>;
+  const note = notesOn && k ? { "data-oui-k": k, "data-oui-label": label } : null;
+  if (!a) return <Tag style={style} {...rest} {...note}>{children}</Tag>;
   const open = ctx.openKey === k, active = open || ctx.tipKey === k;
   const part = Tag === "tr" || Tag === "th" || Tag === "td";
   return (
@@ -127,6 +149,7 @@ export function HotBox({ as: Tag = "div", k, label, name, dot = { top: 3, right:
       {...rest}
       data-tip={k}
       data-tip-label={label}
+      {...note}
       tabIndex={0}
       role={part ? undefined : "button"}
       aria-label={part ? undefined : (name || label) + ". " + tooltipText(a)}
@@ -154,7 +177,9 @@ export function TipBox({ tooltips, tile, children }) {
   const ref = useRef(null);
   const [flow, setFlow] = useState(null); // { gap } when the parent is a row that wraps
   useLayoutEffect(() => {
-    const parent = tile && ref.current ? ref.current.parentElement : null;
+    let parent = tile && ref.current ? ref.current.parentElement : null;
+    // Notes (native) wrap a component in a display:contents element: the row is the first ancestor that has a box.
+    try { while (parent && window.getComputedStyle(parent).display === "contents") parent = parent.parentElement; } catch (e) {}
     if (!parent) return;
     let f = null;
     try { f = rowFlow(window.getComputedStyle(parent)); } catch (e) {}
