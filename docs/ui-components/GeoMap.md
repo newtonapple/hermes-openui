@@ -7,7 +7,7 @@ An offline world map with coloured pins and optional dashed links. It draws coas
 ## Signature
 
 ```text
-GeoMap(points: GeoPoint[], links?: string[][], title?: string)
+GeoMap(points: GeoPoint[], links?: string[][], title?: string, tooltips?: Tooltip[])
 GeoPoint(label: string, lat: number, lon: number, tone?: "good" | "warn" | "bad" | "info" | "neutral")
 ```
 
@@ -27,6 +27,7 @@ Not for street-level detail: the coastlines are coarse and there are no place na
 | 1 | `points` | GeoPoint[] | yes | One `GeoPoint` per pin. |
 | 2 | `links` | string[][] | no | Pairs `[labelA, labelB]` of pin **labels**, each drawn as a dashed line. Pass `null` to skip. |
 | 3 | `title` | string | no | A bold line above the map. |
+| 4 | `tooltips` | array of `Tooltip` | no | Hover tooltips and click panels for a pin or a link. Written last, so pass `null` for a skipped `links` or `title`. See [Tooltips](#tooltips). |
 
 ### GeoPoint
 
@@ -87,6 +88,23 @@ p6 = GeoPoint("nyc-1", 40.71, -74.01)
 ```
 
 ![Six sites in North America, one pin for each tone and one with the default](images/geo-map-tones.png)
+
+## Tooltips
+
+Pass `Tooltip` items as the last argument: `GeoMap(points, links, title, [t1])`. Write `null` for a `links` or `title` you skip. The target is a point's `label` (the pin and its name), or `A>B` for a link, for example `web>api`. A link is a thin dashed line, so it has a wider invisible hit area. Two links that join the same pair are ambiguous, and so are two points with the same label. A pin or link with a tooltip gets a dot. Pins closer than about 20 px, or a link shorter than about 25 px, cannot be told apart with the mouse (the pin on top gets the pointer); Tab reaches each one. Hover or Tab to it for the hint; click it, or press Enter or Space, to open a panel under the map. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([map])
+map = GeoMap([p1, p2, p3], [["web", "api"], ["api", "db"]], "Sites (sample data)", [a1, a2, a3])
+p1 = GeoPoint("web", 52.52, 13.40, "good")
+p2 = GeoPoint("api", 50.08, 14.44, "good")
+p3 = GeoPoint("db", 48.21, 16.37, "warn")
+a1 = Tooltip("web", "Public entry point", null, null, null, "good")
+a2 = Tooltip("web>api", "Private link, 12 ms", "Every request crosses this link. If it drops, the site serves cached pages only.", "traceroute api", "bash", "bad")
+a3 = Tooltip("db", "Primary database", null, null, null, "warn")
+```
+
+![A map with the link between two sites open in a panel and the pointer on a pin](images/geo-map-tooltips.png)
 
 ## Tips and pitfalls
 

@@ -1,0 +1,8 @@
+root = Stack([flow])
+flow = Dag([n1, n2, n3, n4], [["build", "test"], ["test", "package"], ["package", "deploy"]], "LR", "Release pipeline (sample data)", [a1, a2])
+n1 = DagNode("build", "Build image", "done")
+n2 = DagNode("test", "Integration tests", "failed")
+n3 = DagNode("package", "Package", "skipped")
+n4 = DagNode("deploy", "Deploy", "pending")
+a1 = Tooltip("test", "2 of 48 tests failed", "The checkout and refund suites fail on a missing environment variable.\nSet it, then re-run only those suites.", "pytest tests/checkout tests/refund -x -q", "bash", "bad")
+a2 = Tooltip("build", "Image came from the cache", null, null, null, "good")

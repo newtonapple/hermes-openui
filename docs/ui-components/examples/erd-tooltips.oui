@@ -1,0 +1,7 @@
+root = Stack([schema])
+schema = Erd([e1, e2], [r1], "Orders (sample data)", [a1, a2])
+e1 = Entity("users", ["id uuid PK", "email text UNIQUE", "created_at timestamptz"])
+e2 = Entity("orders", ["id uuid PK", "user_id uuid FK", "total_cents int", "status text"])
+r1 = Relation("users", "orders", "1:N", "places")
+a1 = Tooltip("orders.user_id", "Indexed foreign key", "Every order belongs to one user. The index keeps the orders-per-user lookup fast.", "CREATE INDEX orders_user_id_idx ON orders (user_id);", "sql", "good")
+a2 = Tooltip("users", "Accounts are never deleted", "A closed account is deactivated, so old orders keep their owner.")

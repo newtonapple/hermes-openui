@@ -7,7 +7,7 @@ A directed graph of boxes and arrows, laid out in layers for you. Use it for pip
 ## Signature
 
 ```text
-Dag(nodes: DagNode[], edges: string[][], direction?: "LR" | "TB", title?: string)
+Dag(nodes: DagNode[], edges: string[][], direction?: "LR" | "TB", title?: string, tooltips?: Tooltip[])
 DagNode(id: string, label: string, status?: "done" | "running" | "failed" | "pending" | "skipped")
 ```
 
@@ -29,6 +29,7 @@ Not for graphs with cycles (the edge that closes a loop is dropped), database ta
 | 2 | `edges` | string[][] | yes | Pairs `[fromId, toId]`. The arrow points from the first to the second. Use the **id strings**, not the variable names. |
 | 3 | `direction` | `"LR"` or `"TB"` | no | Left to right or top to bottom. Omit it, or pass `null`, for automatic. |
 | 4 | `title` | string | no | A bold line above the graph. |
+| 5 | `tooltips` | Tooltip[] | no | A hover tooltip, with an optional click-to-open panel, for some nodes. The target is the node id. See [Tooltips](#tooltips). |
 
 ### DagNode
 
@@ -97,6 +98,21 @@ n7 = DagNode("archive", "Archive")
 
 ![An ETL graph with one extract step, three shards, a merge and two outputs](images/dag-fan-out.png)
 
+## Tooltips
+
+Pass `Tooltip` items as the last argument to comment on a node. The target is the node id. Hover or Tab to a node with a dot to read its hint; click it, or press Enter or Space, to open a panel under the graph with the detail text and a snippet. Edges cannot have a tooltip. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([flow])
+flow = Dag([n1, n2, n3], [["extract", "transform"], ["transform", "load"]], null, "Nightly job (sample data)", [a1])
+n1 = DagNode("extract", "Extract", "done")
+n2 = DagNode("transform", "Transform", "running")
+n3 = DagNode("load", "Load", "pending")
+a1 = Tooltip("transform", "Takes about 6 minutes", "Rows are cleaned in batches of 500 so memory stays flat.", "for batch in chunks(rows, 500):\n    write(clean(batch))", "python")
+```
+
+![A three step job where the running step has a tooltip and an open panel with a Python snippet](images/dag-tooltips.png)
+
 ## Tips and pitfalls
 
 - An edge that names an id no `DagNode` has prints a red warning under the graph and the edge is skipped.
@@ -106,8 +122,8 @@ n7 = DagNode("archive", "Archive")
 - An edge that closes a loop is dropped with no warning. With x to y, y to z and z to x, only the first two are drawn.
 - In a single straight row, an edge that skips a node (a to c while b sits between) runs behind b and looks the same as the chain a to b to c.
 - `"skipped"` and `"pending"` are both grey. Only the dashed outline tells them apart.
-- Edges have no labels and boxes have no click action. You cannot place nodes. The layout orders them inside each layer.
+- Edges have no labels and cannot have a tooltip. A box has no action that sends anything to the agent: a [Tooltip](Tooltip.md) only shows text. You cannot place nodes. The layout orders them inside each layer.
 
 ## Related
 
-[InfraMap](InfraMap.md) draws servers and services in zones, with labeled links. [Erd](Erd.md) draws database tables. [Table](Table.md) lists steps with details. [Card](Card.md) wraps a graph under a heading.
+[Tooltip](Tooltip.md) adds hover notes and detail panels to nodes. [InfraMap](InfraMap.md) draws servers and services in zones, with labeled links. [Erd](Erd.md) draws database tables. [Table](Table.md) lists steps with details. [Card](Card.md) wraps a graph under a heading.

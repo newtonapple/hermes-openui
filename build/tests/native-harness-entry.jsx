@@ -99,8 +99,35 @@ window.measureAll = () =>
       if ((tag === "svg" && r.width >= 100) || tag === "img" || tag === "canvas" || tag === "table")
         media.push({ tag, w: Math.round(r.width), h: Math.round(r.height), x: Math.round(r.left - box.left), nat: tag === "img" ? el.naturalWidth : undefined, select: tag === "svg" ? getComputedStyle(el).userSelect : undefined });
     }
+    // Elements with a tooltip: what the app's stylesheet leaves selectable. `picked` is what a real Range over the element returns.
+    const pick = (el) => {
+      const sel = window.getSelection(), range = document.createRange();
+      sel.removeAllRanges();
+      range.selectNodeContents(el);
+      sel.addRange(range);
+      const text = String(sel);
+      sel.removeAllRanges();
+      return text;
+    };
+    const tipSelect = [];
+    const addTip = (name, el) => {
+      if (!el) return void tipSelect.push({ name: name + " (not drawn)", select: "missing", text: "", picked: "" });
+      tipSelect.push({ name, select: getComputedStyle(el).userSelect, text: el.textContent.trim(), picked: pick(el).trim() });
+    };
+    if (root.querySelector("[data-tip]")) {
+      addTip("a table cell with a tooltip", root.querySelector('td[data-tip="cell:1.service"]'));
+      addTip("a table header with a tooltip", root.querySelector('th[data-tip="col:status"]'));
+      addTip("a cell of a row with a tooltip", root.querySelector('tr[data-tip="row:2"] td'));
+      addTip("a metric tile with a tooltip", root.querySelector('div[data-tip="Error rate"]'));
+      addTip("a metric value with a tooltip", root.querySelector('div[data-tip="Error rate"] > div:nth-child(2)'));
+      addTip("a bar with a tooltip", root.querySelector('div[data-tip="api"]'));
+      addTip("a bar label with a tooltip", root.querySelector('div[data-tip="api"] > div:last-of-type'));
+      const pin = root.querySelector('g[data-tip="web"] text'); // an svg element: the range covers its text node
+      addTip("a map pin label with a tooltip", pin);
+    }
     return {
       ...row,
+      tipSelect,
       w: Math.round(box.width),
       h: Math.round(box.height),
       rootOverflow: root.scrollWidth > root.clientWidth + 1,

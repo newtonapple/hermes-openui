@@ -14,6 +14,7 @@ import { ThemeProvider } from "../../node_modules/@openuidev/react-ui/dist/compo
 import { coreComponents } from "../core-components.jsx";
 import { packs } from "../packs/index.js";
 import { openuiTheme } from "../oui-theme.js";
+import { enableNativeLinks } from "../components/tooltips.jsx";
 
 const ROOT_CLASS = "hermes-openui-root";
 const STYLE_ATTR = "data-hermes-openui";
@@ -34,6 +35,10 @@ const THEME_BRIDGE = {
   "--card": "var(--ui-bg-editor)",
 };
 
+// Native only: a tooltip's link may open through the app's own bridge when the user clicks it (tooltips.jsx checks the bridge and the
+// scheme again at click time). The preview frame and exported pages never call this, so their links stay text to copy.
+enableNativeLinks();
+
 const library = createLibrary({ root: "Stack", components: [...coreComponents, ...packs.flatMap((p) => p.components)] });
 const COMPONENT_COUNT = coreComponents.length + packs.reduce((n, p) => n + p.components.length, 0);
 const WIDGET_CSS = packs.map((p) => p.css).filter(Boolean).join("\n");
@@ -44,6 +49,7 @@ const NATIVE_CSS = [
   `.${ROOT_CLASS} img,.${ROOT_CLASS} svg{box-sizing:border-box}`, // a 1 px border on top of max-width:100% pushed an image or a map 2 px past the column
   `.${ROOT_CLASS} .openui-chart-with-stacked-legend--row{max-width:720px}`, // a pie and its legend each took half the column and ended up far apart
   `.${ROOT_CLASS} [data-hermes-openui-map]{max-width:960px}`, // a map keeps its 2:1 shape, so its height grew with the column (1,200 px at 2,400)
+  `.${ROOT_CLASS} [data-tip]{user-select:text;-webkit-user-select:text}`, // the app's sheet has button,[role='button']{user-select:none}; a Metric tile, a bar or an image with a tooltip is a role=button and a table row, header or cell with one sits inside the same rule's reach, so their text could not be selected or copied. The Copy and close buttons of the panel are not under [data-tip] and stay as the app has them
   `.${ROOT_CLASS} svg{user-select:text}`, // the app's sheet has img,picture,video,canvas,svg{user-select:none}; this is more specific, so labels in every diagram can be selected and copied
 ].join("\n");
 

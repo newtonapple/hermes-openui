@@ -1,0 +1,6 @@
+root = Stack([flow])
+flow = Dag([n1, n2, n3], [["extract", "transform"], ["transform", "load"]], null, "Nightly job (sample data)", [a1])
+n1 = DagNode("extract", "Extract", "done")
+n2 = DagNode("transform", "Transform", "running")
+n3 = DagNode("load", "Load", "pending")
+a1 = Tooltip("transform", "Takes about 6 minutes", "Rows are cleaned in batches of 500 so memory stays flat.", "for batch in chunks(rows, 500):\n    write(clean(batch))", "python")

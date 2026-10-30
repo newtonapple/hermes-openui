@@ -7,7 +7,7 @@ A picture from a local file or a `data:` address, with optional alt text and a c
 ## Signature
 
 ```text
-Image(src: string, alt?: string, caption?: string)
+Image(src: string, alt?: string, caption?: string, tooltips?: Tooltip[])
 ```
 
 ## When to use
@@ -24,6 +24,7 @@ Not for charts (use [BarChart](BarChart.md) and friends, which stay sharp and ne
 | 1 | `src` | string | yes | An absolute local path such as `/path/to/chart.png`, or a `data:` address. |
 | 2 | `alt` | string | no | A description. It is shown in place of the picture if loading fails. |
 | 3 | `caption` | string | no | A small grey line under the picture. |
+| 4 | `tooltips` | array of `Tooltip` | no | At most one: a hover tooltip and a click panel for the picture. Written last, so pass `null` for a skipped `alt` or `caption`. See [Tooltips](#tooltips). |
 
 In these examples the path is `/path/to/sample.png`. The screenshot tool swaps it for a sample picture that ships with the docs. In your own widget, write the real absolute path of your file.
 
@@ -64,6 +65,18 @@ diagram = Image("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'
 ```
 
 ![A small diagram of two boxes, spark-1 and spark-2, joined by a line, with a caption](images/image-inline-svg.png)
+
+## Tooltips
+
+Pass one `Tooltip` as the last argument: `Image(src, alt, caption, [t1])`. Write `null` for an `alt` or `caption` you skip. The target is the word `image`, and the whole picture is the target, so one tooltip is the most an Image takes. There are no hotspots or regions on a picture. The picture gets a dot at its top right corner. At narrow widths an Image fills the column, so its tooltip is drawn over the picture. Hover or Tab to it for the hint; click it, or press Enter or Space, to open a panel under the image and its caption. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([photo])
+photo = Image("/path/to/sample.png", "A 480 by 270 sample image", "A sample picture, not live data.", [a1])
+a1 = Tooltip("image", "Sample data, not live", "The picture is a fixed sample. Render the widget again to refresh it.", null, null, "info", "https://example.com/samples", "About the sample")
+```
+
+![A sample image with its panel open and the pointer on the picture](images/image-tooltips.png)
 
 ## Tips and pitfalls
 

@@ -1,0 +1,3 @@
+root = Stack([photo])
+photo = Image("/path/to/sample.png", "A 480 by 270 sample image", "A sample picture, not live data.", [a1])
+a1 = Tooltip("image", "Sample data, not live", "The picture is a fixed sample. Render the widget again to refresh it.", null, null, "info", "https://example.com/samples", "About the sample")

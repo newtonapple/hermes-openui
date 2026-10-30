@@ -1,0 +1,8 @@
+root = Stack([map])
+map = GeoMap([p1, p2, p3], [["web", "api"], ["api", "db"]], "Sites (sample data)", [a1, a2, a3])
+p1 = GeoPoint("web", 52.52, 13.40, "good")
+p2 = GeoPoint("api", 50.08, 14.44, "good")
+p3 = GeoPoint("db", 48.21, 16.37, "warn")
+a1 = Tooltip("web", "Public entry point", null, null, null, "good")
+a2 = Tooltip("web>api", "Private link, 12 ms", "Every request crosses this link. If it drops, the site serves cached pages only.", "traceroute api", "bash", "bad")
+a3 = Tooltip("db", "Primary database", null, null, null, "warn")

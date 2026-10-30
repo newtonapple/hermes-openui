@@ -1,0 +1,4 @@
+root = Stack([chart])
+chart = BarChart(["web", "api", "db", "cache"], [31, 82, 47, 9], "CPU by service (sample data)", "%", [a1, a2])
+a1 = Tooltip("api", "Busiest service", "Peaks every day at noon, when the batch jobs start.\nScale it before you add more web nodes.", "kubectl scale deploy/api --replicas=4", "bash", "warn")
+a2 = Tooltip("cache", "Mostly idle", null, null, null, "good")

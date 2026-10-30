@@ -4,6 +4,7 @@
 // it in Node (tests/test_infra_builtin.py); the renderer is InfraMapView.
 import React, { useId } from "react";
 import { C, TONES, MONO } from "../theme.js";
+import { Tipped, Hot, tippedKeys } from "./tooltips.jsx";
 
 const STATUS = {
   up: { color: TONES.good, label: "up" },
@@ -355,7 +356,7 @@ export function layoutInfra(zonesIn, linksIn, direction) {
     statuses: STATUS_ORDER.filter((s) => recs.some((r) => r.n.status === s)),
     nodes: nodeRects, zones: zoneRects,
     links: links.map((k) => ({ from: k.a.id, to: k.b.id, label: k.label, dashed: k.dashed, d: toD(k.cmds), points: k.poly, type: k.type })),
-    pills: links.filter((k) => k.pill).map((k) => k.pill).map((p) => ({ text: p.text, x: p.x, y: p.y, w: p.w, h: p.h })),
+    pills: links.filter((k) => k.pill).map((k) => ({ text: k.pill.text, x: k.pill.x, y: k.pill.y, w: k.pill.w, h: k.pill.h, from: k.a.id, to: k.b.id })),
   };
 }
 
@@ -374,34 +375,44 @@ function Warn({ items }) {
   return <div style={{ marginTop: 6, fontSize: 12, color: TONES.bad }}>{items.map((t, i) => <div key={i}>{"\u26a0 " + t}</div>)}</div>;
 }
 
-export function InfraMapView({ zones, links, title, direction }) {
+export function InfraMapView({ zones, links, title, direction, tooltips }) {
   const uid = str(useId()).replace(/[^A-Za-z0-9]/g, "");
   const lay = layoutInfra(zones, links, direction === "TB" ? "TB" : "LR");
   const vb = lay.viewBox;
   const arrow = "ia" + uid;
+  const marked = tippedKeys(tooltips);
 
   const zoneBoxes = [], zoneLabels = [];
   lay.zones.forEach((q, i) => {
     const tinted = q.tone !== "neutral";
+    const zk = "zone:" + q.name;
     zoneBoxes.push(
-      <rect key={"z" + i} x={q.x} y={q.y} width={q.w} height={q.h} rx={12}
-        fill={tinted ? "color-mix(in srgb, " + TONES[q.tone] + " 9%, transparent)" : C.soft}
-        stroke={tinted ? "color-mix(in srgb, " + TONES[q.tone] + " 50%, transparent)" : C.border} strokeWidth={1} />,
+      <Hot key={"z" + i} k={zk} label={q.name} shape={{ t: "rect", x: q.x, y: q.y, w: q.w, h: q.h, rx: 12 }} marker={[q.x + q.w - 2, q.y + 2]}>
+        <rect x={q.x} y={q.y} width={q.w} height={q.h} rx={12}
+          fill={tinted ? "color-mix(in srgb, " + TONES[q.tone] + " 9%, transparent)" : C.soft}
+          stroke={tinted ? "color-mix(in srgb, " + TONES[q.tone] + " 50%, transparent)" : C.border} strokeWidth={1} />
+      </Hot>,
     );
     zoneLabels.push(
-      <text key={"zl" + i} x={q.x + 12} y={q.y + 17} fontSize={11.5} fontWeight={650} letterSpacing="0.02em" fill={tinted ? TONES[q.tone] : C.muted}>{q.name}</text>,
+      <Hot key={"zl" + i} k={zk} label={q.name} proxy>
+        <text x={q.x + 12} y={q.y + 17} fontSize={11.5} fontWeight={650} letterSpacing="0.02em" fill={tinted ? TONES[q.tone] : C.muted}>{q.name}</text>
+      </Hot>,
     );
   });
 
   const linkEls = lay.links.map((k, i) => {
-    const p0 = k.points[0];
+    const p0 = k.points[0], key = k.from + ">" + k.to, name = k.from + " \u2192 " + k.to;
+    const pill = lay.pills.find((p) => p.from === k.from && p.to === k.to);
+    const mid = k.points[Math.floor(k.points.length / 2)] || p0;
     return (
-      <g key={"l" + i}>
-        <path d={k.d} fill="none" stroke={C.muted} strokeWidth={1.5} strokeDasharray={k.dashed ? "6 4" : undefined} strokeLinecap="round" opacity={0.9} markerEnd={"url(#" + arrow + ")"}>
-          <title>{k.from + " \u2192 " + k.to + (k.label ? " (" + k.label + ")" : "")}</title>
-        </path>
-        <circle cx={n1(p0[0])} cy={n1(p0[1])} r={2.4} fill={C.muted} />
-      </g>
+      <Hot key={"l" + i} k={key} label={name} shape={{ t: "path", d: k.d }} marker={pill ? null : [n1(mid[0]), n1(mid[1])]}>
+        <g>
+          <path d={k.d} fill="none" stroke={C.muted} strokeWidth={1.5} strokeDasharray={k.dashed ? "6 4" : undefined} strokeLinecap="round" opacity={0.9} markerEnd={"url(#" + arrow + ")"}>
+            {marked.has(key) ? null : <title>{name + (k.label ? " (" + k.label + ")" : "")}</title>}
+          </path>
+          <circle cx={n1(p0[0])} cy={n1(p0[1])} r={2.4} fill={C.muted} />
+        </g>
+      </Hot>
     );
   });
 
@@ -411,22 +422,26 @@ export function InfraMapView({ zones, links, title, direction }) {
     const cy = lay.anyDetail ? q.y + 14.5 : q.y + q.h / 2 - 0.5;
     const tip = str(r.n.label) + (r.n.kind ? " \u00b7 " + r.n.kind : "") + (st ? " \u00b7 " + st.label : "") + (r.n.detail ? " \u00b7 " + r.n.detail : "");
     return (
-      <g key={"n" + i}>
-        <title>{tip}</title>
-        <rect x={q.x} y={q.y} width={q.w} height={q.h} rx={8} fill={C.card} stroke={stroke} strokeWidth={st && st.outline ? 1.6 : 1} strokeDasharray={st && st.dash} />
-        {glyph(r.n.kind, q.x + 9, q.y + q.h / 2 - 9.5)}
-        <text x={q.x + 34} y={lay.anyDetail ? q.y + 19 : q.y + q.h / 2 + 4.5} fontSize={12.5} fontWeight={600} fill={C.fg}>{r.label}</text>
-        {r.detail ? <text x={q.x + 34} y={q.y + 34} fontSize={10.5} fontFamily={MONO} fill={C.muted}>{r.detail}</text> : null}
-        {st ? statusDot(st, q.x + q.w - 11, cy) : null}
-      </g>
+      <Hot key={"n" + i} k={q.id} label={str(r.n.label)} shape={{ t: "rect", x: q.x, y: q.y, w: q.w, h: q.h, rx: 8 }} marker={[q.x + q.w - 2, q.y + 2]}>
+        <g>
+          {marked.has(q.id) ? null : <title>{tip}</title>}
+          <rect x={q.x} y={q.y} width={q.w} height={q.h} rx={8} fill={C.card} stroke={stroke} strokeWidth={st && st.outline ? 1.6 : 1} strokeDasharray={st && st.dash} />
+          {glyph(r.n.kind, q.x + 9, q.y + q.h / 2 - 9.5)}
+          <text x={q.x + 34} y={lay.anyDetail ? q.y + 19 : q.y + q.h / 2 + 4.5} fontSize={12.5} fontWeight={600} fill={C.fg}>{r.label}</text>
+          {r.detail ? <text x={q.x + 34} y={q.y + 34} fontSize={10.5} fontFamily={MONO} fill={C.muted}>{r.detail}</text> : null}
+          {st ? statusDot(st, q.x + q.w - 11, cy) : null}
+        </g>
+      </Hot>
     );
   });
 
   const pillEls = lay.pills.map((p, i) => (
-    <g key={"p" + i}>
-      <rect x={n1(p.x)} y={n1(p.y)} width={p.w} height={p.h} rx={PH / 2} fill={C.card} stroke={C.border} strokeWidth={1} />
-      <text x={n1(p.x + p.w / 2)} y={n1(p.y + p.h / 2 + 3.8)} textAnchor="middle" fontSize={10.5} fill={C.fg}>{p.text}</text>
-    </g>
+    <Hot key={"p" + i} k={p.from + ">" + p.to} label={p.from + " \u2192 " + p.to} proxy marker={[n1(p.x + p.w - 1), n1(p.y + 1)]}>
+      <g>
+        <rect x={n1(p.x)} y={n1(p.y)} width={p.w} height={p.h} rx={PH / 2} fill={C.card} stroke={C.border} strokeWidth={1} />
+        <text x={n1(p.x + p.w / 2)} y={n1(p.y + p.h / 2 + 3.8)} textAnchor="middle" fontSize={10.5} fill={C.fg}>{p.text}</text>
+      </g>
+    </Hot>
   ));
 
   const legend = lay.statuses.length ? (
@@ -449,8 +464,9 @@ export function InfraMapView({ zones, links, title, direction }) {
   return (
     <div style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
+      <Tipped tooltips={tooltips}>
       <div style={{ overflowX: "auto" }}>
-        <svg viewBox={vb.join(" ")} role="img" aria-label={title || "Infrastructure map"} style={{ width: "100%", maxWidth: w, minWidth: Math.min(w, Math.round(w * 0.78)), height: "auto", display: "block" }}>
+        <svg viewBox={vb.join(" ")} role={marked.size ? "group" : "img"} aria-label={title || "Infrastructure map"} style={{ width: "100%", maxWidth: w, minWidth: Math.min(w, Math.round(w * 0.78)), height: "auto", display: "block" }}>
           <defs>
             <marker id={arrow} viewBox="0 0 10 10" refX={9} refY={5} markerWidth={9} markerHeight={9} markerUnits="userSpaceOnUse" orient="auto">
               <path d="M0 0L10 5L0 10z" fill={C.muted} />
@@ -463,6 +479,7 @@ export function InfraMapView({ zones, links, title, direction }) {
           {pillEls}
         </svg>
       </div>
+      </Tipped>
       <Warn items={lay.warns} />
       {legend}
     </div>

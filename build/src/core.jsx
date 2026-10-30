@@ -13,6 +13,9 @@ import { createLibrary, Renderer, defineComponent, action, useTriggerAction, use
 import * as UiTheme from "../node_modules/@openuidev/react-ui/dist/components/ThemeProvider/index.js";
 const { ThemeProvider } = UiTheme;
 import { coreComponents } from "./core-components.jsx";
+import { Tooltip } from "./components/tooltip-schema.js";
+import * as TooltipsModule from "./components/tooltips.jsx";
+import * as CodeModule from "./components/code.jsx";
 import { openuiTheme } from "./oui-theme.js";
 
 // The ONLY react-lang exports packs may use. A namespace import (import * as) would keep every export and with it
@@ -66,6 +69,12 @@ window.__HM = {
     zod: Zod,
     "@openuidev/react-lang": ReactLangShared,
     "react-ui/ThemeProvider": UiTheme,
+    // Internal, for the built-in diagram packs only (build.mjs SHARED_FILES): the one Tooltip definition their `tooltips` argument refers to.
+    "hermes-openui/tooltip-schema": { Tooltip },
+    // Also internal: the one interaction module (Tipped, Hot, HotBox, ...) and the code highlighter it uses, so the core carries them once
+    // and the packs that draw a tooltip (diagrams, infra, sequence, map) or a code block (text) do not bundle a copy.
+    "hermes-openui/tooltips": TooltipsModule,
+    "hermes-openui/code": CodeModule,
   },
   register,
   packs,

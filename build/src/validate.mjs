@@ -9,6 +9,8 @@ import { createLibrary, defineComponent, action, useTriggerAction, useIsQueryLoa
 import { createParser } from "@openuidev/lang-core";
 import { library as builtinLibrary, components as builtinComponents } from "./library.jsx";
 import { checkSequence } from "./components/sequence-check.js";
+import { checkTooltips, strayTooltip, misplacedListHint, orphanTooltipHint, holdsTooltipList } from "./components/tooltips-check.js";
+import { TIP_HOSTS } from "./components/tooltips-core.js";
 
 // usage: node validate.cjs [--pack FILE]... <file.oui>
 // A --pack is a user-linked component pack (see packs.py). It is evaluated in a bare vm context against the SAME React, zod and
@@ -68,6 +70,17 @@ const walk = (n, fn) => { if (n && typeof n === "object") { if (n.typeName) fn(n
 const refNames = (arr, key) => (Array.isArray(arr) ? arr.map((x) => x?.props?.[key]).filter((x) => typeof x === "string") : []);
 const str = (v) => (v == null ? "" : String(v));
 const list = (v) => (Array.isArray(v) ? v : []);
+// The statements by name (one per line), to tell a Tooltip from another component and to read the arguments of a statement that failed.
+const stmts = new Map();
+for (const line of src.split("\n")) { const m = /^\s*([A-Za-z_]\w*)\s*=\s*([A-Za-z_]\w*)\s*\(/.exec(line); if (m) stmts.set(m[1], { type: m[2], text: line }); }
+const tipNames = [...stmts].filter(([, v]) => v.type === "Tooltip").map(([k]) => k);
+// A Tooltip draws nothing by itself: it belongs to the `tooltips` argument of a diagram. Anywhere else it is a mistake the model must see.
+const strays = (n, parent, slot) => {
+  if (!n || typeof n !== "object") return;
+  if (n.typeName === "Tooltip" && !(parent && TIP_HOSTS.includes(parent.typeName) && slot === "tooltips")) problems.push(strayTooltip(n.statementId));
+  for (const [k, v] of Object.entries(n.props ?? {})) (Array.isArray(v) ? v : [v]).forEach((c) => strays(c, n, k));
+};
+strays(root, null, null);
 walk(root, (n) => {
   const p = n.props ?? {};
   for (const c of packChecks) {
@@ -104,6 +117,7 @@ walk(root, (n) => {
   }
   if (n.typeName === "InfraZone" && !list(p.nodes).length) problems.push(`InfraZone \`${str(p.name)}\` has no nodes (give it at least one InfraNode, or remove the zone).`);
   if (n.typeName === "SequenceDiagram") for (const m of checkSequence(p)) problems.push(m);
+  if (TIP_HOSTS.includes(n.typeName)) for (const m of checkTooltips(n.typeName, p)) problems.push(m);
   if (n.typeName === "InfraMap") {
     const zones = list(p.zones).map((z) => z?.props ?? {});
     if (!zones.length) problems.push("InfraMap needs at least one InfraZone in `zones`.");
@@ -124,6 +138,20 @@ walk(root, (n) => {
   }
 });
 for (const e of meta.errors) problems.push(`${e.component ?? ""}${e.statementId ? " in `" + e.statementId + "`" : ""}: ${e.message ?? JSON.stringify(e)}${e.hint ? " — " + e.hint : ""}`);
+// The errors that come from a Tooltip in the wrong place also carry the rule: an unreachable Tooltip, and a statement that holds a list of Tooltips in a
+// slot that cannot take it (a component without tooltips, a skipped optional argument before `tooltips`, one list too many). Once for each statement.
+const hinted = new Set();
+for (let i = 0; i < problems.length; i++) {
+  const line = problems[i];
+  const orphan = /^`([^`]+)` is defined but not reachable/.exec(line);
+  if (orphan && tipNames.includes(orphan[1])) { problems[i] = line + " " + orphanTooltipHint(); continue; }
+  const err = /^(\S*) in `([^`]+)`: (.*)$/.exec(line);
+  const st = err ? stmts.get(err[2]) : null;
+  if (st && !hinted.has(err[2]) && holdsTooltipList(st.text, tipNames) && (!TIP_HOSTS.includes(st.type) || /but got array|excess dropped/.test(err[3]))) {
+    hinted.add(err[2]);
+    problems[i] = line.replace(/[.\s]+$/, "") + ". " + misplacedListHint(st.type, tipNames.find((n) => holdsTooltipList(st.text, [n])));
+  }
+}
 const uniq = [...new Set(problems)]; problems.length = 0; problems.push(...uniq);
 if (problems.length) { console.log("OpenUI validation FAILED:\n- " + problems.join("\n- ")); process.exit(1); }
 console.log(`OpenUI validation OK (${meta.statementCount} statements).`);

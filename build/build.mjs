@@ -56,7 +56,16 @@ const MOD_FOR = { zod: "zod", "zod/v4": "zod" };
 // Upstream modules that hold React context must also be the core's instance (a pack's own copy of the ThemeProvider
 // would give charts the default palette instead of the Hermes one). Matched on the RESOLVED path, so any import
 // shape ("../ThemeProvider", ".../ThemeProvider/index.js") lands on the same shared module.
-const SHARED_FILES = [[/react-ui\/dist\/components\/ThemeProvider\/index\.js$/, "react-ui/ThemeProvider"]];
+// The Tooltip definition is another one: Dag, Erd, InfraMap and SequenceDiagram (three packs) type their `tooltips` with it, and the parser matches
+// a component to a slot by the identity of its schema object, so a pack that bundled its own copy would silently drop every Tooltip in the page.
+// The interaction module (tooltips.jsx, with its React context) and the code highlighter it uses are shared too: the core carries them once for the
+// whole page (Table, Metric, BarChart and Image are core components), so a pack that draws a tooltip or a code block takes them from there.
+const SHARED_FILES = [
+  [/react-ui\/dist\/components\/ThemeProvider\/index\.js$/, "react-ui/ThemeProvider"],
+  [/src\/components\/tooltip-schema\.js$/, "hermes-openui/tooltip-schema"],
+  [/src\/components\/tooltips\.jsx$/, "hermes-openui/tooltips"],
+  [/src\/components\/code\.jsx$/, "hermes-openui/code"],
+];
 const sharedFromCore = {
   name: "shared-from-core",
   setup(b) {

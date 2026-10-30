@@ -7,7 +7,7 @@ A data table with a header row. Give it column names and rows of strings or numb
 ## Signature
 
 ```text
-Table(columns: string[], rows: (string | number)[][])
+Table(columns: string[], rows: (string | number)[][], tooltips?: Tooltip[])
 ```
 
 ## When to use
@@ -24,6 +24,7 @@ Not for a trend over time (use [LineChart](LineChart.md)) or one series of numbe
 |---|---|---|---|---|
 | 1 | `columns` | array of strings | yes | The header labels, left to right. Headers never wrap. |
 | 2 | `rows` | array of arrays of strings or numbers | yes | One inner array per row, with one value per column. |
+| 3 | `tooltips` | array of `Tooltip` | no | Hover tooltips and click panels for a row, a header or a cell. See [Tooltips](#tooltips). |
 
 ## Examples
 
@@ -61,6 +62,20 @@ wide = Table(["Node name", "GPU model", "Utilisation %", "Memory used GB", "Memo
 ```
 
 ![A table cut off at the right edge after the Temperature column](images/table-wide.png)
+
+## Tooltips
+
+Pass `Tooltip` items as the last argument, `Table(columns, rows, [t1, t2])`. The target is `row:3` (the third data row, counted from 1), `col:status` (a column header) or `cell:3.status` (the row number, a dot, then the header; the first dot splits it, so a header may contain dots). A row, a header or a cell with a tooltip has a small dot right after its text (a row's dot follows the text of its first cell), and each keeps its own role, so a screen reader still reads a table with its rows, headers and cells. Hover or Tab to it to read the hint; click it, or press Enter or Space, to open a panel under the table. A tooltip on a header with no room above it can hide the cells of the first row while it shows. Two columns with the same header make `col:` and `cell:` targets for that header ambiguous, so the validator asks you to rename one. A wide table still scrolls sideways. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([t])
+t = Table(["service", "status", "p95", "owner"], [["web", "up", "12", "platform"], ["api", "down", "340", "platform"], ["db", "up", "7", "data"], ["cache", "up", "1", "data"]], [a1, a2, a3])
+a1 = Tooltip("row:2", "Down since noon", "Restart it, then check the queue.\nIt pages the on-call after two failed probes.", "systemctl restart api", "bash", "bad", "https://example.com/runbooks/api", "API runbook")
+a2 = Tooltip("col:p95", "95th percentile latency in milliseconds")
+a3 = Tooltip("cell:3.service", "Primary of the pair", null, null, null, "warn")
+```
+
+![A table with the failed row open in a panel and the pointer on the p95 header](images/table-tooltips.png)
 
 ## Tips and pitfalls
 

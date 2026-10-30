@@ -3,6 +3,7 @@
 import React, { useId } from "react";
 import { C, TONES } from "../theme.js";
 import { WORLD_PATH } from "../world-path.js";
+import { Tipped, Hot } from "./tooltips.jsx";
 
 const X = (lon) => (lon + 180) * 10;
 const Y = (lat) => (90 - lat) * 10;
@@ -24,7 +25,7 @@ export function fitView(points) {
   return { x, y, w, h };
 }
 
-export function MapView({ points, links = [], title }) {
+export function MapView({ points, links = [], title, tooltips }) {
   const uid = useId().replace(/:/g, "");
   const v = fitView(points);
   const k = v.w / 640; // view units per nominal css pixel
@@ -37,30 +38,45 @@ export function MapView({ points, links = [], title }) {
     // data-hermes-openui-map is a styling hook for native mode (plugin.jsx NATIVE_CSS); it changes nothing elsewhere.
     <div data-hermes-openui-map="" style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
-      <svg viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: 10, border: `1px solid ${C.border}`, background: "color-mix(in srgb, var(--foreground, CanvasText) 3%, transparent)" }}>
-        <g stroke={C.border} strokeWidth={0.7 * k} opacity="0.45">{grat}</g>
-        <defs><path id={`w${uid}`} d={WORLD_PATH} /></defs>
-        <g fill={C.soft} stroke={C.muted} strokeWidth={0.8 * k} strokeLinejoin="round" opacity="0.9">
-          {[-3600, 0, 3600].map((dx) => <use key={dx} href={`#w${uid}`} x={dx} />)}
-        </g>
-        {links.map(([a, b], i) => {
-          const p = byLabel.get(a), q = byLabel.get(b);
-          if (!p || !q) return null;
-          return <line key={i} x1={X(p.lon)} y1={Y(p.lat)} x2={X(q.lon)} y2={Y(q.lat)} stroke={C.accent} strokeWidth={1.6 * k} strokeDasharray={`${5 * k} ${4 * k}`} opacity="0.85" />;
-        })}
-        {points.map((p, i) => {
-          const col = TONES[p.tone || "info"] || C.accent;
-          const x = X(p.lon), y = Y(p.lat);
-          const right = x < v.x + v.w * 0.78;
-          return (
-            <g key={i}>
-              <circle cx={x} cy={y} r={9 * k} fill={col} opacity="0.22" />
-              <circle cx={x} cy={y} r={4.6 * k} fill={col} stroke="var(--card, Canvas)" strokeWidth={1.4 * k} />
-              <text x={x + (right ? 9 : -9) * k} y={y + 4 * k} fontSize={12 * k} textAnchor={right ? "start" : "end"} fill={C.fg} stroke="var(--card, Canvas)" strokeWidth={3.2 * k} paintOrder="stroke" style={{ fontWeight: 550 }}>{p.label}</text>
-            </g>
-          );
-        })}
-      </svg>
+      <Tipped tooltips={tooltips} keepFocus>
+        <svg viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: 10, border: `1px solid ${C.border}`, background: "color-mix(in srgb, var(--foreground, CanvasText) 3%, transparent)" }}>
+          <g stroke={C.border} strokeWidth={0.7 * k} opacity="0.45">{grat}</g>
+          <defs><path id={`w${uid}`} d={WORLD_PATH} /></defs>
+          <g fill={C.soft} stroke={C.muted} strokeWidth={0.8 * k} strokeLinejoin="round" opacity="0.9">
+            {[-3600, 0, 3600].map((dx) => <use key={dx} href={`#w${uid}`} x={dx} />)}
+          </g>
+          {links.map(([a, b], i) => {
+            const p = byLabel.get(a), q = byLabel.get(b);
+            if (!p || !q) return null;
+            const line = <line x1={X(p.lon)} y1={Y(p.lat)} x2={X(q.lon)} y2={Y(q.lat)} stroke={C.accent} strokeWidth={1.6 * k} strokeDasharray={`${5 * k} ${4 * k}`} opacity="0.85" />;
+            if (a === b) return <React.Fragment key={i}>{line}</React.Fragment>;
+            const d = `M${X(p.lon)} ${Y(p.lat)}L${X(q.lon)} ${Y(q.lat)}`;
+            // The dashed line is thin, so a transparent hit path of about 12 css px lies over it; the dot sits in the middle of the line.
+            return (
+              <Hot key={i} k={a + ">" + b} label={a + " \u2192 " + b} shape={{ t: "path", d }} marker={[(X(p.lon) + X(q.lon)) / 2, (Y(p.lat) + Y(q.lat)) / 2]} scale={k}>
+                {line}
+              </Hot>
+            );
+          })}
+          {points.map((p, i) => {
+            const col = TONES[p.tone || "info"] || C.accent;
+            const x = X(p.lon), y = Y(p.lat);
+            const right = x < v.x + v.w * 0.78;
+            // The hit box covers the pin and its label (7.8 css px a letter, the width of a bold 12 px label), so the whole pin can be hovered and clicked.
+            const tw = String(p.label).length * 7.8 * k;
+            const x0 = right ? x - 9 * k : x - 9 * k - tw - 2 * k, w = 18 * k + tw + 2 * k;
+            return (
+              <Hot key={i} k={String(p.label)} label={String(p.label)} shape={{ t: "rect", x: x0, y: y - 10 * k, w, h: 20 * k, rx: 6 * k }} marker={[x0 + w, y - 8 * k]} scale={k}>
+                <g>
+                  <circle cx={x} cy={y} r={9 * k} fill={col} opacity="0.22" />
+                  <circle cx={x} cy={y} r={4.6 * k} fill={col} stroke="var(--card, Canvas)" strokeWidth={1.4 * k} />
+                  <text x={x + (right ? 9 : -9) * k} y={y + 4 * k} fontSize={12 * k} textAnchor={right ? "start" : "end"} fill={C.fg} stroke="var(--card, Canvas)" strokeWidth={3.2 * k} paintOrder="stroke" style={{ fontWeight: 550 }}>{p.label}</text>
+                </g>
+              </Hot>
+            );
+          })}
+        </svg>
+      </Tipped>
     </div>
   );
 }

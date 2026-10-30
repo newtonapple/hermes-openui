@@ -1,9 +1,9 @@
 {
  "core": {
   "file": "core.js.gz",
-  "raw": 810076,
-  "gz": 205007,
-  "sha256": "6fa1de9199d2311ce9c330f5c4fcc3eb6abb0d7b93b7b0304b567b595cdb3bd0",
+  "raw": 833045,
+  "gz": 213469,
+  "sha256": "5d730fa7b9059802077b38f85b1772bc7fb33b953cb9463255fac2f11c239e78",
   "components": [
    "Stack",
    "Text",
@@ -15,7 +15,8 @@
    "Button",
    "TabItem",
    "Tabs",
-   "Image"
+   "Image",
+   "Tooltip"
   ]
  },
  "packs": {
@@ -34,9 +35,9 @@
   },
   "diagrams": {
    "file": "packs/diagrams.js.gz",
-   "raw": 12939,
-   "gz": 5590,
-   "sha256": "64dfd0c4af279e60dc9e0d5b53f764aef4db684fd39c9cf1e239171e293cba95",
+   "raw": 14260,
+   "gz": 6006,
+   "sha256": "c1398c09fe9649cfb9bb5278e07583760adde05e68cd534e3dc6f949806dbbd0",
    "components": [
     "DagNode",
     "Dag",
@@ -47,9 +48,9 @@
   },
   "infra": {
    "file": "packs/infra.js.gz",
-   "raw": 15611,
-   "gz": 6913,
-   "sha256": "ebc67e4962bb0bf9201599515de18fa814698b231461ee49746757f0d5205a89",
+   "raw": 16943,
+   "gz": 7406,
+   "sha256": "6f6182ecbc2bb8647129be7c464f3b18bdbb96a00900fcfc2408cc81ccaeeceb",
    "components": [
     "InfraNode",
     "InfraZone",
@@ -59,9 +60,9 @@
   },
   "map": {
    "file": "packs/map.js.gz",
-   "raw": 27432,
-   "gz": 11628,
-   "sha256": "403e6860e821d45a8ba20cd677221d937e9024742577137e9d63feb1e5173a49",
+   "raw": 28537,
+   "gz": 12179,
+   "sha256": "c0b77783bde4a2723776ac7dd915d1d5b0bb958f309e959d92bb7e6ca22ed7f2",
    "components": [
     "GeoPoint",
     "GeoMap"
@@ -69,9 +70,9 @@
   },
   "sequence": {
    "file": "packs/sequence.js.gz",
-   "raw": 16646,
-   "gz": 6918,
-   "sha256": "193640a018b239b74ebb5c661ef13f57b409d1a9de7d508c0de90201f21799bc",
+   "raw": 17655,
+   "gz": 7306,
+   "sha256": "1cee12e0a1161d834945bbb2fcf9cfa089bd8ed1f2369c60b76bd2da0d680532",
    "components": [
     "SeqParticipant",
     "SeqMessage",
@@ -82,9 +83,9 @@
   },
   "text": {
    "file": "packs/text.js.gz",
-   "raw": 11590,
-   "gz": 4689,
-   "sha256": "6cc3ea24cb0b1081f19473a884cfbb172f224c3eccb66d4a7e613bebab9e478d",
+   "raw": 8207,
+   "gz": 3276,
+   "sha256": "37d21cc43645f72175c4c84ebebbd884cd4998bb0a94672b445e6822f2910ca3",
    "components": [
     "Markdown",
     "CodeBlock",

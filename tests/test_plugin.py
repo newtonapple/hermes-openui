@@ -105,7 +105,7 @@ class Contract(unittest.TestCase):
 
     def test_bundled_skills_are_registered_and_have_frontmatter(self):
         self.assertEqual([n for n, _ in self.ctx.skills], ["custom-components", "openui-render"])
-        longest = {"custom-components": 8000, "openui-render": 4500}  # loaded in full each time a skill is used
+        longest = {"custom-components": 8000, "openui-render": 5000}  # loaded in full each time a skill is used
         for name, path in self.ctx.skills:
             with self.subTest(skill=name):
                 text = path.read_text(encoding="utf-8")

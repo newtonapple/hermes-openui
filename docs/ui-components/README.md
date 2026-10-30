@@ -1,6 +1,6 @@
 # UI components
 
-Every component the `render_widget` tool can draw, with a screenshot, the exact signature, an explanation of each argument, two or three runnable examples and the pitfalls found by rendering them. There are 23 components, plus 14 small helpers that live on their parent's page (`TabItem`, `Series`, `DagNode`, `Entity`, `Relation`, `GeoPoint`, `FaqItem`, `InfraNode`, `InfraZone`, `InfraLink`, `SeqParticipant`, `SeqMessage`, `SeqNote`, `SeqGroup`).
+Every component the `render_widget` tool can draw, with a screenshot, the exact signature, an explanation of each argument, two or three runnable examples and the pitfalls found by rendering them. There are 24 components, plus 14 small helpers that live on their parent's page (`TabItem`, `Series`, `DagNode`, `Entity`, `Relation`, `GeoPoint`, `FaqItem`, `InfraNode`, `InfraZone`, `InfraLink`, `SeqParticipant`, `SeqMessage`, `SeqNote`, `SeqGroup`).
 
 Click a preview to open the page. All screenshots are real renders of the example beside them (dark theme, 2x), produced by [`tools/shoot.py`](../../tools/shoot.py). Charts and the data in them are sample data.
 
@@ -56,6 +56,7 @@ Read it top-down: `root` is a column holding a heading and a row of two Metric t
 | [**GeoMap**](GeoMap.md) | <a href="GeoMap.md"><img src="images/geo-map-regional.png" width="260" alt="GeoMap example"></a> | An offline world map with coloured pins and optional dashed links. It draws coastlines from data shipped with the plugin, so it needs no network and no map tiles. The view zooms to fit your pins. |
 | [**InfraMap**](InfraMap.md) | <a href="InfraMap.md"><img src="images/infra-map-web-platform.png" width="260" alt="InfraMap example"></a> | A map of infrastructure. Zones such as networks, racks or clouds hold nodes such as servers, databases and queues, and labelled arrows show which node talks to which. A node can carry an icon for its kind and a health status. |
 | [**SequenceDiagram**](SequenceDiagram.md) | <a href="SequenceDiagram.md"><img src="images/sequence-diagram-login.png" width="260" alt="SequenceDiagram example"></a> | A sequence diagram. The parts of a system are columns, and the calls between them are numbered arrows from top to bottom, with dashed returns, activation bars, notes and alt, opt, loop or par groups. Use it to show who calls whom, and in what order. |
+| [**Tooltip**](Tooltip.md) | <a href="Tooltip.md"><img src="images/tooltip-dag-node.png" width="260" alt="Tooltip example"></a> | A hover tooltip for one element of a diagram, table, metric, bar chart, map or image, with an optional panel of detail, code and a link that opens on a click. It goes in the `tooltips` argument of a Dag, Erd, InfraMap, SequenceDiagram, Table, Metric, BarChart, GeoMap or Image. |
 
 ### Rich content
 
@@ -89,6 +90,7 @@ Found by rendering every example. Each is explained, with a screenshot where it 
 | [GeoMap](GeoMap.md) | Links are straight lines on a flat map. Pins close together print overlapping labels. |
 | [InfraMap](InfraMap.md) | Shrinks to fit its column (a preview frame is at most 640 px), then scrolls sideways with no visual cue (about 4 zones fit 640 px). `InfraLink` takes node **id strings**, not variable names or labels, and the validator rejects a mistake with the ids it knows. |
 | [SequenceDiagram](SequenceDiagram.md) | Shrinks to fit its column (a preview frame is at most 640 px), then scrolls sideways (about 5 participants fit 640 px). `SeqMessage` and `SeqNote` take participant **id strings**, not variable names or labels, and the validator rejects a mistake with the ids it knows. A bar opens only on a `sync` message that a later `return` answers. |
+| [Tooltip](Tooltip.md) | Only for Dag, Erd, InfraMap, SequenceDiagram, Table, Metric, BarChart, GeoMap and Image. Its `target` must name exactly one element: a SeqMessage needs an `id`, two links between the same nodes are ambiguous, a Table needs distinct headers for `col:` and `cell:` targets. A link in the panel opens only in native mode with the desktop app; elsewhere it is text to copy. |
 | [Markdown](Markdown.md) | Lists are flat (no nesting), and strikethrough, `_italics_` and HTML print as typed. |
 | [CodeBlock](CodeBlock.md) | Any language gets some colouring (strings, numbers, a word before `(`), not only the listed ones. |
 | [Tabs](Tabs.md) | Only the first tab shows in a screenshot. Items in a tab have no spacing: use one Stack per tab. |

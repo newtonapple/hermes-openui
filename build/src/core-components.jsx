@@ -5,6 +5,8 @@ import { action, defineComponent, useTriggerAction } from "@openuidev/react-lang
 import { z } from "zod/v4";
 
 import { C, TONES } from "./theme.js";
+import { Tooltip } from "./components/tooltip-schema.js";
+import { Tipped, TipBox, HotBox, TipDot, useTipHas, hasTips } from "./components/tooltips.jsx";
 
 const GAP = { none: 0, xs: 4, s: 8, m: 12, l: 20, xl: 28 };
 
@@ -80,85 +82,118 @@ const Card = defineComponent({
 const Metric = defineComponent({
   name: "Metric",
   description:
-    'KPI tile: label, value (string), optional delta text, optional tone "good"|"warn"|"bad"|"neutral" colouring the delta.',
+    'KPI tile: label, value (string), optional delta text, optional tone "good"|"warn"|"bad"|"neutral" colouring the delta. tooltips: Tooltip[] is the LAST argument (write null for delta and tone if skipped, e.g. Metric("Latency", "120 ms", null, null, [t1])) and adds a hover tooltip with an optional click-to-open panel; one at most, its target is its own label.',
   props: z.object({
     label: z.string(),
     value: z.string(),
     delta: z.string().optional(),
     tone: z.enum(["good", "warn", "bad", "neutral"]).optional(),
+    tooltips: z.array(Tooltip.ref).optional(),
   }),
-  component: ({ props }) => (
-    <div
-      style={{
-        border: `1px solid ${C.border}`,
-        borderRadius: 10,
-        padding: "10px 14px",
-        flex: "1 1 120px",
-        minWidth: 0,
-      }}
-    >
-      <div style={{ fontSize: 12, color: C.muted }}>{props.label}</div>
-      <div style={{ fontSize: 24, fontWeight: 650, lineHeight: 1.2 }}>{props.value}</div>
-      {props.delta ? (
-        <div style={{ fontSize: 12, color: TONES[props.tone ?? "neutral"] }}>{props.delta}</div>
-      ) : null}
-    </div>
-  ),
+  component: ({ props }) => {
+    const tipped = hasTips(props.tooltips);
+    return (
+      <TipBox tooltips={props.tooltips} tile>
+        <HotBox
+          k={props.label}
+          label={props.label}
+          name={props.label + ": " + props.value + (props.delta ? ", " + props.delta : "")}
+          style={{
+            border: `1px solid ${C.border}`,
+            borderRadius: 10,
+            padding: "10px 14px",
+            flex: tipped ? "1 1 auto" : "1 1 120px", // a tile with a tooltip sits in a wrapper that is the flex item and fills it
+            minWidth: 0,
+            ...(tipped ? { pointerEvents: "auto" } : null), // its wrapper ignores the pointer outside the tile (tooltips.jsx TILE_ROOM)
+          }}
+        >
+          <div style={{ fontSize: 12, color: C.muted }}>{props.label}</div>
+          <div style={{ fontSize: 24, fontWeight: 650, lineHeight: 1.2 }}>{props.value}</div>
+          {props.delta ? (
+            <div style={{ fontSize: 12, color: TONES[props.tone ?? "neutral"] }}>{props.delta}</div>
+          ) : null}
+        </HotBox>
+      </TipBox>
+    );
+  },
 });
 
 const Table = defineComponent({
   name: "Table",
-  description: "Data table. columns: array of header strings. rows: array of rows, each an array of strings/numbers matching columns.",
+  description:
+    "Data table. columns: array of header strings. rows: array of rows, each an array of strings/numbers matching columns. tooltips: Tooltip[] is the LAST argument, Table(columns, rows, [t1]), and adds a hover tooltip with an optional click-to-open panel; target is `row:3` (1-based data row), `col:status` (a column header) or `cell:3.status` (row number, a dot, then the header); duplicate headers make col: and cell: targets ambiguous.",
   props: z.object({
     columns: z.array(z.string()),
     rows: z.array(z.array(z.union([z.string(), z.number()]))),
+    tooltips: z.array(Tooltip.ref).optional(),
   }),
   component: ({ props }) => (
+    <TipBox tooltips={props.tooltips}>
+      <TableView columns={props.columns} rows={props.rows} />
+    </TipBox>
+  ),
+});
+
+// The table itself. Inside a Tipped, a row, a header or a cell with a tooltip is marked through HotBox (the same tag, so a <tr> stays a <tr>
+// directly under <tbody>, and each part keeps its own role). The dot of a header or a cell sits right after its text; a row's dot sits after
+// the text of its first cell, because only a cell can hold it.
+function TableView({ columns, rows }) {
+  const has = useTipHas();
+  const TH = { textAlign: "left", padding: "6px 10px", color: C.muted, fontWeight: 600, borderBottom: `1px solid ${C.border}`, whiteSpace: "nowrap" };
+  return (
     <div style={{ overflowX: "auto" }}>
       <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 13 }}>
         <thead>
           <tr>
-            {props.columns.map((c, i) => (
-              <th
-                key={i}
-                style={{
-                  textAlign: "left",
-                  padding: "6px 10px",
-                  color: C.muted,
-                  fontWeight: 600,
-                  borderBottom: `1px solid ${C.border}`,
-                  whiteSpace: "nowrap",
-                }}
-              >
+            {columns.map((c, i) => (
+              <HotBox as="th" key={i} k={"col:" + c} label={c} inset dot="inline" style={TH}>
                 {c}
-              </th>
+              </HotBox>
             ))}
           </tr>
         </thead>
         <tbody>
-          {props.rows.map((r, i) => (
-            <tr key={i}>
-              {r.map((cell, j) => (
-                <td key={j} style={{ padding: "6px 10px", borderBottom: `1px solid ${C.border}` }}>
-                  {String(cell)}
-                </td>
-              ))}
-            </tr>
+          {rows.map((r, i) => (
+            <HotBox as="tr" key={i} k={"row:" + (i + 1)} label={"Row " + (i + 1)} inset dot={null}>
+              {r.map((cell, j) => {
+                const cellKey = j < columns.length ? "cell:" + (i + 1) + "." + columns[j] : "";
+                const lead = j === 0 && has("row:" + (i + 1));
+                return (
+                  <HotBox as="td" key={j} k={cellKey} label={"Row " + (i + 1) + ", " + columns[j]} inset dot="inline" style={{ padding: "6px 10px", borderBottom: `1px solid ${C.border}` }}>
+                    {String(cell)}
+                    {lead ? <TipDot k={"row:" + (i + 1)} inline /> : null}
+                  </HotBox>
+                );
+              })}
+            </HotBox>
           ))}
         </tbody>
       </table>
     </div>
-  ),
-});
+  );
+}
+
+// One bar. With a tooltip its dot sits inside the bar at the top, centred: that spot is never the value above or the label below, whatever the
+// width of the column, and it follows the bar. (A bar so short that the dot is taller than it is drawn the same way.)
+function Bar({ k, height }) {
+  const has = useTipHas();
+  return (
+    <div style={{ width: "100%", maxWidth: 48, height, background: C.accent, borderRadius: "4px 4px 0 0", position: has(k) ? "relative" : undefined }}>
+      <TipDot k={k} top={1} left="50%" marginLeft={-3} />
+    </div>
+  );
+}
 
 const BarChart = defineComponent({
   name: "BarChart",
-  description: "Vertical bar chart. labels and values are parallel arrays; optional title and unit suffix (e.g. \"%\").",
+  description:
+    "Vertical bar chart. labels and values are parallel arrays; optional title and unit suffix (e.g. \"%\"). tooltips: Tooltip[] is the LAST argument (write null for title and unit if skipped, e.g. BarChart(labels, values, null, null, [t1])) and adds a hover tooltip with an optional click-to-open panel; target is a bar's label (the whole column), so duplicate labels are ambiguous.",
   props: z.object({
     labels: z.array(z.string()),
     values: z.array(z.number()),
     title: z.string().optional(),
     unit: z.string().optional(),
+    tooltips: z.array(Tooltip.ref).optional(),
   }),
   component: ({ props }) => {
     const { labels, values, unit = "" } = props;
@@ -167,20 +202,22 @@ const BarChart = defineComponent({
     return (
       <div>
         {props.title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{props.title}</div> : null}
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: H + 36 }}>
-          {values.map((v, i) => (
-            <div key={i} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end" }}>
-              <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>
-                {v}
-                {unit}
-              </div>
-              <div style={{ width: "100%", maxWidth: 48, height: Math.max(2, (v / max) * H), background: C.accent, borderRadius: "4px 4px 0 0" }} />
-              <div style={{ fontSize: 11, color: C.muted, marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-                {labels[i]}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Tipped tooltips={props.tooltips}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: H + 36 }}>
+            {values.map((v, i) => (
+              <HotBox key={i} k={String(labels[i] ?? "")} label={String(labels[i] ?? "")} name={labels[i] + ": " + v + unit} dot={null} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end" }}>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 2 }}>
+                  {v}
+                  {unit}
+                </div>
+                <Bar k={String(labels[i] ?? "")} height={Math.max(2, (v / max) * H)} />
+                <div style={{ fontSize: 11, color: C.muted, marginTop: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
+                  {labels[i]}
+                </div>
+              </HotBox>
+            ))}
+          </div>
+        </Tipped>
       </div>
     );
   },
@@ -287,21 +324,26 @@ const Tabs = defineComponent({
 const Image = defineComponent({
   name: "Image",
   description:
-    'Image. src is an absolute local file path (png/jpg/webp/gif/svg; inlined automatically by the renderer, max 100 KB each, less if the widget also has charts or a map) or a data: URI. Remote URLs are NOT guaranteed to load. Optional alt and caption.',
-  props: z.object({ src: z.string(), alt: z.string().optional(), caption: z.string().optional() }),
+    'Image. src is an absolute local file path (png/jpg/webp/gif/svg; inlined automatically by the renderer, max 100 KB each, less if the widget also has charts or a map) or a data: URI. Remote URLs are NOT guaranteed to load. Optional alt and caption. tooltips: Tooltip[] is the LAST argument (write null for alt and caption if skipped, e.g. Image(src, null, null, [t1])) and adds a hover tooltip with an optional click-to-open panel; one at most, its target is the word image.',
+  props: z.object({ src: z.string(), alt: z.string().optional(), caption: z.string().optional(), tooltips: z.array(Tooltip.ref).optional() }),
   component: ({ props }) => {
     const [bad, setBad] = useState(false);
+    const pic = bad ? (
+      <div style={{ border: `1px dashed ${C.border}`, borderRadius: 10, padding: 18, color: C.muted, fontSize: 13 }}>Image failed to load{props.alt ? `: ${props.alt}` : ""}</div>
+    ) : (
+      <img src={props.src} alt={props.alt ?? ""} onError={() => setBad(true)} style={{ maxWidth: "100%", height: "auto", borderRadius: 10, border: `1px solid ${C.border}`, display: "block", alignSelf: "flex-start" }} />
+    );
     return (
       <figure style={{ margin: 0, display: "flex", flexDirection: "column", gap: 6, minWidth: 0 }}>
-        {bad ? (
-          <div style={{ border: `1px dashed ${C.border}`, borderRadius: 10, padding: 18, color: C.muted, fontSize: 13 }}>Image failed to load{props.alt ? `: ${props.alt}` : ""}</div>
-        ) : (
-          <img src={props.src} alt={props.alt ?? ""} onError={() => setBad(true)} style={{ maxWidth: "100%", height: "auto", borderRadius: 10, border: `1px solid ${C.border}`, display: "block", alignSelf: "flex-start" }} />
-        )}
-        {props.caption ? <figcaption style={{ fontSize: 12.5, color: C.muted }}>{props.caption}</figcaption> : null}
+        <Tipped tooltips={props.tooltips} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {hasTips(props.tooltips) ? <HotBox k="image" label={props.alt || "Image"} style={{ alignSelf: "flex-start", maxWidth: "100%", borderRadius: 10 }}>{pic}</HotBox> : pic}
+          {props.caption ? <figcaption style={{ fontSize: 12.5, color: C.muted }}>{props.caption}</figcaption> : null}
+        </Tipped>
       </figure>
     );
   },
 });
 
-export const coreComponents = [Stack, Text, Card, Metric, Table, BarChart, Callout, Button, TabItem, Tabs, Image];
+// Tooltip is defined once (components/tooltip-schema.js) and lives here, not in a pack: every diagram pack refers to it, and a
+// component registered by two packs would make createLibrary throw.
+export const coreComponents = [Stack, Text, Card, Metric, Table, BarChart, Callout, Button, TabItem, Tabs, Image, Tooltip];

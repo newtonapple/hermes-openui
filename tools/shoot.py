@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Render an OpenUI Lang file exactly as the plugin would, and save a PNG screenshot of it. Pure standard library + a local Chrome.
 
-usage: python3 tools/shoot.py EXAMPLE.oui OUT.png [--theme dark|light] [--width 640] [--scale 2] [--chrome PATH] [--keep-html]
-       python3 tools/shoot.py --html FILE.html OUT.png [--theme light|dark|auto] [--width 1100] [--scale 2] [--eval JS] [--before JS]
+usage: python3 tools/shoot.py EXAMPLE.oui OUT.png [--theme dark|light] [--width 640] [--scale 2] [--chrome PATH] [--keep-html] [--steps JSON]
+       python3 tools/shoot.py --html FILE.html OUT.png [--theme light|dark|auto] [--width 1100] [--scale 2] [--eval JS] [--before JS] [--steps JSON]
 
 It builds the real widget page with the plugin's own page builder (the same bytes render_widget writes), wraps it in the app's theme
 tokens, loads it in headless Chrome over the DevTools protocol, waits for the runtime to settle, measures the real content height, and
@@ -16,6 +16,17 @@ is wrapped or rebuilt, and the whole page height is captured. --theme light|dark
 requests outside file:/data: the page made, which is how to prove a page really works offline. --eval JS prints a JSON value
 computed in the finished page (e.g. --eval 'document.querySelectorAll(".mount").length'); --before JS runs first, before the screenshot
 (e.g. --before 'document.querySelector("button").click()' to capture what a click shows).
+
+--steps JSON (both modes) drives the finished page with REAL input events from the DevTools protocol before the screenshot, which a
+JavaScript call cannot do (a hover, the keyboard focus ring, Tab, Space). A JSON list; each step has exactly one action:
+  {"move": SELECTOR | [x, y], "at": [fx, fy]}   mouse move to the element's centre, or to fractions fx, fy of its box
+  {"click": SELECTOR | [x, y], "at": [fx, fy]}  move, press, release
+  {"key": "Tab" | "Shift+Tab" | "Enter" | "Escape" | "Space" | "ArrowDown" | "ArrowUp"}
+  {"js": EXPR}                                  run an expression (for example to focus an element or install a stub)
+  {"eval": EXPR, "name": NAME}                  record the JSON value of an expression
+  {"shot": "name.png"}                          an extra screenshot, written next to OUT.png, of the whole page
+The page height is measured again after the steps, so a panel that opened is part of the final screenshot. The recorded values are
+printed as one `steps:` line.
 """
 from __future__ import annotations
 
@@ -26,6 +37,7 @@ import importlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import socket
 import struct
@@ -204,7 +216,107 @@ def docs_source(text: str) -> str:
     return text.replace('"/path/to/', '"%s/' % (ROOT / "docs" / "ui-components" / "examples" / "assets"))
 
 
-def shoot(example: Path, out: Path, theme: str = "dark", width: int = 640, scale: int = 2, chrome: str = None, keep_html: bool = False, pack_files=None) -> str:
+KEYS = {  # name -> (key, code, windowsVirtualKeyCode, text)
+    "Tab": ("Tab", "Tab", 9, ""), "Enter": ("Enter", "Enter", 13, "\r"), "Escape": ("Escape", "Escape", 27, ""), "Space": (" ", "Space", 32, " "),
+    "ArrowDown": ("ArrowDown", "ArrowDown", 40, ""), "ArrowUp": ("ArrowUp", "ArrowUp", 38, ""),
+}
+STEP_ACTIONS = ("move", "click", "key", "js", "eval", "shot")
+
+
+def parse_steps(text):
+    """Check a --steps list before Chrome starts: a JSON list of steps with exactly one known action each."""
+    try:
+        steps = json.loads(text)
+    except ValueError as e:
+        raise SystemExit("--steps is not JSON: %s" % e)
+    if not isinstance(steps, list):
+        raise SystemExit("--steps must be a JSON list")
+    for i, s in enumerate(steps):
+        where = "--steps item %d" % (i + 1)
+        if not isinstance(s, dict):
+            raise SystemExit("%s must be an object" % where)
+        actions = [a for a in STEP_ACTIONS if a in s]
+        if len(actions) != 1:
+            raise SystemExit("%s needs exactly one of %s" % (where, ", ".join(STEP_ACTIONS)))
+        a = actions[0]
+        v = s[a]
+        if a in ("move", "click"):
+            ok = isinstance(v, str) and v or (isinstance(v, list) and len(v) == 2 and all(isinstance(n, (int, float)) for n in v))
+            if not ok:
+                raise SystemExit("%s: %s takes a CSS selector or [x, y]" % (where, a))
+        elif a == "key":
+            if v != "Shift+Tab" and v not in KEYS:
+                raise SystemExit("%s: key must be one of %s or Shift+Tab" % (where, ", ".join(sorted(KEYS))))
+        elif a in ("js", "eval"):
+            if not isinstance(v, str) or not v:
+                raise SystemExit("%s: %s takes a JavaScript expression" % (where, a))
+            if a == "eval" and not (isinstance(s.get("name"), str) and s["name"]):
+                raise SystemExit("%s: eval needs a name" % where)
+        elif a == "shot":
+            if not (isinstance(v, str) and re.fullmatch(r"[\w.-]+\.png", v)):
+                raise SystemExit("%s: shot takes a plain file name ending in .png" % where)
+    return steps
+
+
+def settle(ws):
+    """Wait for two animation frames, so a change the last step made (a hover outline, a tooltip) is on screen before a screenshot."""
+    ws.call("Runtime.evaluate", expression="new Promise(function(r){requestAnimationFrame(function(){requestAnimationFrame(r)})})", awaitPromise=True)
+
+
+def _point(ws, target, at):
+    if isinstance(target, list):
+        return target
+    js = ("(function(){var e=document.querySelector(%s);if(!e)return null;e.scrollIntoView({block:'nearest',inline:'nearest'});"
+          "var r=e.getBoundingClientRect();return [r.left+r.width*%r,r.top+r.height*%r]})()" % (json.dumps(target), float(at[0]), float(at[1])))
+    v = ws.call("Runtime.evaluate", expression=js, returnByValue=True)["result"].get("value")
+    if not v:
+        raise SystemExit("--steps: no element matches %s" % target)
+    return v
+
+
+def run_steps(ws, steps, out: Path, win_w, measure_js, scale):
+    """Run parsed steps with real mouse and keyboard events. Returns {name: value} of the eval steps. Before every mouse step and
+    screenshot the viewport is grown to the whole page (see refit), so nothing scrolls and a point stays where it was computed."""
+    got = {}
+    for s in steps:
+        at = s.get("at") or [0.5, 0.5]
+        if "move" in s or "click" in s:
+            refit(ws, win_w, measure_js, scale)
+            x, y = _point(ws, s.get("move", s.get("click")), at)
+            ws.call("Input.dispatchMouseEvent", type="mouseMoved", x=x, y=y, button="none")
+            if "click" in s:
+                ws.call("Input.dispatchMouseEvent", type="mousePressed", x=x, y=y, button="left", buttons=1, clickCount=1)
+                ws.call("Input.dispatchMouseEvent", type="mouseReleased", x=x, y=y, button="left", buttons=0, clickCount=1)
+        elif "key" in s:
+            shift = s["key"] == "Shift+Tab"
+            key, code, vk, text = KEYS["Tab" if shift else s["key"]]
+            mods = 8 if shift else 0
+            ws.call("Input.dispatchKeyEvent", type="keyDown" if text else "rawKeyDown", key=key, code=code, windowsVirtualKeyCode=vk, modifiers=mods, **({"text": text} if text else {}))
+            ws.call("Input.dispatchKeyEvent", type="keyUp", key=key, code=code, windowsVirtualKeyCode=vk, modifiers=mods)
+        elif "js" in s:
+            ws.call("Runtime.evaluate", expression=s["js"], awaitPromise=True)
+        elif "eval" in s:
+            res = ws.call("Runtime.evaluate", expression=s["eval"], returnByValue=True, awaitPromise=True)
+            got[s["name"]] = res.get("result", {}).get("value", res.get("exceptionDetails", {}).get("text"))
+        elif "shot" in s:
+            refit(ws, win_w, measure_js, scale)
+            shot = ws.call("Page.captureScreenshot", format="png", fromSurface=True)
+            (out.parent / s["shot"]).write_bytes(base64.b64decode(shot["data"]))
+    return got
+
+
+def refit(ws, win_w, measure_js, scale):
+    """After steps the page may be taller (an opened panel): size the viewport to the whole page again before the screenshot."""
+    ws.call("Runtime.evaluate", expression="window.scrollTo(0,0)")
+    h = int(ws.call("Runtime.evaluate", expression=measure_js, returnByValue=True)["result"].get("value") or 0)
+    if h:
+        ws.call("Emulation.setDeviceMetricsOverride", width=win_w, height=h, deviceScaleFactor=scale, mobile=False)
+    settle(ws)
+    return h
+
+
+def shoot(example: Path, out: Path, theme: str = "dark", width: int = 640, scale: int = 2, chrome: str = None, keep_html: bool = False, pack_files=None, steps=None) -> str:
+    steps = parse_steps(steps) if steps else None
     page, lint, bundle, packs = load_modules()
     custom, pack_problems = packs.load([str(p) for p in (pack_files or [])], bundle.component_names())
     if pack_problems:
@@ -242,6 +354,11 @@ def shoot(example: Path, out: Path, theme: str = "dark", width: int = 640, scale
                 raise SystemExit("widget did not render%s" % (": " + err if err else " (no height reported after 30 s)"))
             ws.call("Emulation.setDeviceMetricsOverride", width=win, height=height, deviceScaleFactor=scale, mobile=False)
             time.sleep(0.5)
+            recorded = None
+            if steps:
+                measure = "Math.ceil(document.body.getBoundingClientRect().height)"
+                recorded = run_steps(ws, steps, out, win, measure, scale)
+                height = refit(ws, win, measure, scale) or height
             shot = ws.call("Page.captureScreenshot", format="png", fromSurface=True)
             out.write_bytes(base64.b64decode(shot["data"]))
             if keep_html:
@@ -251,7 +368,8 @@ def shoot(example: Path, out: Path, theme: str = "dark", width: int = 640, scale
     w, h = png_size(out)
     if w == 0:
         raise SystemExit("screenshot was not written")
-    return "%s: %dx%d px (css %dx%d, %s theme, packs: %s)" % (out.name, w, h, win, height, theme, ", ".join(packs) or "none")
+    line = "%s: %dx%d px (css %dx%d, %s theme, packs: %s)" % (out.name, w, h, win, height, theme, ", ".join(packs) or "none")
+    return line + ("\nsteps: %s" % json.dumps(recorded) if recorded else "")
 
 
 # Waits until every `.mount` container of an exported report (if the page has any) has drawn something.
@@ -286,8 +404,9 @@ def page_problems(events) -> dict:
     return {"console_errors": errors, "failed_requests": failed, "outside_requests": outside}
 
 
-def shoot_html(html_file: Path, out: Path, theme: str = "auto", width: int = 1100, scale: int = 2, chrome: str = None, probe: str = None, before: str = None) -> str:
+def shoot_html(html_file: Path, out: Path, theme: str = "auto", width: int = 1100, scale: int = 2, chrome: str = None, probe: str = None, before: str = None, steps=None) -> str:
     """Screenshot an existing HTML file loaded from file://, full page height. `theme` light|dark forces prefers-color-scheme."""
+    steps = parse_steps(steps) if steps else None
     html_file = html_file.resolve()
     if not html_file.is_file():
         raise SystemExit("no such file: %s" % html_file)
@@ -316,6 +435,10 @@ def shoot_html(html_file: Path, out: Path, theme: str = "auto", width: int = 110
             ws.call("Emulation.setDeviceMetricsOverride", width=width, height=height, deviceScaleFactor=scale, mobile=False)
             if before:
                 ws.call("Runtime.evaluate", expression=before, awaitPromise=True)
+            recorded = None
+            if steps:
+                recorded = run_steps(ws, steps, out, width, HTML_HEIGHT, scale)
+                refit(ws, width, HTML_HEIGHT, scale)
             time.sleep(1.0)  # chart animations
             shot = ws.call("Page.captureScreenshot", format="png", fromSurface=True)
             out.write_bytes(base64.b64decode(shot["data"]))
@@ -337,6 +460,8 @@ def shoot_html(html_file: Path, out: Path, theme: str = "auto", width: int = 110
         lines += ["  %s: %s" % (key, item[:200]) for item in problems[key][:5]]
     if probe:
         lines.append("eval: %s" % json.dumps(value))
+    if recorded:
+        lines.append("steps: %s" % json.dumps(recorded))
     return "\n".join(lines)
 
 
@@ -352,6 +477,7 @@ def parse_args(argv=None):
     ap.add_argument("--keep-html", action="store_true", help="also save OUT.html: a live, self-contained copy of the widget")
     ap.add_argument("--eval", dest="probe", metavar="JS", help="with --html: print the JSON value of this expression, evaluated in the finished page")
     ap.add_argument("--before", metavar="JS", help="with --html: run this expression in the finished page before the screenshot (e.g. click a button)")
+    ap.add_argument("--steps", metavar="JSON", help="drive the finished page with real mouse and keyboard events before the screenshot (see the top of this file)")
     a = ap.parse_args(argv)
     if a.html:
         if len(a.paths) != 1:
@@ -375,9 +501,9 @@ def parse_args(argv=None):
 def main() -> None:
     a = parse_args()
     if a.html:
-        print(shoot_html(Path(a.html), Path(a.paths[0]).resolve(), a.theme, a.width, a.scale, a.chrome, a.probe, a.before))
+        print(shoot_html(Path(a.html), Path(a.paths[0]).resolve(), a.theme, a.width, a.scale, a.chrome, a.probe, a.before, a.steps))
     else:
-        print(shoot(Path(a.paths[0]), Path(a.paths[1]).resolve(), a.theme, a.width, a.scale, a.chrome, a.keep_html, a.pack))
+        print(shoot(Path(a.paths[0]), Path(a.paths[1]).resolve(), a.theme, a.width, a.scale, a.chrome, a.keep_html, a.pack, a.steps))
 
 
 if __name__ == "__main__":

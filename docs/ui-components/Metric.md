@@ -7,7 +7,7 @@ A KPI tile: a small label, a large value and an optional coloured delta. Put sev
 ## Signature
 
 ```text
-Metric(label: string, value: string, delta?: string, tone?: "good" | "warn" | "bad" | "neutral")
+Metric(label: string, value: string, delta?: string, tone?: "good" | "warn" | "bad" | "neutral", tooltips?: Tooltip[])
 ```
 
 ## When to use
@@ -25,6 +25,7 @@ Not for a long list of values (use [Table](Table.md)) or a trend over time (use 
 | 2 | `value` | string | yes | The big number. It is a **string**: write `"87%"` or `"4 / 4"`, not `87`. |
 | 3 | `delta` | string | no | A line under the value. Leave it out and the tile has no third line. |
 | 4 | `tone` | `"good"`, `"warn"`, `"bad"` or `"neutral"` | no | Colours the `delta` text green, amber, red or grey. Defaults to `"neutral"`. |
+| 5 | `tooltips` | array of `Tooltip` | no | At most one: a hover tooltip and a click panel for the tile. Written last, so pass `null` for a skipped `delta` or `tone`. See [Tooltips](#tooltips). |
 
 ## Examples
 
@@ -57,6 +58,21 @@ queue = Metric("Queue", "12", "-3")
 ```
 
 ![Three Metric tiles, two without a delta line](images/metric-minimal.png)
+
+## Tooltips
+
+Pass one `Tooltip` as the last argument: `Metric("Error rate", "2.4%", "+1.9 pt", "bad", [t1])`. Write `null` for a `delta` or `tone` you skip, because `tooltips` is last. The target is the tile's own `label`, and the whole tile is the target, so one tooltip is the most a Metric takes. The tile gets a dot at its top right corner. Hover or Tab to it for the hint, which is drawn below the tile (over the content that follows it, up to about three lines, because the tile has no free space around it; a Metric that ends the widget keeps up to 72 px of empty space below it for this); click it, or press Enter or Space, to open a panel. In a row of tiles that wraps (`Stack([...], "row", "m", true)`) the panel takes a line of its own below all the tiles, as wide as the row, and the tiles keep their place and their height. In a row that does not wrap, or in a column, the panel sits under its tile and is as wide as the tile. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([tiles])
+tiles = Stack([m1, m2, m3], "row", "m", true)
+m1 = Metric("Error rate", "2.4%", "+1.9 pt", "bad", [a1])
+m2 = Metric("Requests / min", "1,284", "unchanged")
+m3 = Metric("Queue depth", "12", "-3", "good")
+a1 = Tooltip("Error rate", "Share of requests that failed", "Counted at the edge over the last five minutes. A jump here usually follows a deploy.", "kubectl rollout undo deploy/api", "bash", "bad", "https://example.com/runbooks/errors", "Error runbook")
+```
+
+![A row of three metric tiles with the first one open in a panel with a command and a link](images/metric-tooltips.png)
 
 ## Tips and pitfalls
 

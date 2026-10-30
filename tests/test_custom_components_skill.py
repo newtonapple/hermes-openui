@@ -788,7 +788,7 @@ class OtherSkill(unittest.TestCase):
         text = (ROOT / "skills" / "openui-render" / "SKILL.md").read_text(encoding="utf-8")
         self.assertIn("skill_view('hermes-openui:custom-components')", text)
         self.assertNotIn("docs/custom-components.md", text)
-        self.assertLessEqual(len(text), 4500)
+        self.assertLessEqual(len(text), 5000)
 
 
 class Docs(unittest.TestCase):

@@ -3,6 +3,7 @@
 import React from "react";
 import { C, TONES } from "../theme.js";
 import { layoutSequence, seqData } from "./sequence-layout.js";
+import { Tipped, Hot, tippedKeys } from "./tooltips.jsx";
 
 export { seqData };
 
@@ -41,8 +42,9 @@ const NOTE_FILL = "color-mix(in srgb, " + C.accent + " 10%, " + C.card + ")";
 const NOTE_STROKE = "color-mix(in srgb, " + C.accent + " 45%, transparent)";
 const BAR_FILL = "color-mix(in srgb, " + C.accent + " 22%, " + C.card + ")";
 
-export function SequenceDiagramView({ participants, steps, title, numbered }) {
+export function SequenceDiagramView({ participants, steps, title, numbered, tooltips }) {
   const lay = layoutSequence({ participants, steps, numbered });
+  const marked = tippedKeys(tooltips);
   const vb = lay.viewBox;
   const w = vb[2];
 
@@ -72,16 +74,19 @@ export function SequenceDiagramView({ participants, steps, title, numbered }) {
 
   const msgs = lay.messages.map((m, i) => {
     const lb = m.labelBox;
+    const name = m.from + " \u2192 " + m.to + ": " + m.full;
     return (
-      <g key={"m" + i} data-seq-id={m.id || undefined}>
-        <title>{m.from + " \u2192 " + m.to + ": " + m.full}</title>
-        <path d={m.d} fill="none" stroke={LINE} strokeOpacity={0.85} strokeWidth={1.4} strokeDasharray={m.dashed ? "6 4" : undefined} strokeLinecap="round" />
-        <path d={m.headD} fill={m.head === "filled" ? LINE : "none"} fillOpacity={0.85} stroke={LINE} strokeOpacity={0.85} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-        <text x={m.self ? lb.x : n1(lb.x + lb.w / 2)} y={n1(lb.y + 11)} textAnchor={lb.anchor} fontSize={12} fill={C.fg} {...HALO}>
-          {m.number != null ? <tspan fill={C.muted}>{m.number + ". "}</tspan> : null}
-          {m.label}
-        </text>
-      </g>
+      <Hot key={"m" + i} k={m.id || ""} label={name} full={m.full !== m.label ? m.full : undefined} shape={{ t: "path", d: m.d }} marker={[n1(lb.x + lb.w + 3), n1(lb.y + 1)]}>
+        <g data-seq-id={m.id || undefined}>
+          {m.id && marked.has(m.id) ? null : <title>{name}</title>}
+          <path d={m.d} fill="none" stroke={LINE} strokeOpacity={0.85} strokeWidth={1.4} strokeDasharray={m.dashed ? "6 4" : undefined} strokeLinecap="round" />
+          <path d={m.headD} fill={m.head === "filled" ? LINE : "none"} fillOpacity={0.85} stroke={LINE} strokeOpacity={0.85} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+          <text x={m.self ? lb.x : n1(lb.x + lb.w / 2)} y={n1(lb.y + 11)} textAnchor={lb.anchor} fontSize={12} fill={C.fg} {...HALO}>
+            {m.number != null ? <tspan fill={C.muted}>{m.number + ". "}</tspan> : null}
+            {m.label}
+          </text>
+        </g>
+      </Hot>
     );
   });
 
@@ -95,19 +100,22 @@ export function SequenceDiagramView({ participants, steps, title, numbered }) {
   ));
 
   const heads = lay.columns.map((c, i) => (
-    <g key={"h" + i}>
-      <title>{(c.full !== c.label ? c.full + " \u00b7 " : "") + c.id + (c.kind ? " \u00b7 " + c.kind : "")}</title>
-      <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={8} fill={C.card} stroke={C.border} strokeWidth={1} strokeDasharray={c.kind === "external" ? "4 3" : undefined} />
-      {glyph(c.kind, c.x + 9, c.y + c.h / 2 - 9.5)}
-      <text x={c.x + 34} y={c.y + c.h / 2 + 4.5} fontSize={12.5} fontWeight={600} fill={C.fg}>{c.label}</text>
-    </g>
+    <Hot key={"h" + i} k={c.id} label={c.full || c.label} full={c.full !== c.label ? c.full : undefined} shape={{ t: "rect", x: c.x, y: c.y, w: c.w, h: c.h, rx: 8 }} marker={[c.x + c.w - 2, c.y + 2]}>
+      <g>
+        {marked.has(c.id) ? null : <title>{(c.full !== c.label ? c.full + " \u00b7 " : "") + c.id + (c.kind ? " \u00b7 " + c.kind : "")}</title>}
+        <rect x={c.x} y={c.y} width={c.w} height={c.h} rx={8} fill={C.card} stroke={C.border} strokeWidth={1} strokeDasharray={c.kind === "external" ? "4 3" : undefined} />
+        {glyph(c.kind, c.x + 9, c.y + c.h / 2 - 9.5)}
+        <text x={c.x + 34} y={c.y + c.h / 2 + 4.5} fontSize={12.5} fontWeight={600} fill={C.fg}>{c.label}</text>
+      </g>
+    </Hot>
   ));
 
   return (
     <div style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
+      <Tipped tooltips={tooltips}>
       <div style={{ overflowX: "auto" }}>
-        <svg viewBox={vb.join(" ")} role="img" aria-label={title || "Sequence diagram"} style={{ width: "100%", maxWidth: w, minWidth: Math.min(w, Math.round(w * 0.78)), height: "auto", display: "block" }}>
+        <svg viewBox={vb.join(" ")} role={marked.size ? "group" : "img"} aria-label={title || "Sequence diagram"} style={{ width: "100%", maxWidth: w, minWidth: Math.min(w, Math.round(w * 0.78)), height: "auto", display: "block" }}>
           {lifelines}
           {frames}
           {bars}
@@ -117,6 +125,7 @@ export function SequenceDiagramView({ participants, steps, title, numbered }) {
           {heads}
         </svg>
       </div>
+      </Tipped>
       <Warn items={lay.warns} />
     </div>
   );

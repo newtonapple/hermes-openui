@@ -1,0 +1,6 @@
+root = Stack([tiles])
+tiles = Stack([m1, m2, m3], "row", "m", true)
+m1 = Metric("Error rate", "2.4%", "+1.9 pt", "bad", [a1])
+m2 = Metric("Requests / min", "1,284", "unchanged")
+m3 = Metric("Queue depth", "12", "-3", "good")
+a1 = Tooltip("Error rate", "Share of requests that failed", "Counted at the edge over the last five minutes. A jump here usually follows a deploy.", "kubectl rollout undo deploy/api", "bash", "bad", "https://example.com/runbooks/errors", "Error runbook")

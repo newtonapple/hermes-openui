@@ -7,7 +7,7 @@ A vertical bar chart for one series: a label under each bar and its value on top
 ## Signature
 
 ```text
-BarChart(labels: string[], values: number[], title?: string, unit?: string)
+BarChart(labels: string[], values: number[], title?: string, unit?: string, tooltips?: Tooltip[])
 ```
 
 ## When to use
@@ -25,6 +25,7 @@ Not for several series (use [LineChart](LineChart.md)), parts of a whole (use [P
 | 2 | `values` | array of numbers | yes | One value per bar, same length as `labels`. The validator rejects unequal lengths. |
 | 3 | `title` | string | no | Bold line above the chart. Pass `null` to skip it and still set `unit`. |
 | 4 | `unit` | string | no | Text added straight after each value: `"%"` gives `91%`. For a space, include it: `" ms"`. |
+| 5 | `tooltips` | array of `Tooltip` | no | Hover tooltips and click panels for single bars. Written last, so pass `null` for a skipped `title` or `unit`. See [Tooltips](#tooltips). |
 
 ## Examples
 
@@ -63,6 +64,19 @@ chart = BarChart(["00:00", "02:00", "04:00", "06:00", "08:00", "10:00", "12:00",
 ```
 
 ![Twelve bars of requests per two-hour window, tallest around midday](images/bar-chart-hourly.png)
+
+## Tooltips
+
+Pass `Tooltip` items as the last argument: `BarChart(labels, values, title, unit, [t1])`. Write `null` for a `title` or `unit` you skip. The target is a bar's label, and the whole column (the value, the bar and the label) is the target. Two bars with the same label are ambiguous, so the validator asks you to rename one. A bar with a tooltip gets a dot inside the bar, at its top. Hover or Tab to it for the hint; click it, or press Enter or Space, to open a panel under the chart. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([chart])
+chart = BarChart(["web", "api", "db", "cache"], [31, 82, 47, 9], "CPU by service (sample data)", "%", [a1, a2])
+a1 = Tooltip("api", "Busiest service", "Peaks every day at noon, when the batch jobs start.\nScale it before you add more web nodes.", "kubectl scale deploy/api --replicas=4", "bash", "warn")
+a2 = Tooltip("cache", "Mostly idle", null, null, null, "good")
+```
+
+![A bar chart with the api bar open in a panel and the pointer on the cache bar](images/bar-chart-tooltips.png)
 
 ## Tips and pitfalls
 

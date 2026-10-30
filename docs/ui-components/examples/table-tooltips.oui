@@ -1,0 +1,5 @@
+root = Stack([t])
+t = Table(["service", "status", "p95", "owner"], [["web", "up", "12", "platform"], ["api", "down", "340", "platform"], ["db", "up", "7", "data"], ["cache", "up", "1", "data"]], [a1, a2, a3])
+a1 = Tooltip("row:2", "Down since noon", "Restart it, then check the queue.\nIt pages the on-call after two failed probes.", "systemctl restart api", "bash", "bad", "https://example.com/runbooks/api", "API runbook")
+a2 = Tooltip("col:p95", "95th percentile latency in milliseconds")
+a3 = Tooltip("cell:3.service", "Primary of the pair", null, null, null, "warn")

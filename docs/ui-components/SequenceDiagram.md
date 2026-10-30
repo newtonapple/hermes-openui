@@ -7,7 +7,7 @@ A sequence diagram: the parts of a system as columns, and the calls between them
 ## Signature
 
 ```text
-SequenceDiagram(participants: SeqParticipant[], steps: (SeqMessage | SeqNote | SeqGroup)[], title?: string, numbered?: boolean)
+SequenceDiagram(participants: SeqParticipant[], steps: (SeqMessage | SeqNote | SeqGroup)[], title?: string, numbered?: boolean, tooltips?: Tooltip[])
 SeqParticipant(id: string, label: string, kind?: "actor" | "service" | "database" | "queue" | "external")
 SeqMessage(from: string, to: string, label: string, style?: "sync" | "async" | "return", id?: string)
 SeqNote(over: string, text: string, to?: string)
@@ -34,6 +34,7 @@ A SequenceDiagram holds SeqParticipants (the columns) and steps (the rows). A st
 | 2 | `steps` | (SeqMessage \| SeqNote \| SeqGroup)[] | yes | The rows, top to bottom in order. At most 100 in total, nested steps and the groups themselves included. |
 | 3 | `title` | string | no | A bold line above the diagram. |
 | 4 | `numbered` | boolean | no | `true` (the default) puts a muted `1.`, `2.` before each message label, in order of appearance, nested groups included. `false` leaves them off. |
+| 5 | `tooltips` | Tooltip[] | no | A hover tooltip, with an optional click-to-open panel, for some participants or messages. See [Tooltips](#tooltips). |
 
 ### SeqParticipant
 
@@ -159,6 +160,25 @@ m9 = SeqMessage("api", "client", "200 report", "return")
 
 ![An async job: the API queues it, a worker loops over jobs, the client reads the result](images/sequence-diagram-async-job.png)
 
+## Tooltips
+
+Pass `Tooltip` items as the last argument to comment on a participant or a message. The target is the participant id, or the `id` of a `SeqMessage`. A message without an `id` cannot have a tooltip, so give the ones you want to comment on an id. If one id is both a participant and a message, the target is ambiguous and the validator rejects it. A message arrow has a wider invisible hit area. Hover or Tab to an element with a dot to read its hint, and click it to open a panel under the diagram. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([flow])
+flow = SequenceDiagram([p1, p2, p3], [m1, m2, m3, m4], "Cache lookup (sample data)", true, [a1])
+p1 = SeqParticipant("client", "Client", "actor")
+p2 = SeqParticipant("api", "API")
+p3 = SeqParticipant("cache", "Cache", "database")
+m1 = SeqMessage("client", "api", "GET /items/7", "sync", "fetch")
+m2 = SeqMessage("api", "cache", "get item:7", "sync", "lookup")
+m3 = SeqMessage("cache", "api", "miss", "return")
+m4 = SeqMessage("api", "client", "200", "return")
+a1 = Tooltip("lookup", "Cache key", "Keys start with the item type, so different types never clash.", "key = \"item:\" + str(item_id)", "python")
+```
+
+![A cache lookup where the get call has a tooltip and an open panel with a Python line](images/sequence-diagram-tooltips.png)
+
 ## Tips and pitfalls
 
 - Messages and notes take participant **id strings**. A variable name (`SeqMessage(api, db, "x")`) or a label (`"Database"` when the id is `"db"`) is rejected before anything is drawn. The validator lists the known ids and, for a label, the id you meant: `` SeqMessage "find user" uses unknown participant id `Database` in `to` (...). `Database` is a label; the id is `db`. ``
@@ -169,9 +189,9 @@ m9 = SeqMessage("api", "client", "200 report", "return")
 - Keep ids and labels short. The columns widen to fit the longest message label between neighbours, so a long label widens the gap. A label is cut at 48 characters, a header at 22 (a wide character such as Chinese counts as two).
 - Size: a diagram keeps its natural width and sits at the left. In the preview frame (the app caps it at 40rem and never above 640 px; 560 px at the app's default 14 px font) it shrinks to fit, but not below 78% of its natural width. Past that it scrolls sideways. About 5 participants with short labels fit (588 px); 6 are 708 px and shrink; 10 scroll. In native mode the diagram uses the width of the chat column: it stays at its natural width, left aligned, when there is room, and shrinks and then scrolls in a column that is narrower. Height: native mode has no height limit, but the preview frame stops at about 1,200 px (roughly 30 plain messages, fewer with groups, notes and self-calls) and hides its scrollbar, so a taller diagram is cut. Keep a diagram to about 20 steps and split longer flows into two diagrams.
 - A self-call needs room for its label to the right of the loop, so the gap to the next column grows with it. On the last column the diagram grows on the right instead.
-- The text is real text, so it can be selected and copied in both modes (native mode overrides the app's own no-select rule for SVG). A label that was cut shows its full text as a tooltip when you hover over it. Colours come from the theme, in light and dark.
+- The text is real text, so it can be selected and copied in both modes (native mode overrides the app's own no-select rule for SVG). A label that was cut shows its full text as a tooltip when you hover over it (an element with a [Tooltip](Tooltip.md) shows the full label at the top of that tooltip instead). Colours come from the theme, in light and dark.
 - You cannot place a row or reorder columns: rows follow the order of `steps` and columns the order of `participants`. Put the participant that starts the story first.
 
 ## Related
 
-[InfraMap](InfraMap.md) draws how parts are connected. [Dag](Dag.md) draws steps and dependencies. [Table](Table.md) lists calls with details. [Card](Card.md) wraps a diagram under a heading.
+[Tooltip](Tooltip.md) adds hover notes and detail panels. [InfraMap](InfraMap.md) draws how parts are connected. [Dag](Dag.md) draws steps and dependencies. [Table](Table.md) lists calls with details. [Card](Card.md) wraps a diagram under a heading.

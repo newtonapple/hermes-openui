@@ -7,7 +7,7 @@ An entity-relationship diagram. Each table is a box with its columns, and lines 
 ## Signature
 
 ```text
-Erd(entities: Entity[], relations: Relation[], title?: string)
+Erd(entities: Entity[], relations: Relation[], title?: string, tooltips?: Tooltip[])
 Entity(name: string, fields: string[])
 Relation(from: string, to: string, kind?: "1:1" | "1:N" | "N:1" | "N:M", label?: string)
 ```
@@ -28,6 +28,7 @@ Not for steps that run in order ([Dag](Dag.md)) or for the rows of a table ([Tab
 | 1 | `entities` | Entity[] | yes | One `Entity` per table. |
 | 2 | `relations` | Relation[] | yes | One `Relation` per line. |
 | 3 | `title` | string | no | A bold line above the diagram. |
+| 4 | `tooltips` | Tooltip[] | no | A hover tooltip, with an optional click-to-open panel, for some tables or columns. The target is the entity name or `entity.column`. See [Tooltips](#tooltips). |
 
 ### Entity
 
@@ -103,6 +104,22 @@ r4 = Relation("nodes", "deployments")
 
 ![An LLM gateway schema with five tables and four default relations](images/erd-gateway.png)
 
+## Tooltips
+
+Pass `Tooltip` items as the last argument to comment on a table or on one column. The target is the entity name (`"orders"`) or `entity.column` (`"orders.user_id"`); the column is the first word of its field string. Hover or Tab to an element with a dot to read its hint, and click it to open a panel under the diagram. A SQL snippet in `code` is highlighted. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([schema])
+schema = Erd([e1, e2], [r1], "Orders (sample data)", [a1, a2])
+e1 = Entity("users", ["id uuid PK", "email text UNIQUE", "created_at timestamptz"])
+e2 = Entity("orders", ["id uuid PK", "user_id uuid FK", "total_cents int", "status text"])
+r1 = Relation("users", "orders", "1:N", "places")
+a1 = Tooltip("orders.user_id", "Indexed foreign key", "Every order belongs to one user. The index keeps the orders-per-user lookup fast.", "CREATE INDEX orders_user_id_idx ON orders (user_id);", "sql", "good")
+a2 = Tooltip("users", "Accounts are never deleted", "A closed account is deactivated, so old orders keep their owner.")
+```
+
+![A two table schema where a foreign key column has a tooltip and an open panel with a CREATE INDEX statement](images/erd-tooltips.png)
+
 ## Tips and pitfalls
 
 - `from` and `to` take the name given to `Entity`, such as `"users"`. A name nothing matches prints a red warning under the diagram and the relation is skipped.
@@ -111,8 +128,9 @@ r4 = Relation("nodes", "deployments")
 - Only `PK` is styled (bold column name, accent-coloured flag). `UNIQUE`, `FK` and the rest are grey text.
 - A field with only a name, such as `"email"`, shows the name with no type.
 - You cannot place tables. The layout uses a grid of at most three columns and puts related tables near each other. In the second example `jobs` is listed fourth but lands first.
+- A tooltip target that matches no entity or column is rejected, and so is a column name that appears twice in one entity (the target would be ambiguous). A relation line cannot have a tooltip.
 - A box grows to fit its longest column. Lines run around boxes that are in the way.
 
 ## Related
 
-[Dag](Dag.md) draws ordered steps. [Table](Table.md) shows rows of data. [Card](Card.md) wraps a diagram under a heading.
+[Tooltip](Tooltip.md) adds hover notes and detail panels to tables and columns. [Dag](Dag.md) draws ordered steps. [Table](Table.md) shows rows of data. [Card](Card.md) wraps a diagram under a heading.

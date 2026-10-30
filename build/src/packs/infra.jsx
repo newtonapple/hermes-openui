@@ -3,6 +3,7 @@
 import { defineComponent } from "@openuidev/react-lang";
 import { z } from "zod/v4";
 import { InfraMapView, infraData, KINDS, STATUS_ORDER, TONE_NAMES } from "../components/infra.jsx";
+import { Tooltip } from "../components/tooltip-schema.js";
 
 const InfraNode = defineComponent({
   name: "InfraNode",
@@ -37,14 +38,15 @@ const InfraLink = defineComponent({
 const InfraMap = defineComponent({
   name: "InfraMap",
   description:
-    "Infrastructure map: zones are columns left to right (LR, default) or rows top to bottom (TB), nodes stacked inside, links routed around the zones between them, legend for the statuses in use. Stays legible in the chat column up to about 4 zones and 12 nodes.",
+    "Infrastructure map: zones are columns left to right (LR, default) or rows top to bottom (TB), nodes stacked inside, links routed around the zones between them, legend for the statuses in use. Stays legible in the chat column up to about 4 zones and 12 nodes. tooltips: Tooltip[] is the LAST argument (write null for each skipped optional argument before it, e.g. InfraMap(zones, links, null, null, [t1])) and adds a hover tooltip with an optional click-to-open detail panel (target: a node id, `zone:<zone name>` or `<fromId>><toId>` for a link).",
   props: z.object({
     zones: z.array(InfraZone.ref),
     links: z.array(InfraLink.ref),
     title: z.string().optional(),
     direction: z.enum(["LR", "TB"]).optional(),
+    tooltips: z.array(Tooltip.ref).optional(),
   }),
-  component: ({ props }) => <InfraMapView {...infraData(props)} />,
+  component: ({ props }) => <InfraMapView {...infraData(props)} tooltips={props.tooltips} />,
 });
 
 export const pack = { name: "infra", components: [InfraNode, InfraZone, InfraLink, InfraMap] };

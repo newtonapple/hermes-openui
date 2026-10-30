@@ -1,6 +1,7 @@
 // SVG diagrams with built-in auto-layout: Dag (layered, longest-path + barycenter ordering) and Erd (grid + crow's-foot relations).
 import React, { useId } from "react";
 import { C, TONES, MONO } from "../theme.js";
+import { Tipped, Hot } from "./tooltips.jsx";
 
 const STATUS = {
   done: { color: TONES.good, label: "done" },
@@ -75,7 +76,7 @@ const COLUMN = 640;
 // Scale to the column first; only scroll when that would make text unreadable (< ~62%).
 const fit = (w) => ({ width: "100%", maxWidth: w, minWidth: Math.min(w, Math.round(w * 0.78)), height: "auto", display: "block" });
 
-export function DagView({ nodes, edges, direction, title }) {
+export function DagView({ nodes, edges, direction, title, tooltips }) {
   const uid = useId().replace(/:/g, "");
   let dir = direction;
   let lay = layoutDag(nodes, edges, dir || "LR");
@@ -89,6 +90,7 @@ export function DagView({ nodes, edges, direction, title }) {
   return (
     <div style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
+      <Tipped tooltips={tooltips}>
       <div style={{ overflowX: "auto" }}>
         <svg viewBox={`${-pad} ${-pad} ${lay.width + pad * 2} ${lay.height + pad * 2}`} style={fit(lay.width + pad * 2)}>
           <defs>
@@ -113,15 +115,18 @@ export function DagView({ nodes, edges, direction, title }) {
             const st = STATUS[n.status];
             const col = st ? st.color : C.border;
             return (
-              <g key={n.id}>
-                <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="9" fill={C.card} stroke={col} strokeWidth={st ? 1.6 : 1} strokeDasharray={st && st.dash} />
-                {st ? <circle cx={b.x + 14} cy={b.y + b.h / 2} r="4" fill={col} /> : null}
-                <text x={b.x + (st ? 26 : 0) + (b.w - (st ? 26 : 0)) / 2} y={b.y + b.h / 2 + 4.5} textAnchor="middle" fontSize="13" fill={C.fg}>{n.label}</text>
-              </g>
+              <Hot key={n.id} k={n.id} label={n.label} shape={{ t: "rect", x: b.x, y: b.y, w: b.w, h: b.h, rx: 9 }} marker={[b.x + b.w - 2, b.y + 2]}>
+                <g>
+                  <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="9" fill={C.card} stroke={col} strokeWidth={st ? 1.6 : 1} strokeDasharray={st && st.dash} />
+                  {st ? <circle cx={b.x + 14} cy={b.y + b.h / 2} r="4" fill={col} /> : null}
+                  <text x={b.x + (st ? 26 : 0) + (b.w - (st ? 26 : 0)) / 2} y={b.y + b.h / 2 + 4.5} textAnchor="middle" fontSize="13" fill={C.fg}>{n.label}</text>
+                </g>
+              </Hot>
             );
           })}
         </svg>
       </div>
+      </Tipped>
       <Warn items={edges.flatMap(([a, b]) => [a, b]).filter((id) => !nodes.some((n) => n.id === id)).map((id) => `edge references unknown node id "${id}"`)} />
       {used.length ? (
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6, fontSize: 11.5, color: C.muted }}>
@@ -260,7 +265,7 @@ function routeErd(ia, ib, boxes, laneN, k) {
   return { pts, d1, d2, lane };
 }
 
-export function ErdView({ entities, relations, title }) {
+export function ErdView({ entities, relations, title, tooltips }) {
   const lay = layoutErd(entities, relations);
   const unknown = [];
   let laneN = 0;
@@ -281,6 +286,7 @@ export function ErdView({ entities, relations, title }) {
   return (
     <div style={{ minWidth: 0 }}>
       {title ? <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>{title}</div> : null}
+      <Tipped tooltips={tooltips}>
       <div style={{ overflowX: "auto" }}>
         <svg viewBox={`${x0 - pad} ${y0 - pad} ${VW} ${VH}`} style={fit(VW)}>
           {routes.map(({ r, rt, i }) => {
@@ -301,7 +307,8 @@ export function ErdView({ entities, relations, title }) {
           {entities.map((e, i) => {
             const b = lay.boxes[i];
             return (
-              <g key={e.name}>
+              <Hot key={e.name} k={e.name} label={e.name} shape={{ t: "rect", x: b.x, y: b.y, w: b.w, h: b.h, rx: 8 }} marker={[b.x + b.w - 2, b.y + 2]}>
+              <g>
                 <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="8" fill={C.card} stroke={C.border} />
                 <path d={`M${b.x} ${b.y + HEAD}V${b.y + 8}a8 8 0 0 1 8-8H${b.x + b.w - 8}a8 8 0 0 1 8 8V${b.y + HEAD}z`} fill={C.soft} />
                 <line x1={b.x} x2={b.x + b.w} y1={b.y + HEAD} y2={b.y + HEAD} stroke={C.border} />
@@ -310,19 +317,24 @@ export function ErdView({ entities, relations, title }) {
                   const p = parseField(f);
                   const y = b.y + HEAD + 8 + j * ROW + 13;
                   const key = /\bPK\b/i.test(p.flags);
+                  const col = e.name + "." + p.name;
                   return (
-                    <g key={j}>
+                    <Hot key={j} k={col} label={col} shape={{ t: "rect", x: b.x + 1, y: y - 15, w: b.w - 2, h: ROW, rx: 3 }} marker={[b.x + b.w - 5, y - 11]}>
+                    <g>
                       <text x={b.x + 12} y={y} fontSize="12.5" fontFamily={MONO} fontWeight={key ? 700 : 400} fill={C.fg}>{p.name}</text>
                       <text x={b.x + b.w - 12 - textW(p.flags, 6.5) - (p.flags ? 10 : 0)} y={y} fontSize="11.5" fontFamily={MONO} textAnchor="end" fill={C.muted}>{p.type}</text>
                       {p.flags ? <text x={b.x + b.w - 12} y={y} fontSize="10.5" textAnchor="end" fill={key ? C.accent : C.muted} fontWeight="650">{p.flags}</text> : null}
                     </g>
+                    </Hot>
                   );
                 })}
               </g>
+              </Hot>
             );
           })}
         </svg>
       </div>
+      </Tipped>
       <Warn items={unknown.map((n) => `relation references unknown entity "${n}" (use the Entity name, not the variable name)`)} />
     </div>
   );

@@ -7,7 +7,7 @@ A map of infrastructure. Zones such as networks, racks or clouds hold nodes such
 ## Signature
 
 ```text
-InfraMap(zones: InfraZone[], links: InfraLink[], title?: string, direction?: "LR" | "TB")
+InfraMap(zones: InfraZone[], links: InfraLink[], title?: string, direction?: "LR" | "TB", tooltips?: Tooltip[])
 InfraZone(name: string, nodes: InfraNode[], tone?: "neutral" | "info" | "good" | "warn" | "bad")
 InfraNode(id: string, label: string, kind?: "client" | "gateway" | "service" | "gpu" | "database" | "storage" | "queue" | "cloud", status?: "up" | "degraded" | "down" | "unknown", detail?: string)
 InfraLink(from: string, to: string, label?: string, style?: "solid" | "dashed")
@@ -33,6 +33,7 @@ An InfraMap holds InfraZones, an InfraZone holds InfraNodes, and InfraLinks join
 | 2 | `links` | InfraLink[] | yes | One per arrow. Use `[]` for none. |
 | 3 | `title` | string | no | A bold line above the map. |
 | 4 | `direction` | `"LR"` or `"TB"` | no | `"LR"` makes each zone a column, left to right. `"TB"` makes each zone a row, top to bottom. Omit it, or pass `null`, for `"LR"`. |
+| 5 | `tooltips` | Tooltip[] | no | A hover tooltip, with an optional click-to-open panel, for some nodes, zones or links. See [Tooltips](#tooltips). |
 
 ### InfraZone
 
@@ -165,6 +166,26 @@ l7 = InfraLink("proxy", "hosted", "mirror", "dashed")
 
 ![Eight node kinds with their icons and four statuses, and a legend](images/infra-map-kinds.png)
 
+## Tooltips
+
+Pass `Tooltip` items as the last argument to comment on a node, a zone or a link. The target is the node id, `zone:` and the zone name (`"zone:Edge"`), or the two node ids joined by `>` for a link (`"web>api"`). If two links join the same pair of nodes, `"web>api"` is ambiguous and the validator rejects it. A link has a wider invisible hit area, and its label pill reacts too. Hover or Tab to an element with a dot to read its hint, and click it to open a panel under the map. The full rules are on the [Tooltip](Tooltip.md) page.
+
+```openui
+root = Stack([map])
+map = InfraMap([z1, z2], [l1, l2], null, null, [a1, a2])
+z1 = InfraZone("Public", [n1])
+z2 = InfraZone("Private", [n2, n3])
+n1 = InfraNode("web", "Web", "gateway", "up")
+n2 = InfraNode("api", "API", "service", "up")
+n3 = InfraNode("cache", "Cache", "storage", "up")
+l1 = InfraLink("web", "api", "HTTPS")
+l2 = InfraLink("api", "cache", "TCP")
+a1 = Tooltip("web", "Terminates TLS", "Certificates renew by themselves every 60 days.")
+a2 = Tooltip("api>cache", "Reads only", "The API never writes to the cache directly.", null, null, "good")
+```
+
+![A small map where the web node has a hover tooltip](images/infra-map-tooltips.png)
+
 ## Tips and pitfalls
 
 - `InfraLink` takes node **id strings**. A variable name (`InfraLink(web, api)`) or a label (`"Postgres"` when the id is `"pg"`) is rejected before anything is drawn. The validator lists the known ids and, for a label, the id you meant: `` InfraMap link uses unknown node id `Postgres` in `to` (...). `Postgres` is a label; the id is `pg`. ``
@@ -178,8 +199,8 @@ l7 = InfraLink("proxy", "hosted", "mirror", "dashed")
 - Text is cut with an ellipsis at 22 characters for a label, 26 for a `detail` and 18 for a link label. A zone name is never cut. If any node has a `detail`, every node gets the taller box, and nodes without one keep their label on the top line.
 - Put nodes that talk to each other next to each other. Neighbours in a zone get a short straight arrow with its label beside it. A link that skips a node bows around the edge of the column and can cross other arrows, and two links between the same pair in one zone nearly overlap.
 - A link across more than one zone runs in a lane outside the zones and can end up close to another arrow in a gap. A label pill slides to a free spot, but on a crowded map it can still cover another arrow. If two arrows look merged, reorder the nodes or drop a link.
-- You cannot place a node, and nodes have no click action. A `null` skips an optional argument: `InfraNode("internet", "Internet", "cloud", null, "ISP uplink")`.
+- You cannot place a node. A node has no action that sends anything to the agent: a [Tooltip](Tooltip.md) only shows text. A `null` skips an optional argument: `InfraNode("internet", "Internet", "cloud", null, "ISP uplink")`.
 
 ## Related
 
-[Dag](Dag.md) draws steps and dependencies. [Erd](Erd.md) draws database tables. [GeoMap](GeoMap.md) puts pins on a world map. [Card](Card.md) wraps a map under a heading.
+[Tooltip](Tooltip.md) adds hover notes and detail panels. [Dag](Dag.md) draws steps and dependencies. [Erd](Erd.md) draws database tables. [GeoMap](GeoMap.md) puts pins on a world map. [Card](Card.md) wraps a map under a heading.

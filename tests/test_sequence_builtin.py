@@ -35,7 +35,7 @@ SIGNATURES = {
     "SeqMessage": 'SeqMessage(from: string, to: string, label: string, style?: "sync" | "async" | "return", id?: string)',
     "SeqNote": "SeqNote(over: string, text: string, to?: string)",
     "SeqGroup": 'SeqGroup(kind: "alt" | "opt" | "loop" | "par", label: string, steps: (SeqMessage | SeqNote | SeqGroup)[], elseSteps?: (SeqMessage | SeqNote | SeqGroup)[], elseLabel?: string)',
-    "SequenceDiagram": "SequenceDiagram(participants: SeqParticipant[], steps: (SeqMessage | SeqNote | SeqGroup)[], title?: string, numbered?: boolean)",
+    "SequenceDiagram": "SequenceDiagram(participants: SeqParticipant[], steps: (SeqMessage | SeqNote | SeqGroup)[], title?: string, numbered?: boolean, tooltips?: Tooltip[])",
 }
 
 
@@ -122,8 +122,9 @@ class Reference(unittest.TestCase):
 
     def test_the_five_come_after_every_older_component_so_the_existing_order_is_unchanged(self):
         order = re.findall(r"^([A-Z]\w*)\(", bundle.reference_text(), re.M)
-        self.assertEqual(order[-5:], NAMES)
-        self.assertEqual(order[-9:-5], ["InfraNode", "InfraZone", "InfraLink", "InfraMap"])
+        # Tooltip, added after them, is the last line of the reference (tests/test_tooltips_builtin.py pins that)
+        self.assertEqual(order[-6:-1], NAMES)
+        self.assertEqual(order[-10:-6], ["InfraNode", "InfraZone", "InfraLink", "InfraMap"])
 
     def test_descriptions_keep_the_facts_the_model_needs(self):
         facts = {
@@ -961,18 +962,18 @@ class Docs(unittest.TestCase):
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "check_docs.py")], capture_output=True, text=True, timeout=200,
                            env=dict(os.environ, DO_NOT_TRACK="1", PYTHONDONTWRITEBYTECODE="1"))
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
-        self.assertIn("all 37 components documented", r.stdout)
+        self.assertIn("all 38 components documented", r.stdout)
 
     def test_the_gallery_index_and_the_readme_count_the_new_components(self):
         index = (ROOT / "docs" / "ui-components" / "README.md").read_text(encoding="utf-8")
         self.assertIn("[**SequenceDiagram**](SequenceDiagram.md)", index)
-        self.assertIn("There are 23 components, plus 14 small helpers", index)
+        self.assertIn("There are 24 components, plus 14 small helpers", index)
         for h in ("SeqParticipant", "SeqMessage", "SeqNote", "SeqGroup"):
             self.assertIn("`%s`" % h, index)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("**23 components** (37 with helpers)", readme)
+        self.assertIn("**24 components** (38 with helpers)", readme)
         self.assertIn("SequenceDiagram", readme)
-        self.assertIn("All 23 components", readme)
+        self.assertIn("All 24 components", readme)
 
 
 class Discovery(unittest.TestCase):
@@ -1003,14 +1004,14 @@ class Skill(unittest.TestCase):
         self.assertIn("`SeqGroup` per decision", self.TEXT)
         self.assertIn("SeqGroup", self.TEXT)
         self.assertIn("return", self.TEXT)
-        self.assertLessEqual(len(self.TEXT), 4500)
+        self.assertLessEqual(len(self.TEXT), 5000)
         self.assertGreater(len(self.TEXT), 3995, "the row was not added")
         self.assertTrue(self.TEXT.startswith("---\nname: openui-render\n"))
 
-    def test_the_tests_that_pin_the_cap_agree_on_4500(self):
+    def test_the_tests_that_pin_the_cap_agree_on_5000(self):
         for rel in ("tests/test_plugin.py", "tests/test_custom_components_skill.py"):
             with self.subTest(file=rel):
-                self.assertIn("4500", (ROOT / rel).read_text(encoding="utf-8"))
+                self.assertIn("5000", (ROOT / rel).read_text(encoding="utf-8"))
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         m = re.search(r"`hermes-openui:openui-render`, about ([\d,]+) tokens", readme)
         self.assertIsNotNone(m)

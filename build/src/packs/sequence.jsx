@@ -4,6 +4,7 @@ import { defineComponent } from "@openuidev/react-lang";
 import { z } from "zod/v4";
 import { SequenceDiagramView, seqData } from "../components/sequence.jsx";
 import { KINDS, STYLES, GROUP_KINDS } from "../components/sequence-layout.js";
+import { Tooltip } from "../components/tooltip-schema.js";
 
 const SeqParticipant = defineComponent({
   name: "SeqParticipant",
@@ -53,14 +54,15 @@ const SeqGroup = defineComponent({
 const SequenceDiagram = defineComponent({
   name: "SequenceDiagram",
   description:
-    "Sequence diagram of calls between participants: columns left to right, steps top to bottom, messages numbered unless numbered is false. A sync message opens an activation bar on its receiver until the next return back to the sender. Stays legible up to about 5 participants in the chat column; at most 10 participants and 100 steps, but aim for about 20 steps and split longer flows into two diagrams. Header labels are cut at 22 characters, message labels at 48, group labels at 40: keep them short.",
+    "Sequence diagram of calls between participants: columns left to right, steps top to bottom, messages numbered unless numbered is false. A sync message opens an activation bar on its receiver until the next return back to the sender. Stays legible up to about 5 participants in the chat column; at most 10 participants and 100 steps, but aim for about 20 steps and split longer flows into two diagrams. Header labels are cut at 22 characters, message labels at 48, group labels at 40: keep them short. tooltips: Tooltip[] is the LAST argument (write null for each skipped optional argument before it, e.g. SequenceDiagram(participants, steps, null, null, [t1])) and adds a hover tooltip with an optional click-to-open detail panel (target: a participant id or a SeqMessage id; a message without an id cannot have a tooltip).",
   props: z.object({
     participants: z.array(SeqParticipant.ref),
     steps: z.array(z.union([SeqMessage.ref, SeqNote.ref, SeqGroup.ref])),
     title: z.string().optional(),
     numbered: z.boolean().optional(),
+    tooltips: z.array(Tooltip.ref).optional(),
   }),
-  component: ({ props }) => <SequenceDiagramView {...seqData(props)} />,
+  component: ({ props }) => <SequenceDiagramView {...seqData(props)} tooltips={props.tooltips} />,
 });
 
 export const pack = { name: "sequence", components: [SeqParticipant, SeqMessage, SeqNote, SeqGroup, SequenceDiagram] };

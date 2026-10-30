@@ -14,11 +14,12 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 ## What you get
 
 - **One tool, `render_widget`.** The agent writes a few lines of *OpenUI Lang* (a compact component language); the plugin validates it, saves a widget, and the agent puts one line in its reply. The widget appears in the chat when the turn finishes.
-- **23 components** (37 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, sequence diagrams, infrastructure maps, offline maps, code, markdown, FAQs, and clickable choices. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
+- **24 components** (38 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, sequence diagrams, infrastructure maps, offline maps, code, markdown, FAQs, clickable choices, and hover tooltips for diagrams, tables, metrics, bar charts, maps and images. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
 - **Plain English works.** You do not name the tool. Hermes's Tool Search keeps it out of the model's context until a request needs it.
-- **Cheap on context.** About 20 tokens always on; about 3,700 tokens the first time it is used (the component reference); a few hundred per widget.
+- **Cheap on context.** About 20 tokens always on; about 4,750 tokens the first time it is used (the component reference); a few hundred per widget.
 - **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself, so the widget files are tiny (1 to 2 KB), at the price of running with full app authority. See [Display modes](#display-modes).
 - **Interactive.** Buttons and choices send their text back to the agent as your next turn.
+- **Tooltips.** A Dag, ER diagram, infrastructure map, sequence diagram, table, metric tile, bar chart, map or image can carry short hover tooltips, and a click opens a panel under it with detail text, highlighted code and a link. See [Tooltips](#tooltips).
 - **Export to HTML.** Ask for a few widgets, or a whole report, as one standalone offline HTML file, saved where you say. See [Export to HTML](#export-to-html).
 - **Your own components.** Link a small JavaScript file in the plugin's settings and the agent can use the components it adds, or ask the agent to write one. See [Custom components](#custom-components).
 
@@ -40,9 +41,14 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 <td valign="top" width="33%"><a href="docs/ui-components/InfraMap.md"><img src="docs/ui-components/images/infra-map-office-network.png" width="270" alt="An office network drawn top to bottom, with zone tones and a dashed remote link"></a><br><b>Network</b> &middot; <a href="docs/ui-components/InfraMap.md">InfraMap</a><br><sub>An office network drawn top to bottom, with zone tones and a dashed remote link</sub></td>
 <td valign="top" width="33%"><a href="docs/ui-components/SequenceDiagram.md"><img src="docs/ui-components/images/sequence-diagram-cache-lookup.png" width="270" alt="A cache lookup with an alt group, notes and a self-call"></a><br><b>Sequence</b> &middot; <a href="docs/ui-components/SequenceDiagram.md">SequenceDiagram</a><br><sub>A cache lookup with an alt group, notes and a self-call</sub></td>
 </tr>
+<tr>
+<td valign="top" width="33%"><a href="docs/ui-components/Tooltip.md"><img src="docs/ui-components/images/tooltip-infra-map.png" width="270" alt="A map with an open panel that has detail text and a runbook link"></a><br><b>Hover details</b> &middot; <a href="docs/ui-components/Tooltip.md">Tooltip</a><br><sub>A hover tooltip, and a click panel with detail, code and a link</sub></td>
+<td></td>
+<td></td>
+</tr>
 </table>
 
-Each picture is a real render of the example code on that component's page, with sample data. All 23 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
+Each picture is a real render of the example code on that component's page, with sample data. All 24 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
 
 ## Requirements
 
@@ -180,7 +186,24 @@ Timings and memory were measured in headless Chrome, not in the desktop app, so 
 
 ## Components
 
-Every component has a page with its signature, arguments, rendered examples and pitfalls: **[docs/ui-components](docs/ui-components/README.md)**. Layout and data: Stack, Text, Card, Metric, Table, Tabs, Callout, Button. Charts: LineChart, AreaChart, PieChart, RadarChart, BarChart. Diagrams: Dag, Erd, GeoMap, InfraMap, SequenceDiagram. Rich content: Markdown, CodeBlock, Image, Faq, Choice.
+Every component has a page with its signature, arguments, rendered examples and pitfalls: **[docs/ui-components](docs/ui-components/README.md)**. Layout and data: Stack, Text, Card, Metric, Table, Tabs, Callout, Button. Charts: LineChart, AreaChart, PieChart, RadarChart, BarChart. Diagrams: Dag, Erd, GeoMap, InfraMap, SequenceDiagram. Rich content: Markdown, CodeBlock, Image, Faq, Choice. Diagram details: Tooltip.
+
+### Tooltips
+
+Dag, Erd, InfraMap, SequenceDiagram, Table, Metric, BarChart, GeoMap and Image take a last argument, `tooltips`, a list of `Tooltip` items. An element with one (a node, a table row, column or cell, a metric tile, a bar, a map pin or link, the picture) gets a small dot. Hovering it (or tabbing to it) shows the hint; clicking it, or pressing Enter, opens a panel under the component with the detail, a highlighted code snippet with a Copy button, and a link. Escape or a second click closes it. In the default preview mode a link is text with a Copy button; in native mode a click on it opens the browser.
+
+```
+root = Stack([flow])
+flow = Dag([n1, n2, n3], [["extract", "transform"], ["transform", "load"]], null, "Nightly job", [t1])
+n1 = DagNode("extract", "Extract", "done")
+n2 = DagNode("transform", "Transform", "running")
+n3 = DagNode("load", "Load", "pending")
+t1 = Tooltip("transform", "Takes about 6 minutes", "Rows are cleaned in batches of 500.", "for batch in chunks(rows, 500):\n    write(clean(batch))", "python")
+```
+
+![A job graph where the running step has an open panel with a Python snippet](docs/ui-components/images/dag-tooltips.png)
+
+`Tooltip` is now a reserved component name: a custom pack cannot define one. The rules, the targets each component accepts and the limits are on the [Tooltip page](docs/ui-components/Tooltip.md).
 
 ## Export to HTML
 
@@ -236,12 +259,12 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 330 |
 | `export_widgets` listing line | every chat, with Tool Search on | about 20 |
 | `export_widgets` schema (1.6 KB) | every API call **only if** Tool Search is off | about 400 |
-| Component reference | the first use in a chat | about 3,700 |
+| Component reference | the first use in a chat | about 4,750 |
 | Custom component reference | the first use, **only when packs are linked** | one line per component. The four InfraMap lines and the five SequenceDiagram lines, now built in, add about 320 and 470 |
 | Your widget source | each widget, stays in the history | about 250–600 |
 | Tool result | each widget | about 100 |
 
-The bundled skills (`hermes-openui:openui-render`, about 1,100 tokens, and `hermes-openui:custom-components`, about 1,995 tokens) are loaded on demand only. The first `render_widget(reference=true)` result of a chat and an "Unknown component" error each carry a one-line pointer to the second one, about 20 tokens.
+The bundled skills (`hermes-openui:openui-render`, about 1,250 tokens, and `hermes-openui:custom-components`, about 1,995 tokens) are loaded on demand only. The first `render_widget(reference=true)` result of a chat and an "Unknown component" error each carry a one-line pointer to the second one, about 20 tokens.
 
 ## Security and privacy
 

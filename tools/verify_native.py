@@ -4,12 +4,14 @@
 usage: python3 tools/verify_native.py [--plugin FILE] [--png OUT.png] [--json OUT.json] [--widths 360,640,1000,1800,2400]
                                       [--theme dark|light] [--app-css FILE|auto]
 
-Builds one page (build/tests/native-harness.mjs) that draws the same 16 widgets, through the plugin's own directive render, in
+Builds one page (build/tests/native-harness.mjs) that draws the same 17 widgets, through the plugin's own directive render, in
 chat columns of several widths, then screenshots it and measures every widget through tools/shoot.py --html --eval. It prints a
 table (column width, widget width and height, scrollers, left offset and size of the first diagram, image or table) and checks:
 widgets fill their column, nothing overflows its column, diagrams stay left aligned, images never grow past their natural size,
 the widget does not inherit `overflow-wrap:anywhere`, and in a 360 px column the wide components get their own scroller. With --app-css it
-also checks that the sequence sample's svg computes to `user-select:text` (the app's own sheet says `svg{user-select:none}`).
+also checks that the sequence sample's svg computes to `user-select:text` (the app's own sheet says `svg{user-select:none}`), and that the text of
+every element with a tooltip (a table cell, header and row cell, a metric tile and its value, a bar and its label, a map pin label) computes to
+`user-select:text` and that a real Range over it returns its text (the app's sheet also says `button,[role='button']{user-select:none}`).
 Exit 1 when a check fails.
 
 --app-css FILE inlines the Hermes Desktop stylesheet and wraps every widget in the wrapper elements the app puts around a message
@@ -54,6 +56,15 @@ NARROW = 360  # the narrow chat column the scroller check is about
 NEEDS_SCROLLER_AT_360 = ("infra-map-web-platform", "sequence-diagram-cache-lookup", "dag-pipeline", "erd-schema", "table-wide", "code-block-python")
 DIAGRAMS = ("infra-map-web-platform", "sequence-diagram-cache-lookup", "dag-pipeline", "erd-schema")
 SELECTABLE = "sequence-diagram-cache-lookup"  # with --app-css, its svg must compute to user-select:text
+TOOLTIPS_SELECT = (  # a table, a tile, a bar chart and a map with tooltips: with --app-css, their text must compute to user-select:text and a Range over it must return it
+    'root = Stack([t, tiles, bars, map])\n'
+    't = Table(["service", "status", "p95"], [["web", "up", "12"], ["api", "down", "340"]], [t1, t2, t3])\n'
+    't1 = Tooltip("row:2", "Down since noon")\nt2 = Tooltip("col:status", "Up or down")\nt3 = Tooltip("cell:1.service", "The front door")\n'
+    'tiles = Stack([m1, m2], "row", "m", true)\n'
+    'm1 = Metric("Error rate", "2.4%", "+1.9 pt", "bad", [t4])\nm2 = Metric("Queue", "12")\nt4 = Tooltip("Error rate", "Share of requests that failed")\n'
+    'bars = BarChart(["web", "api"], [31, 82], "CPU", "%", [t5])\nt5 = Tooltip("api", "Busiest service")\n'
+    'map = GeoMap([p1, p2], [["web", "api"]], null, [t6])\np1 = GeoPoint("web", 52.5, 13.4)\np2 = GeoPoint("api", 48.8, 2.3)\nt6 = Tooltip("web", "Frankfurt")\n'
+)
 
 
 def load_widgets():
@@ -63,6 +74,7 @@ def load_widgets():
         source = lint.strip_fences(shoot.docs_source((EXAMPLES / (name + ".oui")).read_text(encoding="utf-8")))
         out.append({"name": name, "source": page.inline_images(source)})
     out.append({"name": "button-and-choice", "source": BUTTON_AND_CHOICE})
+    out.append({"name": "tooltips-select", "source": TOOLTIPS_SELECT})
     return out
 
 
@@ -131,6 +143,11 @@ def problems(rows, app_css=False):
             bad.append("%s: expected its own scroller" % tag)
         if app_css and r["widget"] == SELECTABLE and m and m.get("select") != "text":  # the app's sheet says svg{user-select:none}
             bad.append("%s: the diagram's computed user-select is %s, labels cannot be selected" % (tag, m.get("select")))
+        for t in r.get("tipSelect", []) if app_css else []:  # the app's sheet also says button,[role='button']{user-select:none}
+            if t.get("select") != "text":
+                bad.append("%s: %s computes to user-select:%s, its text cannot be selected or copied" % (tag, t["name"], t.get("select")))
+            elif "".join(str(t.get("picked")).split()) != "".join(str(t.get("text")).split()):  # a Range puts a line break between block children
+                bad.append("%s: a Range over %s selects %r, not %r" % (tag, t["name"], t.get("picked"), t.get("text")))
     return bad
 
 

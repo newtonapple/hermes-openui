@@ -46,23 +46,32 @@ function tokenize(code, lang) {
 }
 const COLORS = { c: C.muted, s: "#7ee787", n: "#79c0ff", w: "#ff7b72", k: "#79c0ff", f: "#d2a8ff" };
 
+// Copy through a hidden textarea: the sandboxed preview frame has no clipboard API permission. Returns whether it worked.
+export function copyText(text) {
+  let ok = false;
+  const before = document.activeElement; // the textarea takes focus; give it back, or a key press after a copy goes nowhere
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = String(text);
+    ta.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    ok = document.execCommand("copy");
+    ta.remove();
+  } catch (e) {}
+  try {
+    if (before && before !== document.body && typeof before.focus === "function") before.focus({ preventScroll: true });
+  } catch (e) {}
+  return ok;
+}
+
 export function CodeView({ code, language = "", title }) {
   const raw = String(language || "").toLowerCase();
   const lang = ALIAS[raw] || raw;
   const [copied, setCopied] = useState("");
   const toks = tokenize(String(code), lang);
   const copy = () => {
-    let ok = false;
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = String(code);
-      ta.style.cssText = "position:fixed;opacity:0";
-      document.body.appendChild(ta);
-      ta.select();
-      ok = document.execCommand("copy");
-      ta.remove();
-    } catch (e) {}
-    setCopied(ok ? "Copied" : "Copy blocked");
+    setCopied(copyText(code) ? "Copied" : "Copy blocked");
     setTimeout(() => setCopied(""), 1500);
   };
   return (

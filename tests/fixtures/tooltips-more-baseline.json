@@ -1,0 +1,165 @@
+{
+ "table": {
+  "tags": [
+   "div",
+   "table",
+   "thead",
+   "tr",
+   "th",
+   "/th",
+   "th",
+   "/th",
+   "/tr",
+   "/thead",
+   "tbody",
+   "tr",
+   "td",
+   "/td",
+   "td",
+   "/td",
+   "/tr",
+   "tr",
+   "td",
+   "/td",
+   "td",
+   "/td",
+   "/tr",
+   "/tbody",
+   "/table",
+   "/div"
+  ],
+  "text": [
+   "name",
+   "status",
+   "web",
+   "up",
+   "api",
+   "down"
+  ]
+ },
+ "metric": {
+  "tags": [
+   "div*2",
+   "/div",
+   "div",
+   "/div",
+   "div",
+   "/div*2"
+  ],
+  "text": [
+   "Latency",
+   "120 ms",
+   "+3 ms"
+  ]
+ },
+ "bar": {
+  "tags": [
+   "div*2",
+   "/div",
+   "div*3",
+   "/div",
+   "div",
+   "/div",
+   "div",
+   "/div*2",
+   "div*2",
+   "/div",
+   "div",
+   "/div",
+   "div",
+   "/div*2",
+   "div*2",
+   "/div",
+   "div",
+   "/div",
+   "div",
+   "/div*4"
+  ],
+  "text": [
+   "Load",
+   "3%",
+   "web",
+   "5%",
+   "api",
+   "2%",
+   "db"
+  ]
+ },
+ "geo": {
+  "tags": [
+   "div[data-hermes-openui-map=]",
+   "div",
+   "/div",
+   "svg",
+   "g",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "line",
+   "/line",
+   "/g",
+   "defs",
+   "path",
+   "/path",
+   "/defs",
+   "g",
+   "use",
+   "/use",
+   "use",
+   "/use",
+   "use",
+   "/use",
+   "/g",
+   "line",
+   "/line",
+   "g",
+   "circle",
+   "/circle",
+   "circle",
+   "/circle",
+   "text",
+   "/text",
+   "/g",
+   "g",
+   "circle",
+   "/circle",
+   "circle",
+   "/circle",
+   "text",
+   "/text",
+   "/g",
+   "/svg",
+   "/div"
+  ],
+  "text": [
+   "Regions",
+   "web",
+   "api"
+  ]
+ },
+ "image": {
+  "tags": [
+   "figure",
+   "img[src=data:image/gif;base64,R0lGODlhAQABAAAAACw=;alt=a pixel]",
+   "figcaption",
+   "/figcaption",
+   "/figure"
+  ],
+  "text": [
+   "A pixel"
+  ]
+ }
+}

@@ -29,12 +29,12 @@ A widget page must fit the app's 512 KiB file read (it truncates silently and a 
 
 | Piece | Components | Adds to the page |
 |---|---|---|
-| core (always) | Stack, Text, Card, Metric, Table, BarChart, Callout, Button, Tabs, TabItem, Image | about 267 KB |
+| core (always) | Stack, Text, Card, Metric, Table, BarChart, Callout, Button, Tabs, TabItem, Image, Tooltip | about 268 KB |
 | `charts` | LineChart, AreaChart, PieChart, RadarChart, Series | +84 KB |
 | `map` | GeoMap, GeoPoint | +15 KB |
-| `diagrams` | Dag, DagNode, Erd, Entity, Relation | +7 KB |
-| `infra` | InfraMap, InfraZone, InfraNode, InfraLink | +9 KB |
-| `sequence` | SequenceDiagram, SeqParticipant, SeqMessage, SeqNote, SeqGroup | +9 KB |
+| `diagrams` | Dag, DagNode, Erd, Entity, Relation | +14 KB |
+| `infra` | InfraMap, InfraZone, InfraNode, InfraLink | +16 KB |
+| `sequence` | SequenceDiagram, SeqParticipant, SeqMessage, SeqNote, SeqGroup | +16 KB |
 | `text` | Markdown, CodeBlock, Faq, FaqItem, Choice | +6 KB |
 
 `page.select_packs` scans the source for `Name(` calls (text inside strings is blanked first) and embeds only the packs those names live in (`assets/packs.json` maps component → pack). A dashboard with no charts is about 275 KB; every pack is about 390 KB. If detection ever misses, the page prints `Widget is missing component(s): X` instead of showing a silently partial widget.
@@ -66,6 +66,10 @@ InfraMap is the built-in `infra` pack. It started as a user pack, and the port i
 
 SequenceDiagram is the built-in `sequence` pack, built the same way. Its layout is a pure function (`build/src/components/sequence-layout.js`, no imports, so Node tests load it without a bundler), its checks are `build/src/components/sequence-check.js`, called from `build/src/validate.mjs`, its view is `build/src/components/sequence.jsx` and its schemas are `build/src/packs/sequence.jsx`. A `SeqGroup` holds groups, so its `steps` are typed with getters (a recursive zod object); the reference still prints `(SeqMessage | SeqNote | SeqGroup)[]`. Activation bars are derived: a `sync` message opens a bar on its receiver and the next `return` back to the sender closes the most recent open one (`matchActivations`), so there is no argument for them. Text widths are estimates (characters times an average advance), as in InfraMap. The five reference lines add about 470 tokens. The reserved names are the manifest's component names, so no list needed extending in `packs.py`.
 
+Tooltip (hover hint, click-to-open detail panel) is the `tooltips` argument of the four diagrams, and the interaction lives in ONE module, `build/src/components/tooltips.jsx`: `Tipped` (a `position:relative` wrapper that owns the hover, focus and open state, the tooltip and the panel) and `Hot` (wraps one element; a no-op when that element has no tooltip, so a diagram without tooltips draws as before). Events are delegated: the wrapper listens for mouseover, focus, click and keydown and finds the element with `closest("[data-tip]")`, which makes an entity and one of its columns work as nested targets. The rules are pure functions (`tooltips-core.js`: the tooltip text, the link check that the validator and the renderer both use, `placeTooltip`, the target lists of each diagram) and the validator checks are `tooltips-check.js`. The tooltip is an HTML element placed from `getBoundingClientRect()`; it goes above or below the element and, in a short diagram where neither fits inside the wrapper, beside it, because a tooltip that sticks out of the wrapper would grow the page. Beside the element `placeTooltip` asks the view how tall the box is at the width that side has (it wraps down to 140 px, then 100 px) and cuts the text with a line clamp when the wrapper is still too short; only with no room anywhere does it sit over the element. The panel opens below the diagram, so in preview mode (a frame of at most 1,200 px, no scrollbar) a diagram with tooltips should stay under about 800 px: a panel adds 70 to 400 px (measured 73 and 391). The panel is docked under the diagram, not floating, because the preview frame follows the page height live and a popover breaks under sideways scrolling. A link opens only in native mode (`desktop/plugin.js` calls `enableNativeLinks()`) through `window.hermesDesktop.openExternal` when the app has it, once per click, after checking the scheme again; the preview frame never does and shows the address as text with a Copy button. An element with a tooltip drops its native `<title>`, which would show a second tooltip, and the svg gets `role="group"` instead of `img` so its buttons stay reachable. `Tipped` drops its state when it is handed another list of tooltips: inside `Tabs` React keeps the component across a tab switch, and the first tab's panel used to show up on the second.
+
+The trap: the parser matches a component to a slot by the **identity of its schema object**. `Tooltip` is registered once, in the core, but each pack is a separate bundle, so a pack that bundled its own copy of `tooltip-schema.js` would type `tooltips` with a different object, and every `Tooltip(...)` in the page would be dropped with `expects object but got component "Tooltip"`. Node never shows it (one module instance); only a browser does. `build.mjs` maps the import in the pack builds onto the core's copy (`SHARED_FILES`, handed over in `window.__HM.mods["hermes-openui/tooltip-schema"]`, internal like the ThemeProvider entry), and `tests/test_tooltips_builtin.py` checks that no pack bundles its own. Each diagram pack grew by about 5.3 KB gzipped (the interaction and the code highlighter, which each pack carries a copy of); the core grew by about 0.5 KB.
+
 ## Export
 
 `export_widgets` is a second tool so `render_widget`'s schema and discoverability stay as they were. Measured with Tool Search's own ranking against a catalog of 172 unrelated tools: `render_widget` keeps 25 of 25 keyword queries, and all 7 export queries rank `export_widgets` first. The export description avoids `render_widget`'s vocabulary on purpose: in the export agent's measurement the first draft cost `render_widget` one top-5 hit.
@@ -87,7 +91,7 @@ How that search works (`tools/tool_search_catalog.py` in Hermes):
 
 Measured against a 178-tool catalog (Hermes's own deferred tools plus 172 names shaped like a large MCP server): the first draft of the description found 13 of 20 keyword queries; adding graph, plot, flowchart, schema, topology and KPI found 20 of 20, with no false hits on unrelated requests. Whole-sentence queries still miss when a word is absent from every tool; that is the engine's design, and a model that sees the listing line usually goes straight to `tool_describe`. Re-measure with `tools/verify_discovery.py` after any wording change. When InfraMap became a built-in, the four new infrastructure queries (`infrastructure map`, `infrastructure diagram`, `architecture diagram`, `server map`) all missed, and the set stood at 21 of 25. Adding "infrastructure and server maps, architecture diagrams" to the description (55 more characters) took it to 25 of 25, with `export_widgets` still first on all 7 export queries. The three new whole-sentence infrastructure queries still miss, like five of the ten older ones. Adding "sequence diagrams (call flow, request flow, message sequence chart, API call sequence)" for the five sequence queries kept all 28 older keyword queries and found the five new ones (33 of 33), with `export_widgets` first on all 7 export queries. The description stays at about 750 characters: `interactive`, `written` and `clickable` were cut. Cutting `visually` as well made `visualize data` miss, so it stays.
 
-The component reference (about 3,700 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
+The component reference (about 4,750 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
 
 ## Display modes
 
@@ -121,6 +125,8 @@ Build guards (each fails the build): a pack that bundles its own React/zod/react
 8. **A Choice disables its other options after one pick**, so a click-everything test over-counts messages.
 9. **One-shot headless Chrome hangs** here (`--screenshot`, `--dump-dom`, even on a blank page). `tools/shoot.py` launches Chrome with a debugging port and speaks the DevTools protocol over a small stdlib WebSocket client.
 10. **iCloud Drive and Git do not mix well.** Keep `node_modules` out of a synced folder; build in a normal directory.
+11. **A component shared by several packs must be one object.** See the Tooltip paragraph above: define it once, register it in the core, and share the module with the packs through `SHARED_FILES`.
+12. **`Page.captureScreenshot` shows the last frame produced.** A hover outline or a tooltip drawn by the previous step may not be in it yet; `tools/shoot.py --steps` waits two animation frames before every screenshot, and grows the viewport to the whole page first so nothing scrolls under a point it computed.
 
 ## What is verified, and what is not
 
@@ -134,4 +140,4 @@ Not verified: how the desktop app *renders* a widget (only a headless-Chrome har
 
 - A hidden-turn option for plugins (`host.composer.submit(sessionId, text, { hidden: true })`) would remove the main `native` trade-off. It needs an SDK change in Hermes.
 - Pruning old widgets (they are never deleted automatically, because old messages still point at them).
-- A tool-side `list_components` or per-component reference to shrink the 3,700-token first use.
+- A tool-side `list_components` or per-component reference to shrink the 4,750-token first use.

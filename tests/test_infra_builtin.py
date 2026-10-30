@@ -36,7 +36,7 @@ SIGNATURES = {
     "InfraNode": 'InfraNode(id: string, label: string, kind?: "client" | "gateway" | "service" | "gpu" | "database" | "storage" | "queue" | "cloud", status?: "up" | "degraded" | "down" | "unknown", detail?: string)',
     "InfraZone": 'InfraZone(name: string, nodes: InfraNode[], tone?: "neutral" | "info" | "good" | "warn" | "bad")',
     "InfraLink": 'InfraLink(from: string, to: string, label?: string, style?: "solid" | "dashed")',
-    "InfraMap": 'InfraMap(zones: InfraZone[], links: InfraLink[], title?: string, direction?: "LR" | "TB")',
+    "InfraMap": 'InfraMap(zones: InfraZone[], links: InfraLink[], title?: string, direction?: "LR" | "TB", tooltips?: Tooltip[])',  # tooltips was added after the user pack's header
 }
 # Facts the descriptions must keep (they are the only place the model learns what the arguments mean).
 DESCRIPTION_FACTS = {
@@ -191,9 +191,9 @@ class Reference(unittest.TestCase):
                     self.assertIn(fact, desc)
 
     def test_the_four_come_after_every_older_component_so_the_existing_order_is_unchanged(self):
-        # the five sequence components were added after them (tests/test_sequence_builtin.py), so the four end the older order
+        # the five sequence components were added after them (tests/test_sequence_builtin.py) and Tooltip after those, so the four end the older order
         order = re.findall(r"^([A-Z]\w*)\(", bundle.reference_text(), re.M)
-        older = order[:-5]
+        older = order[:-6]
         self.assertEqual(older[-4:], NAMES)
         self.assertEqual(older[:-4], [n for n in older if not n.startswith("Infra")])
         self.assertEqual(order.index("RadarChart"), len(older) - 5)
