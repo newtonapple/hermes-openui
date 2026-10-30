@@ -1098,7 +1098,7 @@ class Guidance(unittest.TestCase):
         for word in ("about 8", "native"):
             self.assertIn(word, low)
         self.assertTrue(self.TEXT.startswith("---\nname: openui-render\n"))
-        self.assertRegex(self.TEXT, r"(?m)^version: 0\.3\.0$")
+        self.assertRegex(self.TEXT, r"(?m)^version: \d+\.\d+\.\d+$")  # the number itself is guarded by test_version
 
     def test_the_skill_says_tooltips_is_the_last_argument_and_how_tall_the_diagram_may_be(self):
         self.assertLessEqual(len(self.TEXT), 5000)
@@ -1127,10 +1127,16 @@ class Guidance(unittest.TestCase):
 
 
 class Changelog(unittest.TestCase):
-    def test_unreleased_lists_tooltips_under_added_and_names_the_reserved_word(self):
+    # Tooltips ship in 0.4.0, so their entries stay under that heading. A rule such as "under Unreleased" passes only until
+    # the release moves the heading, and then it blocks that release.
+    SHIPPED_IN = "0.4.0"
+
+    def test_the_release_lists_tooltips_under_added_and_names_the_reserved_word(self):
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        sec = re.split(r"(?m)^(?=## \[)", text)[1]
-        self.assertRegex(sec, r"^## \[Unreleased\]")
+        holders = [s for s in re.split(r"(?m)^(?=## \[)", text)[1:] if "**Tooltip**" in s]
+        self.assertEqual(len(holders), 1, "the Tooltip entry should be in exactly one release section")
+        sec = holders[0]
+        self.assertRegex(sec, r"^## \[%s\]" % re.escape(self.SHIPPED_IN))
         self.assertIn("### Added", sec)
         self.assertIn("Tooltip", sec)
         self.assertRegex(sec, r"reserved")

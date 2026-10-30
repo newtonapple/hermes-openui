@@ -858,8 +858,10 @@ class Guidance(unittest.TestCase):
 
     def test_the_changelog_lists_the_five_under_added(self):
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        sec = re.split(r"(?m)^(?=## \[)", text)[1]
-        self.assertRegex(sec, r"^## \[Unreleased\]")
+        holders = [s for s in re.split(r"(?m)^(?=## \[)", text)[1:] if "**Tooltips on Table, Metric, BarChart, GeoMap and Image.**" in s]
+        self.assertEqual(len(holders), 1, "the entry should be in exactly one release section")
+        sec = holders[0]
+        self.assertRegex(sec, r"^## \[0\.4\.0\]")  # shipped in 0.4.0; a rule such as "under Unreleased" would block the release
         added = sec[sec.index("### Added"):]
         for name in ("Table", "Metric", "BarChart", "GeoMap", "Image"):
             self.assertIn(name, added)
