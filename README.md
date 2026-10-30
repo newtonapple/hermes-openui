@@ -334,7 +334,7 @@ The version is in `plugin.yaml`. Each release has an entry in [CHANGELOG.md](CHA
 Without `--ref`, `hermes plugins install` follows the default branch, `main`, which can be ahead of the latest release. It does not accept a tag for `--ref`, only a full 40-character commit SHA. To install an exact release, look up the commit its tag points to and pin that:
 
 ```sh
-SHA=$(git ls-remote https://github.com/newtonapple/hermes-openui 'refs/tags/v0.4.0^{}' | cut -f1)
+SHA=$(git ls-remote https://github.com/newtonapple/hermes-openui 'refs/tags/v0.5.0^{}' | cut -f1)
 hermes plugins install newtonapple/hermes-openui --ref "$SHA" --enable
 ```
 
