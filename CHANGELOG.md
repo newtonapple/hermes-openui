@@ -14,7 +14,7 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 ### Changed
 
 - **`Tooltip` is now a reserved component name.** A custom pack that defines a component with that name is skipped with the usual message.
-- The component reference the agent loads on first use grows from about 3,700 to 4,750 tokens (the `Tooltip` line and the new `tooltips` argument of nine components). The `render_widget` description is unchanged, and the discovery check still finds 33 of 33 keyword queries.
+- The component reference the agent loads on first use grows from about 3,700 to 4,700 tokens (the `Tooltip` line and the new `tooltips` argument of nine components). The `render_widget` description is unchanged, and the discovery check still finds 33 of 33 keyword queries.
 - The `openui-render` skill has three lines about tooltips. Its size limit goes from 4,500 to 5,000 characters (it was at 4,376), about 1,250 tokens.
 - The tooltip interaction module and the code highlighter are in the core once, so the diagrams, infra, sequence and text packs no longer carry a copy. The core grows by about 7.8 KB gzipped (205.7 to 213.5 KB), the diagrams, infra and sequence packs shrink by about 5.8 KB each and the text pack by about 1.5 KB, the map pack grows by about 0.6 KB, and `desktop/plugin.js` grows by about 6.7 KB (2.7 KB gzipped). A page with no pack weighs about 8 KB more, a page with one diagram pack about 2 KB more, and a page with two or more of them less than before. The packs take the module from the core through internal entries of `window.__HM.mods`, next to the shared `Tooltip` definition; the pack API (`api: 1`) is unchanged.
 

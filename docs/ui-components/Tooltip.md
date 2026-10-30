@@ -2,7 +2,7 @@
 
 A short note that appears when the reader hovers one element of a diagram, a table, a metric tile, a bar chart, a map or an image, with an optional panel of detail, code and a link that opens when they click it. It works on [Dag](Dag.md), [Erd](Erd.md), [InfraMap](InfraMap.md), [SequenceDiagram](SequenceDiagram.md), [Table](Table.md), [Metric](Metric.md), [BarChart](BarChart.md), [GeoMap](GeoMap.md) and [Image](Image.md).
 
-![An infrastructure map with the pointer on the API node, which shows its hover tooltip](images/tooltip-hover.png)
+![A bar chart with the pointer on the cache bar, which shows its hover tooltip](images/tooltip-hover.png)
 
 ![A pipeline where the failed step has a tooltip and an open detail panel with a command](images/tooltip-dag-node.png)
 
@@ -144,20 +144,13 @@ a2 = Tooltip("db", "Read replica", "Logins read from a replica, so a new account
 Two nodes have a hint and nothing else. With the pointer on the API node, the tooltip shows its hint and the node gets an outline in the tone colour; no panel is open.
 
 ```openui
-root = Stack([map])
-map = InfraMap([z1, z2], [l1, l2], null, "LR", [a1, a2])
-z1 = InfraZone("Edge", [n1, n2], "warn")
-z2 = InfraZone("App", [n3])
-n1 = InfraNode("client", "Client", "client")
-n2 = InfraNode("web", "Web", "gateway", "up")
-n3 = InfraNode("api", "API", "service", "degraded", "p95 840 ms")
-l1 = InfraLink("client", "web", "HTTPS")
-l2 = InfraLink("web", "api", "gRPC")
-a1 = Tooltip("web", "Terminates TLS and rate limits clients", null, null, null, "warn")
-a2 = Tooltip("api", "Slow since the last deploy: check the query plan before you scale it", null, null, null, "bad")
+root = Stack([chart])
+chart = BarChart(["web", "api", "db", "cache"], [31, 82, 47, 9], "CPU by service (sample data)", "%", [a1, a2])
+a1 = Tooltip("api", "Busiest service", null, null, null, "warn")
+a2 = Tooltip("cache", "Mostly idle, nothing to scale here", null, null, null, "good")
 ```
 
-![An infrastructure map with the pointer on the API node](images/tooltip-hover.png)
+![A bar chart with the pointer on the cache bar](images/tooltip-hover.png)
 
 ## Tips and pitfalls
 

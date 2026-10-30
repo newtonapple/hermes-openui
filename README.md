@@ -16,7 +16,7 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 - **One tool, `render_widget`.** The agent writes a few lines of *OpenUI Lang* (a compact component language); the plugin validates it, saves a widget, and the agent puts one line in its reply. The widget appears in the chat when the turn finishes.
 - **24 components** (38 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, sequence diagrams, infrastructure maps, offline maps, code, markdown, FAQs, clickable choices, and hover tooltips for diagrams, tables, metrics, bar charts, maps and images. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
 - **Plain English works.** You do not name the tool. Hermes's Tool Search keeps it out of the model's context until a request needs it.
-- **Cheap on context.** About 20 tokens always on; about 4,750 tokens the first time it is used (the component reference); a few hundred per widget.
+- **Cheap on context.** About 20 tokens always on; about 4,700 tokens the first time it is used (the component reference); a few hundred per widget.
 - **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself, so the widget files are tiny (1 to 2 KB), at the price of running with full app authority. See [Display modes](#display-modes).
 - **Interactive.** Buttons and choices send their text back to the agent as your next turn.
 - **Tooltips.** A Dag, ER diagram, infrastructure map, sequence diagram, table, metric tile, bar chart, map or image can carry short hover tooltips, and a click opens a panel under it with detail text, highlighted code and a link. See [Tooltips](#tooltips).
@@ -259,7 +259,7 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 330 |
 | `export_widgets` listing line | every chat, with Tool Search on | about 20 |
 | `export_widgets` schema (1.6 KB) | every API call **only if** Tool Search is off | about 400 |
-| Component reference | the first use in a chat | about 4,750 |
+| Component reference | the first use in a chat | about 4,700 |
 | Custom component reference | the first use, **only when packs are linked** | one line per component. The four InfraMap lines and the five SequenceDiagram lines, now built in, add about 320 and 470 |
 | Your widget source | each widget, stays in the history | about 250–600 |
 | Tool result | each widget | about 100 |

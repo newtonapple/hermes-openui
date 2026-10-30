@@ -75,7 +75,7 @@ a2 = Tooltip("col:p95", "95th percentile latency in milliseconds")
 a3 = Tooltip("cell:3.service", "Primary of the pair", null, null, null, "warn")
 ```
 
-![A table with the failed row open in a panel and the pointer on the p95 header](images/table-tooltips.png)
+![A table with the failed row open in a panel under it](images/table-tooltips.png)
 
 ## Tips and pitfalls
 

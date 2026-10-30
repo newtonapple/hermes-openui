@@ -91,7 +91,7 @@ How that search works (`tools/tool_search_catalog.py` in Hermes):
 
 Measured against a 178-tool catalog (Hermes's own deferred tools plus 172 names shaped like a large MCP server): the first draft of the description found 13 of 20 keyword queries; adding graph, plot, flowchart, schema, topology and KPI found 20 of 20, with no false hits on unrelated requests. Whole-sentence queries still miss when a word is absent from every tool; that is the engine's design, and a model that sees the listing line usually goes straight to `tool_describe`. Re-measure with `tools/verify_discovery.py` after any wording change. When InfraMap became a built-in, the four new infrastructure queries (`infrastructure map`, `infrastructure diagram`, `architecture diagram`, `server map`) all missed, and the set stood at 21 of 25. Adding "infrastructure and server maps, architecture diagrams" to the description (55 more characters) took it to 25 of 25, with `export_widgets` still first on all 7 export queries. The three new whole-sentence infrastructure queries still miss, like five of the ten older ones. Adding "sequence diagrams (call flow, request flow, message sequence chart, API call sequence)" for the five sequence queries kept all 28 older keyword queries and found the five new ones (33 of 33), with `export_widgets` first on all 7 export queries. The description stays at about 750 characters: `interactive`, `written` and `clickable` were cut. Cutting `visually` as well made `visualize data` miss, so it stays.
 
-The component reference (about 4,750 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
+The component reference (about 4,700 tokens) is deliberately **not** in the schema: with Tool Search off the schema rides every API call. `render_widget(reference=true)` returns it on demand.
 
 ## Display modes
 
@@ -140,4 +140,4 @@ Not verified: how the desktop app *renders* a widget (only a headless-Chrome har
 
 - A hidden-turn option for plugins (`host.composer.submit(sessionId, text, { hidden: true })`) would remove the main `native` trade-off. It needs an SDK change in Hermes.
 - Pruning old widgets (they are never deleted automatically, because old messages still point at them).
-- A tool-side `list_components` or per-component reference to shrink the 4,750-token first use.
+- A tool-side `list_components` or per-component reference to shrink the 4,700-token first use.
