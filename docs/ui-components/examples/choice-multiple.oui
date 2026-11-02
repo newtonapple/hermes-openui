@@ -1,0 +1,2 @@
+root = Stack([ask])
+ask = Choice("Which checks should I run?", ["Disk", "Memory", "Network"], "I will run them in this order and report back.", true)

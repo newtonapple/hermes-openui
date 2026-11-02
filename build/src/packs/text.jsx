@@ -4,7 +4,7 @@ import { defineComponent } from "@openuidev/react-lang";
 import { z } from "zod/v4";
 import { renderMarkdown } from "../components/markdown.jsx";
 import { CodeView } from "../components/code.jsx";
-import { FaqView, ChoiceView } from "../components/qa.jsx";
+import { FaqView, ChoiceView, CHOICE_CSS } from "../components/qa.jsx";
 
 const Markdown = defineComponent({
   name: "Markdown",
@@ -37,9 +37,9 @@ const Faq = defineComponent({
 const Choice = defineComponent({
   name: "Choice",
   description:
-    'A question with clickable options for the USER to answer. Clicking sends "<question> — <option>" to the agent as a new turn. options: string[] (2-6). Optional hint line. Use to ask clarifying questions.',
-  props: z.object({ question: z.string(), options: z.array(z.string()), hint: z.string().optional() }),
-  component: ({ props }) => <ChoiceView question={props.question} options={props.options ?? []} hint={props.hint} />,
+    'A question for the USER with clickable options (2-6). All Choices of a widget, also in Tabs or Cards, are answered together: a click sends nothing, one "Send answers" button sends them all as your next turn (numbered; "(no answer)" if skipped; "other: ..." if typed). multiple: true allows several answers; an Other text box is added unless other is false. Write null for each skipped optional argument before multiple or other, e.g. Choice("Which?", ["a", "b"], null, true). Optional hint line.',
+  props: z.object({ question: z.string(), options: z.array(z.string()), hint: z.string().optional(), multiple: z.boolean().optional(), other: z.boolean().optional() }),
+  component: ({ props }) => <ChoiceView question={props.question} options={props.options ?? []} hint={props.hint} multiple={props.multiple} other={props.other} />,
 });
 
-export const pack = { name: "text", components: [Markdown, CodeBlock, FaqItem, Faq, Choice] };
+export const pack = { name: "text", components: [Markdown, CodeBlock, FaqItem, Faq, Choice], css: CHOICE_CSS };

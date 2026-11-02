@@ -1062,7 +1062,8 @@ class Docs(unittest.TestCase):
         table = re.search(r"\| Component reference \| the first use in a chat \| about ([\d,]+) \|", readme).group(1)
         self.assertIn("about %s tokens" % table, dev)
         self.assertIn("the %s-token first use" % table, dev)
-        self.assertIn("from about 3,700 to %s tokens" % table, (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
+        # the 0.4.0 entry is history: it says 4,700, the figure of that release (the README figure moved when the Choice batch card grew the Choice line)
+        self.assertIn("from about 3,700 to 4,700 tokens", (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"))
         self.assertIn("<b>Hover details</b> &middot; <a href=\"docs/ui-components/Tooltip.md\">Tooltip</a>", readme)
         self.assertNotIn("<b>Tooltip</b> &middot;", readme)
 

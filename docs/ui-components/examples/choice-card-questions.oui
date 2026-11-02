@@ -1,0 +1,5 @@
+root = Stack([plan])
+plan = Card([q1, q2, q3], "Before I restart")
+q1 = Choice("Which node should I restart first?", ["web-1", "web-2"])
+q2 = Choice("Which checks should I run?", ["Disk", "Memory", "Network"], null, true)
+q3 = Choice("Clear the cache on db?", ["Yes", "No"], null, null, false)

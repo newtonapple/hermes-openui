@@ -24,7 +24,7 @@ JavaScript call cannot do (a hover, the keyboard focus ring, Tab, Space). A JSON
   {"dblclick": SELECTOR, "at": [fx, fy]}        two clicks (a word gets selected)
   {"drag": SELECTOR, "from": [fx, fy], "to": [fx, fy]}  press at one point of the element, move, release at another (selects text)
   {"type": "text"}                              insert text into the focused element (a real input event, not a key press)
-  {"key": "Tab" | "Enter" | "Escape" | "Space" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight", optionally "Shift+..." }
+  {"key": "Tab" | "Enter" | "Escape" | "Space" | "ArrowDown" | "ArrowUp" | "ArrowLeft" | "ArrowRight" | "a" ... "z", optionally "Shift+..." }
   {"js": EXPR}                                  run an expression (for example to focus an element or install a stub)
   {"eval": EXPR, "name": NAME}                  record the JSON value of an expression
   {"shot": "name.png"}                          an extra screenshot, written next to OUT.png, of the whole page
@@ -224,6 +224,8 @@ KEYS = {  # name -> (key, code, windowsVirtualKeyCode, text)
     "ArrowDown": ("ArrowDown", "ArrowDown", 40, ""), "ArrowUp": ("ArrowUp", "ArrowUp", 38, ""),
     "ArrowLeft": ("ArrowLeft", "ArrowLeft", 37, ""), "ArrowRight": ("ArrowRight", "ArrowRight", 39, ""),
 }
+for _c in "abcdefghijklmnopqrstuvwxyz":  # a letter key (a Choice row's badge letter): the key, its code and its virtual key code
+    KEYS[_c] = (_c, "Key" + _c.upper(), ord(_c.upper()), _c)
 STEP_ACTIONS = ("move", "click", "dblclick", "drag", "type", "key", "js", "eval", "shot")
 
 

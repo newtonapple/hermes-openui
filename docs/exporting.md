@@ -80,7 +80,7 @@ What is not verified. I read the Desktop and gateway code and ran the gateway's 
 - **One file** with the runtime inside it, typically 280 to 400 KB. The limit is 8 MB. Images may be up to 1 MB each, where a chat widget allows 100 KB.
 - **Offline.** In a headless Chrome, a page with a map, tiles, a chart and Markdown made no network requests and logged no console errors.
 - **Light or dark.** The default follows the viewer's setting. A forced theme also overrides the page's own check, so the charts agree.
-- **Buttons.** A `Button` or `Choice` talks to the agent, which a file on disk cannot do. Clicking one shows the notice "Interactive buttons work inside Hermes only".
+- **Buttons.** A `Button` talks to the agent, which a file on disk cannot do. Clicking one shows the notice "Interactive buttons work inside Hermes only". A `Choice` can be looked at (its options still select), but its **Send answers** button is disabled and the bar says the same sentence.
 - **Custom components.** Linked packs that a report uses are embedded once. See [Custom components](custom-components.md).
 
 ## From the terminal

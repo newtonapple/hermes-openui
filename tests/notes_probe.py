@@ -50,7 +50,7 @@ SOURCES = {
     ),
     "buttons": (
         'root = Stack([ask, actions])\n'
-        'ask = Choice("Which node should I restart first?", ["web-1", "web-2"], "Pick one.")\n'
+        'ask = Choice("Which node should I restart first?", ["web-1", "web-2"], "Then I report back.")\n'
         'actions = Stack([a, b], "row", "s", true)\n'
         'a = Button("Restart web", @ToAssistant("Restart the web service"))\nb = Button("Show logs", @ToAssistant("Show the web logs"))\n'
     ),

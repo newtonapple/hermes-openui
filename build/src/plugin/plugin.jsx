@@ -15,12 +15,14 @@ import { coreComponents } from "../core-components.jsx";
 import { packs } from "../packs/index.js";
 import { openuiTheme } from "../oui-theme.js";
 import { enableNativeLinks, enableNotes } from "../components/tooltips.jsx";
-import { NotesHost, withIds } from "./notes.jsx";
+import { NotesHost, withIds, composerAddress } from "./notes.jsx";
 import { stemOf } from "../components/notes-core.js";
+import { ChoiceBoard } from "../components/choice-board.jsx";
+import { CHOICE_LIMITS } from "../components/choice-core.js";
 
 const ROOT_CLASS = "hermes-openui-root";
 const STYLE_ATTR = "data-hermes-openui";
-const MAX_INTENT_LENGTH = 500; // same cap as window.hermes.send
+const MAX_INTENT_LENGTH = 500; // same cap as window.hermes.send; the cap of EVERY action an agent can write (@ToAssistant)
 const MIN_INTENT_GAP_MS = 1000; // same rate limit as window.hermes.send
 const SOURCE_MAX_BYTES = 512 * 1024; // the file bridge truncates here; refuse instead of rendering half a widget
 
@@ -60,7 +62,8 @@ const NATIVE_CSS = [
   `.${ROOT_CLASS}:hover [data-oui-chip],.${ROOT_CLASS}:focus-within [data-oui-chip],.${ROOT_CLASS}[data-oui-active] [data-oui-chip]{opacity:1}`,
   `@media (hover:none){.${ROOT_CLASS} [data-oui-chip]{opacity:1}}`,
   `.${ROOT_CLASS}[data-oui-mode] [data-oui-type] *{cursor:pointer!important;user-select:text!important;-webkit-user-select:text!important}`, // in notes mode every item is clickable and its words can be selected (the app's sheet blocks buttons and svg)
-  `.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Button] *,.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Choice] *{cursor:not-allowed!important}`,
+  `.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Button] *,.${ROOT_CLASS}[data-oui-mode] [data-oui-type=Choice] *,.${ROOT_CLASS}[data-oui-mode] [data-oui-bar] *{cursor:not-allowed!important}`, // the Choice board's controls are disabled in notes mode too (choice-board.jsx)
+  `.${ROOT_CLASS} [data-oui-other]{user-select:text;-webkit-user-select:text}`, // the Other box of a Choice is a text field: typing and selecting work whatever the app's sheet says about controls
   `.${ROOT_CLASS} [data-oui-notes-ui] button:focus-visible,.${ROOT_CLASS} [data-oui-notes-ui] textarea:focus-visible,.${ROOT_CLASS} [data-oui-chip]:focus-visible{outline:2px solid var(--accent,#5B9CF6);outline-offset:2px}`,
   `.${ROOT_CLASS} [data-oui-hit]{pointer-events:none}`, // the transparent hit shapes of notes (tooltips.jsx) catch the pointer only in notes mode, so with notes off they change nothing
   `.${ROOT_CLASS}[data-oui-mode] [data-oui-hit=all]{pointer-events:all}`,
@@ -131,8 +134,10 @@ async function readWidget(file) {
   return r.text;
 }
 
+// Both ways out name the chat that HOLDS the widget (composerAddress, notes.jsx): submit(null, ...) means "the composer the user focused last", which in a
+// split view or a tile can be another chat, and a sent message cannot be taken back.
 let lastIntentAt = 0;
-function onAction(event) {
+function onAction(event, address = null) {
   if (!event || event.type !== "continue_conversation" || !event.humanFriendlyMessage) return; // open_url: not allowed, same as the sandbox
   const text = String(event.humanFriendlyMessage).trim();
   const now = Date.now();
@@ -140,7 +145,7 @@ function onAction(event) {
   lastIntentAt = now;
   let sent = false;
   try {
-    sent = host.composer.submit(null, text);
+    sent = host.composer.submit(address, text);
   } catch (e) {
     sent = false;
   }
@@ -149,6 +154,29 @@ function onAction(event) {
       host.notify({ kind: "error", message: "OpenUI widget: no chat input accepted the message." });
     } catch (e) {}
   }
+}
+
+// The Choice board's way out: the user's staged answers as one visible message, up to CHOICE_LIMITS.native characters. This is NOT an action: the board
+// calls it directly, so an agent cannot reach the larger cap (a Button's @ToAssistant goes through onAction above, which stays at 500).
+function sendBoardMessage(text, address = null) {
+  const t = String(text).trim();
+  if (!t || t.length > CHOICE_LIMITS.native) return { ok: false, error: "This answer is " + t.length + " characters; at most " + CHOICE_LIMITS.native + " can be sent." };
+  const now = Date.now();
+  if (now - lastIntentAt < MIN_INTENT_GAP_MS) return { ok: false, error: "Wait a second, then press Send answers again." };
+  lastIntentAt = now;
+  let sent = false;
+  try {
+    sent = host.composer.submit(address, t);
+  } catch (e) {
+    sent = false;
+  }
+  if (!sent) {
+    try {
+      host.notify({ kind: "error", message: "OpenUI widget: no chat input accepted the message." });
+    } catch (e) {}
+    return { ok: false, error: "No chat input accepted the answers. Click the message box and try again." };
+  }
+  return { ok: true };
 }
 
 function Notice({ children }) {
@@ -184,16 +212,21 @@ function OpenUIWidget({ file }) {
     <div ref={rootRef} className={ROOT_CLASS + " not-prose"} data-hermes-openui-widget="" style={{ ...THEME_BRIDGE, position: "relative", width: "100%", minWidth: 0, color: "var(--foreground)" }}>
       <NotesHost stem={stemOf(file)} rootRef={rootRef} source={state.text}>
       <ThemeProvider mode={mode} lightTheme={openuiTheme} darkTheme={openuiTheme} cssSelector={"." + ROOT_CLASS}>
-        <Renderer
-          response={state.text}
-          library={library}
-          isStreaming={false}
-          onAction={onAction}
-          onError={(errors) => {
-            const names = [...new Set((errors || []).filter((e) => e && e.code === "unknown-component").map((e) => e.component))];
-            if (names.length) setMissing(names.join(", "));
-          }}
-        />
+        <ChoiceBoard mode="native" stem={stemOf(file)} send={(text) => sendBoardMessage(text, composerAddress(rootRef.current))} rootRef={rootRef}>
+          {(onParse) => (
+            <Renderer
+              response={state.text}
+              library={library}
+              isStreaming={false}
+              onAction={(event) => onAction(event, composerAddress(rootRef.current))}
+              onParseResult={onParse}
+              onError={(errors) => {
+                const names = [...new Set((errors || []).filter((e) => e && e.code === "unknown-component").map((e) => e.component))];
+                if (names.length) setMissing(names.join(", "));
+              }}
+            />
+          )}
+        </ChoiceBoard>
       </ThemeProvider>
       {missing ? <Notice>Unknown component(s): {missing}</Notice> : null}
       </NotesHost>

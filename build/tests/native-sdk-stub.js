@@ -4,7 +4,8 @@ export const TRANSCRIPT_DIRECTIVE_AREA = "transcript-directive";
 export const calls = [];
 export const host = {
   composer: {
-    submit: (...args) => (calls.push({ submit: args }), true),
+    // Choice and Button: submit records its arguments and answers true unless the page set window.__submitResult to false (no chat input took the message).
+    submit: (...args) => (calls.push({ submit: args }), !(typeof window !== "undefined" && window.__submitResult === false)),
     // Notes: insertText records its arguments and answers true unless the page set window.__insertResult to false (or to "throw").
     insertText: (...args) => {
       calls.push({ insertText: args });

@@ -65,6 +65,7 @@ const SHARED_FILES = [
   [/src\/components\/tooltip-schema\.js$/, "hermes-openui/tooltip-schema"],
   [/src\/components\/tooltips\.jsx$/, "hermes-openui/tooltips"],
   [/src\/components\/code\.jsx$/, "hermes-openui/code"],
+  [/src\/components\/choice-board\.jsx$/, "hermes-openui/choice-board"], // the Choice board's context (the Choice view is in the text pack, the board provider in the core)
 ];
 const sharedFromCore = {
   name: "shared-from-core",

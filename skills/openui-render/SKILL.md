@@ -41,7 +41,7 @@ First use: call `render_widget(reference=true)` for the exact component signatur
 - Tooltip `link`: `http(s)`, opens in native mode only (preview: text to copy). A panel adds 70 to 400 px: in preview keep the widget under about 800 px (20 steps, 8 Dag rows).
 - Data must be literals you already have. Never invent numbers to fill a layout. A widget is a snapshot: new data means a new widget.
 - Images: an absolute local path, 100 KB or less per image.
-- `Button("Label", @ToAssistant("instruction"))` and `Choice` send text back as your next turn (500 characters at most). Only that text is sent; the optional second `@ToAssistant` argument (`context`) is ignored, so put everything the next turn needs in the message. Act on the click, then render a NEW widget.
+- `Button("Label", @ToAssistant("instruction"))` sends text back as your next turn (500 characters max). A `Choice` sends nothing alone: put all questions in one widget, one Send button sends them. Only the Button text is sent; the optional second `@ToAssistant` argument (`context`) is ignored, so put everything the next turn needs in the message. Act on the click, then render a NEW widget.
 - One widget per reply. Use `Tabs` and `Card` for several sections.
 
 ## Export to a file

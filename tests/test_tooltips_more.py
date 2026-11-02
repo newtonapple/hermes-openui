@@ -641,7 +641,9 @@ class SharedModule(unittest.TestCase):
         for name in ("diagrams", "infra", "sequence"):
             with self.subTest(pack=name):
                 self.assertLess(m["packs"][name]["gz"], BEFORE[name] - 3000, "the pack should lose the interaction module and the highlighter (about 5 KB gzip)")
-        self.assertLess(m["packs"]["text"]["gz"], BEFORE["text"] - 1000)
+        # 0.4.0 moved the interaction module and the highlighter out of the text pack. The Choice batch card (Other box, letter keys, a stylesheet) added
+        # most of what it saved back: the pack must still be smaller than the 0.3.0 text pack plus 1,500 bytes, and does not hold the shared modules.
+        self.assertLess(m["packs"]["text"]["gz"], BEFORE["text"] + 1500)
         self.assertLess(m["packs"]["map"]["gz"], BEFORE["map"] + 1500)
         self.assertGreater(m["core"]["gz"], BEFORE["core"])
         self.assertLess(m["core"]["gz"], BEFORE["core"] + 12 * 1024)

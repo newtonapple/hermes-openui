@@ -16,6 +16,8 @@ import { coreComponents } from "./core-components.jsx";
 import { Tooltip } from "./components/tooltip-schema.js";
 import * as TooltipsModule from "./components/tooltips.jsx";
 import * as CodeModule from "./components/code.jsx";
+import * as ChoiceBoardModule from "./components/choice-board.jsx";
+import { ChoiceBoard } from "./components/choice-board.jsx";
 import { openuiTheme } from "./oui-theme.js";
 
 // The ONLY react-lang exports packs may use. A namespace import (import * as) would keep every export and with it
@@ -46,6 +48,19 @@ function onAction(event) {
   }
 }
 
+// The Choice board's way out (the preview page): the answers are sent as ONE hidden turn through window.hermes.send, which the app caps at 500
+// characters and one message a second (the board checks the 500 itself and says so). A promise of { ok, error? }; an exported page has no chat.
+function sendBoard(text) {
+  const send = window.hermes && window.hermes.send;
+  if (typeof send !== "function") return Promise.resolve({ ok: false, error: "This page cannot send to the agent." });
+  return Promise.resolve(send(String(text))).then(
+    (ack) => (ack && ack.ok === false ? { ok: false, error: "The app did not accept the answers" + (ack.error ? ": " + String(ack.error) : ".") } : { ok: true }),
+    () => ({ ok: false, error: "The answers were not sent. Try again." }),
+  );
+}
+// A standalone export carries its own window.hermes stand-in (page.py, #oui-hermes-shim) that only shows a notice: there is nothing to send to.
+const standalone = () => !!document.getElementById("oui-hermes-shim");
+
 const prefersDark = () => {
   try { return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) { return false; }
 };
@@ -75,6 +90,8 @@ window.__HM = {
     // and the packs that draw a tooltip (diagrams, infra, sequence, map) or a code block (text) do not bundle a copy.
     "hermes-openui/tooltips": TooltipsModule,
     "hermes-openui/code": CodeModule,
+    // Also internal: the Choice board's context. The board is provided here (mount) and read by the Choice view in the text pack.
+    "hermes-openui/choice-board": ChoiceBoardModule,
   },
   register,
   packs,
@@ -89,7 +106,9 @@ window.HermesOpenUI = {
     });
     createRoot(el).render(
       <ThemeProvider mode={prefersDark() ? "dark" : "light"} lightTheme={openuiTheme} darkTheme={openuiTheme}>
-        <Renderer response={source} library={library} isStreaming={false} onAction={onAction} onError={reportErrors} />
+        <ChoiceBoard mode="preview" send={sendBoard} canSend={!standalone()}>
+          {(onParse) => <Renderer response={source} library={library} isStreaming={false} onAction={onAction} onError={reportErrors} onParseResult={onParse} />}
+        </ChoiceBoard>
       </ThemeProvider>,
     );
   },

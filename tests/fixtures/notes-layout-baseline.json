@@ -1,5 +1,5 @@
 {
- "_about": "Layout of the widgets of tests/test_notes_native.py drawn by the plugin of release 0.4.0 (before Notes), app stylesheet inlined. Machine bound: fonts and Chrome decide these numbers; the test skips on another platform or stylesheet. Regenerate: python3 tests/notes_probe.py --baseline <plugin file without Notes> <this file>.",
+ "_about": "Layout of the widgets of tests/test_notes_native.py drawn by the plugin of release 0.4.0 (before Notes), app stylesheet inlined. Machine bound: fonts and Chrome decide these numbers; the test skips on another platform or stylesheet. Regenerate: python3 tests/notes_probe.py --baseline <plugin file without Notes> <this file>. The rows of the widget `buttons` (a Choice and two Buttons) and the body height that follows from it were measured again by the plugin that adds the Choice batch card (its Send answers bar): that widget changes by design, every other row is unchanged.",
  "app_css": "index-BJGZbuYv.css",
  "hits": {
   "infra_web_api": {
@@ -16,24 +16,24 @@
   }
  },
  "layout": {
-  "body": 3136,
+  "body": 3244.9,
   "buttons@1000px": {
-   "h": 229.3,
+   "h": 338.1,
    "rects": [],
    "w": 988
   },
   "buttons@1800px": {
-   "h": 229.3,
+   "h": 338.1,
    "rects": [],
    "w": 1788
   },
   "buttons@360px": {
-   "h": 229.3,
+   "h": 338.1,
    "rects": [],
    "w": 348
   },
   "buttons@700px": {
-   "h": 229.3,
+   "h": 338.1,
    "rects": [],
    "w": 688
   },

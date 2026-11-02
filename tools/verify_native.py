@@ -47,7 +47,7 @@ WIDGETS = (
 )
 BUTTON_AND_CHOICE = (  # Button and Choice together, in one small widget
     'root = Stack([ask, actions])\n'
-    'ask = Choice("Which node should I restart first?", ["web-1", "web-2", "web-3"], "Pick one. I will restart it and report back.")\n'
+    'ask = Choice("Which node should I restart first?", ["web-1", "web-2", "web-3"], "I will restart it and report back.")\n'
     'actions = Stack([a, b], "row", "s", true)\n'
     'a = Button("Restart nginx", @ToAssistant("Restart the nginx service on web-1"))\n'
     'b = Button("Show logs", @ToAssistant("Show the last 50 lines of the nginx log on web-1"))\n'

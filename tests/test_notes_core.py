@@ -290,8 +290,9 @@ class Core(unittest.TestCase):
         self.assertEqual(self.r[47], "(at)url:'page-1' go")
         self.assertEqual(self.r[48], "(at)url:'abc'")
         self.assertEqual(self.r[63], "cell:2.(at)session:q")
-        # not a reference in the app's pattern, so left alone: an address, "@ file:", another word, and the second @ of a double one
-        self.assertEqual(self.r[49], "me@home @ file:x @filesystem:y @(at)tool:z (at)FOLDER:/q")
+        # left alone: an address, "@ file:", and the second @ of a double one. "@filesystem:y" is broken too since the gateway expands any "@word:value"
+        # of a registered provider (agent/context_references.py _PLUGIN_REFERENCE_PATTERN): the one golden of Notes that this rule changed
+        self.assertEqual(self.r[49], "me@home @ file:x (at)filesystem:y @(at)tool:z (at)FOLDER:/q")
 
     def test_a_message_built_from_hostile_words_holds_no_reference_the_app_would_attach(self):
         text = self.r[50]["text"]

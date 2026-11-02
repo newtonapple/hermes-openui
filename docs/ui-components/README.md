@@ -72,7 +72,7 @@ Read it top-down: `root` is a column holding a heading and a row of two Metric t
 | Component | Preview | What it does |
 |---|---|---|
 | [**Button**](Button.md) | <a href="Button.md"><img src="images/button-actions.png" width="260" alt="Button example"></a> | A clickable button. A click sends text back to the AI as the user's next message, so the AI can act and draw a fresh widget. |
-| [**Choice**](Choice.md) | <a href="Choice.md"><img src="images/choice-basic.png" width="260" alt="Choice example"></a> | A question with a short list of buttons for the user to pick from. A click sends the choice back to the agent as the next chat message. |
+| [**Choice**](Choice.md) | <a href="Choice.md"><img src="images/choice-single-vs-multiple.png" width="260" alt="A single question with round radio options and a multiple question with square checkboxes"></a> | A question with a short list of options, one or several answers and an Other text box. The answers of every Choice in the widget are staged and sent together with one Send answers button. |
 
 ## Surprises worth knowing
 
@@ -94,7 +94,7 @@ Found by rendering every example. Each is explained, with a screenshot where it 
 | [Markdown](Markdown.md) | Lists are flat (no nesting), and strikethrough, `_italics_` and HTML print as typed. |
 | [CodeBlock](CodeBlock.md) | Any language gets some colouring (strings, numbers, a word before `(`), not only the listed ones. |
 | [Tabs](Tabs.md) | Only the first tab shows in a screenshot. Items in a tab have no spacing: use one Stack per tab. |
-| [Button](Button.md), [Choice](Choice.md) | Only the message text is sent back. The optional `context` of `@ToAssistant` is ignored. Choice does not enforce its 2-6 option advice. A screenshot cannot show a click. |
+| [Button](Button.md), [Choice](Choice.md) | Only the message text is sent back. The optional `context` of `@ToAssistant` is ignored. Choice sends nothing on a click: its Send answers button sends all the answers of the widget at once (500 characters at most in preview, 4,000 in the desktop renderer). Choice does not enforce its 2-6 option advice. A screenshot cannot show a click, so the Choice pictures were taken with real mouse and key events. |
 
 ## Adding or changing a page
 

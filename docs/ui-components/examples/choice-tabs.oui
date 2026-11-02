@@ -1,0 +1,7 @@
+root = Stack([tabs])
+tabs = Tabs([t1, t2])
+t1 = TabItem("Restart", [r1, r2])
+t2 = TabItem("Cleanup", [c1])
+r1 = Choice("Which node should I restart first?", ["web-1", "web-2"])
+r2 = Choice("Drain the node first?", ["Yes", "No"])
+c1 = Choice("Clear the cache on db?", ["Yes", "No"])

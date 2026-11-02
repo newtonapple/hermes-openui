@@ -25,11 +25,13 @@ export function clip(s, max) {
   const chars = Array.from(s);
   return chars.length <= max ? s : chars.slice(0, Math.max(0, max - 3)).join("").trimEnd() + "...";
 }
-// The kinds of reference the app turns into an attached reference chip when a draft holds "@kind:value" (reference-kinds.ts, WIRE_REFERENCE_KINDS).
-// Words of the widget are written by an agent: "@file:/x" in a quote or in an id would attach a file the user never chose. The "@" is
-// replaced by "(at)" (ASCII, still readable). The user's OWN note text is not touched.
+// What turns into a reference when a message holds it. The app attaches a chip for "@kind:value" (reference-kinds.ts, WIRE_REFERENCE_KINDS: the eight kinds
+// below), and the gateway that receives the message expands more (agent/context_references.py REFERENCE_PATTERN: a bare "@diff" or "@staged", "@git:", and
+// "@word:value" for any provider a plugin registered). Words of the widget are written by an agent: "@file:/x" in a quote or in an id would attach a file the
+// user never chose. So the "@" is replaced by "(at)" (ASCII, still readable) before "diff" or "staged" as a whole word, or before a word and a colon. An "@" in an
+// e-mail address ("me@host.test": no colon after the word) or before a space is not touched. The user's OWN note text is not touched.
 const REF_KINDS = "file|folder|url|image|tool|line|terminal|session";
-const REF_START = new RegExp("@(?=(?:" + REF_KINDS + "):)", "gi");
+const REF_START = new RegExp("@(?=(?:" + REF_KINDS + "):|(?:diff|staged)\\b|[A-Za-z][\\w-]*:)", "gi");
 export const neutralize = (s) => String(s).replace(REF_START, "(at)");
 // A word of the widget that goes inside backticks or double quotes of the message: one line, no backtick or double quote of its own,
 // and no reference token (see above).

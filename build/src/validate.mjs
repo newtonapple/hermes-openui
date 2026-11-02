@@ -152,6 +152,11 @@ for (let i = 0; i < problems.length; i++) {
     problems[i] = line.replace(/[.\s]+$/, "") + ". " + misplacedListHint(st.type, tipNames.find((n) => holdsTooltipList(st.text, [n])));
   }
 }
+// A Choice with a skipped optional argument before multiple or other: say how to write the gap, with an example. Once for each statement.
+for (let i = 0; i < problems.length; i++) {
+  const err = /^Choice in `([^`]+)`: (.*)$/.exec(problems[i]);
+  if (err && !hinted.has(err[1])) { hinted.add(err[1]); problems[i] = problems[i].replace(/[.\s]+$/, "") + ". Choice(question, options, hint, multiple, other): `multiple` and `other` come after `hint`, so write `null` for each skipped optional argument before them, for example `Choice(\"Which checks?\", [\"disk\", \"memory\"], null, true)` or `Choice(\"Why?\", [\"a\", \"b\"], null, null, false)`."; }
+}
 const uniq = [...new Set(problems)]; problems.length = 0; problems.push(...uniq);
 if (problems.length) { console.log("OpenUI validation FAILED:\n- " + problems.join("\n- ")); process.exit(1); }
 console.log(`OpenUI validation OK (${meta.statementCount} statements).`);

@@ -16,9 +16,9 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 - **One tool, `render_widget`.** The agent writes a few lines of *OpenUI Lang* (a compact component language); the plugin validates it, saves a widget, and the agent puts one line in its reply. The widget appears in the chat when the turn finishes.
 - **24 components** (38 with helpers): metric tiles, tables, tabs, cards, line / area / pie / radar / bar charts, DAG pipelines, ER diagrams, sequence diagrams, infrastructure maps, offline maps, code, markdown, FAQs, clickable choices, and hover tooltips for diagrams, tables, metrics, bar charts, maps and images. See the [component gallery](docs/ui-components/README.md) for a screenshot and example of each.
 - **Plain English works.** You do not name the tool. Hermes's Tool Search keeps it out of the model's context until a request needs it.
-- **Cheap on context.** About 20 tokens always on; about 4,700 tokens the first time it is used (the component reference); a few hundred per widget.
+- **Cheap on context.** About 20 tokens always on; about 4,800 tokens the first time it is used (the component reference); a few hundred per widget.
 - **Two display modes.** `preview` (default) works out of the box. `native` renders in the app itself, so the widget files are tiny (1 to 2 KB), at the price of running with full app authority. See [Display modes](#display-modes).
-- **Interactive.** Buttons and choices send their text back to the agent as your next turn.
+- **Interactive.** A button sends its text back to the agent as your next turn. Choices are a question card: you pick answers (several, or your own text), nothing is sent until you press **Send answers**, and then they go together as one turn.
 - **Tooltips.** A Dag, ER diagram, infrastructure map, sequence diagram, table, metric tile, bar chart, map or image can carry short hover tooltips, and a click opens a panel under it with detail text, highlighted code and a link. See [Tooltips](#tooltips).
 - **Export to HTML.** Ask for a few widgets, or a whole report, as one standalone offline HTML file, saved where you say. See [Export to HTML](#export-to-html).
 - **Your own components.** Link a small JavaScript file in the plugin's settings and the agent can use the components it adds, or ask the agent to write one. See [Custom components](#custom-components).
@@ -44,7 +44,7 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 <tr>
 <td valign="top" width="33%"><a href="docs/ui-components/Tooltip.md"><img src="docs/ui-components/images/tooltip-infra-map.png" width="270" alt="A map with an open panel that has detail text and a runbook link"></a><br><b>Hover details</b> &middot; <a href="docs/ui-components/Tooltip.md">Tooltip</a><br><sub>A hover tooltip, and a click panel with detail, code and a link</sub></td>
 <td valign="top" width="33%"><a href="docs/notes.md"><img src="docs/images/notes-diagram-tray.png" width="270" alt="Two diagrams with numbered pins on the clicked nodes and a tray listing the notes"></a><br><b>Notes</b> &middot; <a href="docs/notes.md">Notes</a><br><sub>Click an item or select words, collect notes, add them to your message (native mode)</sub></td>
-<td></td>
+<td valign="top" width="33%"><a href="docs/ui-components/Choice.md"><img src="docs/ui-components/images/choice-single-vs-multiple.png" width="270" alt="A single question with round radio options and a multiple question with square checkboxes"></a><br><b>Questions</b> &middot; <a href="docs/ui-components/Choice.md">Choice</a><br><sub>Round options for one answer, square for several, one Send answers button</sub></td>
 </tr>
 </table>
 
@@ -265,7 +265,7 @@ Measured, using Hermes's own estimate of 4 characters per token.
 | Tool schema (1.3 KB) | every API call **only if** Tool Search is off | about 330 |
 | `export_widgets` listing line | every chat, with Tool Search on | about 20 |
 | `export_widgets` schema (1.6 KB) | every API call **only if** Tool Search is off | about 400 |
-| Component reference | the first use in a chat | about 4,700 |
+| Component reference | the first use in a chat | about 4,800 |
 | Custom component reference | the first use, **only when packs are linked** | one line per component. The four InfraMap lines and the five SequenceDiagram lines, now built in, add about 320 and 470 |
 | Your widget source | each widget, stays in the history | about 250–600 |
 | Tool result | each widget | about 100 |

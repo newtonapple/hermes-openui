@@ -1,9 +1,9 @@
 {
  "core": {
   "file": "core.js.gz",
-  "raw": 833817,
-  "gz": 213682,
-  "sha256": "ca7e4bc16636ac0c3f3567c73ee26964725262bcc15aee264f421cc99573e865",
+  "raw": 843659,
+  "gz": 217353,
+  "sha256": "d980f1fef879761cf7b3f6952e3c18d306ab00c39debf165ad6746ca5e7059f0",
   "components": [
    "Stack",
    "Text",
@@ -83,9 +83,9 @@
   },
   "text": {
    "file": "packs/text.js.gz",
-   "raw": 8207,
-   "gz": 3276,
-   "sha256": "37d21cc43645f72175c4c84ebebbd884cd4998bb0a94672b445e6822f2910ca3",
+   "raw": 13690,
+   "gz": 5279,
+   "sha256": "319ef69d07e4bfc664efbebab5170d22d114b87fa6f757231a1cafb675af7cf5",
    "components": [
     "Markdown",
     "CodeBlock",
