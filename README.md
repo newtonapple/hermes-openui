@@ -43,12 +43,12 @@ Ask your Hermes agent to **draw**: dashboards, charts, DAG, ER and sequence diag
 </tr>
 <tr>
 <td valign="top" width="33%"><a href="docs/ui-components/Tooltip.md"><img src="docs/ui-components/images/tooltip-infra-map.png" width="270" alt="A map with an open panel that has detail text and a runbook link"></a><br><b>Hover details</b> &middot; <a href="docs/ui-components/Tooltip.md">Tooltip</a><br><sub>A hover tooltip, and a click panel with detail, code and a link</sub></td>
-<td></td>
+<td valign="top" width="33%"><a href="docs/notes.md"><img src="docs/images/notes-diagram-tray.png" width="270" alt="Two diagrams with numbered pins on the clicked nodes and a tray listing the notes"></a><br><b>Notes</b> &middot; <a href="docs/notes.md">Notes</a><br><sub>Click an item or select words, collect notes, add them to your message (native mode)</sub></td>
 <td></td>
 </tr>
 </table>
 
-Each picture is a real render of the example code on that component's page, with sample data. All 24 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
+Each picture is a real render of the example code on that component's page, with sample data (the Notes picture shows the feature in use). All 24 components, with the code for every picture, are in the [component gallery](docs/ui-components/README.md).
 
 ## Requirements
 
