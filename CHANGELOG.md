@@ -4,6 +4,8 @@ All notable changes to hermes-openui are listed here. The format follows [Keep a
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-02
+
 ### Added
 
 - **`Choice` takes `multiple` and `other`**: `Choice(question, options, hint, multiple, other)`. `multiple: true` lets the user pick several options (they toggle independently, joined with `; ` in the message); `other` (default `true`) is a last row **Other...** that opens a text box under the options (placeholder `Type your own answer`, 500 characters at most, it grows to a few lines, Enter moves on, Shift+Enter is a new line, Escape leaves it) and `other: false` hides it. In single mode Other replaces the selected option; in multiple mode it comes in addition. An Other row that is selected but empty counts as not answered. Skipped optional arguments before a later one are written `null`; the validator and the reference line say so, with an example.
@@ -153,7 +155,8 @@ First release.
 - The Desktop switch in Capabilities, Plugins for a manually copied plugin.
 - Linux and Windows.
 
-[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/newtonapple/hermes-openui/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.6.0
 [0.5.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.5.0
 [0.4.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.4.0
 [0.3.0]: https://github.com/newtonapple/hermes-openui/releases/tag/v0.3.0
